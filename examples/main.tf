@@ -7,3 +7,8 @@ resource "dcos_services_single_container" "test" {
   mem       = 128
   instances = 1
 }
+
+# data "dcos_service" "test" {
+#   name = "test"
+# }
+

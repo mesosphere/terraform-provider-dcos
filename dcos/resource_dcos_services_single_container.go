@@ -58,13 +58,17 @@ func resourceDcosServicesSingleContainer() *schema.Resource {
 func resourceDcosServicesSingleContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.Client)
 
+	cmd := d.Get("cmd").(string)
+	instances := d.Get("instances").(int)
+	disk := d.Get("disk").(float64)
+	mem := d.Get("mem").(float64)
 	application := marathon.Application{
 		ID:        d.Get("name").(string),
-		Cmd:       d.Get("cmd").(*string),
-		Instances: d.Get("instances").(*int),
+		Cmd:       &cmd,
+		Instances: &instances,
 		CPUs:      d.Get("cpus").(float64),
-		Disk:      d.Get("disk").(*float64),
-		Mem:       d.Get("mem").(*float64),
+		Disk:      &disk,
+		Mem:       &mem,
 	}
 
 	app, err := client.Marathon.MarathonClient.CreateApplication(&application)
@@ -103,22 +107,26 @@ func resourceDcosServicesSingleContainerUpdate(d *schema.ResourceData, meta inte
 	d.Set("cmd", app.Cmd)
 
 	if d.HasChange("cmd") {
-		app.Cmd = d.Get("cmd").(*string)
+		cmd := d.Get("cmd").(string)
+		app.Cmd = &cmd
 	}
 	if d.HasChange("instances") {
-		app.Instances = d.Get("instances").(*int)
+		instances := d.Get("instances").(int)
+		app.Instances = &instances
 	}
 	if d.HasChange("cpus") {
 		app.CPUs = d.Get("cpus").(float64)
 	}
 	d.Set("disk", app.Disk)
 	if d.HasChange("disk") {
-		app.Disk = d.Get("disk").(*float64)
+		disk := d.Get("disk").(float64)
+		app.Disk = &disk
 	}
 
 	d.Set("mem", app.Mem)
 	if d.HasChange("mem") {
-		app.Mem = d.Get("mem").(*float64)
+		mem := d.Get("mem").(float64)
+		app.Mem = &mem
 	}
 
 	_, err = client.Marathon.MarathonClient.UpdateApplication(app, false)
