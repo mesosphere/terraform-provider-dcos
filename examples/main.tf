@@ -8,7 +8,10 @@ resource "dcos_services_single_container" "test" {
   instances = 1
 }
 
-# data "dcos_service" "test" {
-#   name = "test"
-# }
+data "dcos_service" "testdata" {
+  name = "${dcos_services_single_container.test.name}"
+}
 
+output "testappcmd" {
+  value = "${data.dcos_service.testdata.cmd}"
+}
