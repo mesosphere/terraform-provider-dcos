@@ -1,9 +1,9 @@
 package dcos
 
 import (
+	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/mesosphere/dcos-go/dcos"
 )
 
 func Provider() terraform.ResourceProvider {
@@ -33,9 +33,22 @@ func Provider() terraform.ResourceProvider {
 				Default:     "",
 				Description: "Clustername to use",
 			},
+			"user": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "User name logging into the cluster",
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Password to login with",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"dcos_services_single_container": resourceDcosServicesSingleContainer(),
+			"dcos_job":                       resourceDcosJob(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_service": dataSourceDcosService(),

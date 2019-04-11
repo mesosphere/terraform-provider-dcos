@@ -2,7 +2,6 @@ package dcos
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/mesosphere/dcos-go/dcos"
 )
 
 func dataSourceDcosService() *schema.Resource {
@@ -39,21 +38,21 @@ func dataSourceDcosService() *schema.Resource {
 }
 
 func dataSourceDcosServiceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.Client)
+	// client := meta.(*dcos.Client)
+	//
+	// app, err := client.Marathon.MarathonClient.Application(d.Get("name").(string))
+	//
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// d.SetId(app.ID)
+	//
+	// d.Set("cmd", app.Cmd)
+	// d.Set("instances", app.Instances)
+	// d.Set("cpus", app.CPUs)
+	// d.Set("disk", app.Disk)
+	// d.Set("mem", app.Mem)
 
-	app, err := client.Marathon.MarathonClient.Application(d.Get("name").(string))
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(app.ID)
-
-	d.Set("cmd", app.Cmd)
-	d.Set("instances", app.Instances)
-	d.Set("cpus", app.CPUs)
-	d.Set("disk", app.Disk)
-	d.Set("mem", app.Mem)
-
-	return err
+	return nil
 }
