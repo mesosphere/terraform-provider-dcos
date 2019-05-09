@@ -47,8 +47,11 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"dcos_services_single_container": resourceDcosServicesSingleContainer(),
-			"dcos_job":                       resourceDcosJob(),
+			// "dcos_services_single_container": resourceDcosServicesSingleContainer(),
+			// "dcos_job":                       resourceDcosJob(),
+			"dcos_secret":              resourceDcosSecret(),
+			"dcos_iam_service_account": resourceDcosIAMServiceAccount(),
+			"dcos_iam_grant":           resourceDcosIAMGrant(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_service": dataSourceDcosService(),
@@ -58,7 +61,7 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	dcos, err := dcos.NewClient()
+	client, err := dcos.NewClient()
 
-	return dcos, err
+	return client, err
 }
