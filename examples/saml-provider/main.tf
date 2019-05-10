@@ -15,7 +15,6 @@ output "callback_url" {
   value = "${dcos_iam_saml_provider.OneloginTest.callback_url}"
 }
 
-# output "entity_id" {
-#   value = "${dcos_iam_saml_provider.OneloginTest.entity_id}"
-# }
-
+output "entity_id" {
+  value = "${dcos_iam_saml_provider.OneloginTest.entity_id}"
+}

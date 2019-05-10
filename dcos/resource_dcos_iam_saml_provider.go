@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beevik/etree"
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -141,6 +142,8 @@ func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) erro
 
 	if callbackurl, _, err := client.IAM.GetSAMLProviderACSCallbackURL(ctx, providerId); err == nil {
 		d.Set("callback_url", callbackurl.AcsCallbackUrl)
+	} else {
+		d.Set("callback_url", "")
 	}
 
 	metadata, metadataResp, err := client.IAM.GetSAMLProviderSPMetadata(ctx, providerId)
@@ -151,8 +154,22 @@ func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		log.Printf("[WARNING] IAM.GetSAMLProviderSPMetadata Error - %v", err)
 		d.Set("metadata", "")
+		d.Set("entity_id", "")
 	} else {
-		d.Set("metadata", string(metadata))
+		d.Set("metadata", metadata)
+
+		doc := etree.NewDocument()
+
+		if err := doc.ReadFromString(metadata); err == nil {
+			if element := doc.SelectElement("md:EntityDescriptor"); element != nil {
+				if entityID := element.SelectAttr("entityID"); entityID != nil {
+					d.Set("entity_id", entityID.Value)
+				}
+			}
+		} else {
+			log.Printf("[WARNING] IAM.GetSAMLProviderSPMetadata XML Error - %v", err)
+			d.Set("entity_id", "")
+		}
 	}
 
 	d.SetId("provider_id")
