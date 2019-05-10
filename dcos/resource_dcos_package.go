@@ -1,8 +1,11 @@
 package dcos
 
 import (
+	"context"
+	"log"
 	"time"
 
+	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -63,8 +66,22 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
-	// client := meta.(*dcos.APIClient)
-	// ctx := context.TODO()
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	packages, resp, err := client.Cosmos.PackageList(ctx, &dcos.PackageListOpts{})
+
+	log.Printf("[TRACE] Cosmos.PackageList - %v", resp)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[TRACE] Cosmos.PackageList found %d packages" )
+
+	for _, package := range packages.Packages {
+
+	}
 
 	// localVarOptionals := &dcos.ServiceDescribeOpts{}
 	// localVarOptionals.CosmosServiceDescribeV1Request.
