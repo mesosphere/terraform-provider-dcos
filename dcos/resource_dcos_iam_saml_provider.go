@@ -3,9 +3,9 @@ package dcos
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"time"
 
@@ -143,18 +143,16 @@ func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("callback_url", callbackurl.AcsCallbackUrl)
 	}
 
-	metadataResp, err := client.IAM.GetSAMLProviderSPMetadata(ctx, providerId)
+	metadata, metadataResp, err := client.IAM.GetSAMLProviderSPMetadata(ctx, providerId)
+	dumpReq, _ := httputil.DumpRequest(metadataResp.Request, false)
 	log.Printf("[TRACE] IAM.GetSAMLProviderSPMetadata - %v", metadataResp)
+	log.Printf("[TRACE] IAM.GetSAMLProviderSPMetadata - Request %s", dumpReq)
 
 	if err != nil {
 		log.Printf("[WARNING] IAM.GetSAMLProviderSPMetadata Error - %v", err)
+		d.Set("metadata", "")
 	} else {
-		data, err := ioutil.ReadAll(metadataResp.Body)
-		if err != nil {
-			log.Printf("[WARNING] IAM.GetSAMLProviderSPMetadata Error - %v", err)
-		} else {
-			d.Set("metadata", string(data))
-		}
+		d.Set("metadata", string(metadata))
 	}
 
 	d.SetId("provider_id")
