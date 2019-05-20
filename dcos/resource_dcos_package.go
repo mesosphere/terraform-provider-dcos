@@ -2,14 +2,21 @@ package dcos
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/go-test/deep"
 
 	"github.com/antihax/optional"
 	"github.com/dcos/client-go/dcos"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/imdario/mergo"
 )
 
 func resourceDcosPackage() *schema.Resource {
@@ -37,10 +44,17 @@ func resourceDcosPackage() *schema.Resource {
 				Description: "Description of the newly created service account",
 			},
 			"app_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if filepath.Clean("/"+old) == filepath.Clean("/"+new) {
+						return true
+					}
+
+					return false
+				},
 				Description: "ID of the account is used by default",
 			},
 			"version": {
@@ -51,10 +65,50 @@ func resourceDcosPackage() *schema.Resource {
 				Description: "Description of the newly created service account",
 			},
 
-			"config": {
-				Type:        schema.TypeMap,
-				Optional:    true,
-				ForceNew:    true,
+			"config_json": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					log.Printf("[Trace] Comparing old %s  with new %s", old, new)
+					oldConfig := make(map[string]map[string]interface{})
+					config := make(map[string]map[string]interface{})
+					jconfig := make(map[string]map[string]interface{})
+
+					err := json.Unmarshal([]byte(old), &oldConfig)
+					if err != nil {
+						log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
+						return false
+					}
+
+					err = json.Unmarshal([]byte(old), &config)
+					if err != nil {
+						log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
+						return false
+					}
+
+					err = json.Unmarshal([]byte(new), &jconfig)
+					if err != nil {
+						log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
+						return false
+					}
+
+					err = mergo.MergeWithOverwrite(&config, &jconfig)
+					if err != nil {
+						log.Printf("[WARNING] config_json.DiffSuppressFunc Merge - %v", err)
+						return false
+					}
+					log.Printf("[Trace] Comparing old %#v  with new %#v", oldConfig, config)
+
+					if diff := deep.Equal(&oldConfig, &config); diff != nil {
+						log.Printf("[TRACE] config_json.DiffSuppressFunc Equal - %s", strings.Join(diff, ","))
+
+						return false
+					}
+
+					return true
+				},
 				Description: "Path to public key to use",
 			},
 		},
@@ -96,6 +150,17 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 		cosmosPackageInstallV1Request.PackageVersion = packageVersion.(string)
 	}
 
+	if packageConfig, ok := d.GetOk("config_json"); ok {
+		var opt map[string]map[string]interface{}
+		err := json.Unmarshal([]byte(packageConfig.(string)), &opt)
+		if err != nil {
+			return fmt.Errorf("Error reading config_json %v", err)
+		}
+		cosmosPackageInstallV1Request.Options = opt
+
+		log.Printf("[TRACE] Prepare Cosmos.PackageInstall found config_json - %v", opt)
+	}
+
 	installedPkg, installResp, err := client.Cosmos.PackageInstall(ctx, cosmosPackageInstallV1Request)
 	log.Printf("[TRACE] Cosmos.PackageInstall - %v", installResp)
 
@@ -123,44 +188,37 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	appID = a.(string)
 
-	pkgName := d.Get("name").(string)
-
-	listOpts := &dcos.PackageListOpts{
-		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{
-			AppId:       appID,
-			PackageName: pkgName,
+	describeOpts := &dcos.ServiceDescribeOpts{
+		CosmosServiceDescribeV1Request: optional.NewInterface(dcos.CosmosServiceDescribeV1Request{
+			AppId: appID,
 		}),
 	}
 
-	packages, resp, err := client.Cosmos.PackageList(ctx, listOpts)
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 
-	log.Printf("[TRACE] Cosmos.PackageList - %v", resp)
+		pkg, resp, err := client.Cosmos.ServiceDescribe(ctx, describeOpts)
 
-	if err != nil {
-		return err
-	}
+		log.Printf("[TRACE] Cosmos.ServiceDescribe - %v, pkg: %#v", resp, pkg)
 
-	log.Printf("[TRACE] Cosmos.PackageList found %d packages", len(packages.Packages))
-
-	for _, p := range packages.Packages {
-		if p.AppId == appID {
-			d.Set("version", p.PackageInformation.PackageDefinition.Version)
-			d.Set("config", p.PackageInformation.PackageDefinition.Config)
-			d.Set("name", p.PackageInformation.PackageDefinition.Name)
-			d.SetId(appID)
-			return nil
+		if err != nil {
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	// app_id defined but no package installed
-	d.SetId("")
-	return nil
+		log.Printf("[TRACE] Cosmos.ServiceDescribe - ResolvedOptions %v, %d", pkg.ResolvedOptions, len(pkg.ResolvedOptions))
 
-	// localVarOptionals := &dcos.ServiceDescribeOpts{}
-	// localVarOptionals.CosmosServiceDescribeV1Request.
-	//
-	// client.Cosmos.ServiceDescribe(ctx, localVarOptionals)
+		if len(pkg.ResolvedOptions) > 0 {
+			d.Set("version", pkg.Package.Version)
+			if configJSON, err := json.Marshal(pkg.ResolvedOptions); err == nil {
+				d.Set("config_json", string(configJSON))
+			}
+			d.Set("name", pkg.Package.Name)
+			d.SetId(appID)
 
+			return resource.NonRetryableError(nil)
+		} else {
+			return resource.RetryableError(fmt.Errorf("AppID %s still initializing", appID))
+		}
+	})
 }
 
 func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
