@@ -72,25 +72,20 @@ func resourceDcosPackage() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					log.Printf("[Trace] Comparing old %s  with new %s", old, new)
-					oldConfig := make(map[string]map[string]interface{})
-					config := make(map[string]map[string]interface{})
 					jconfig := make(map[string]map[string]interface{})
 
-					err := json.Unmarshal([]byte(old), &oldConfig)
+					oldConfig, err := unmarshallPackageConfig(old)
 					if err != nil {
-						log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
 						return false
 					}
 
-					err = json.Unmarshal([]byte(old), &config)
+					config, err := unmarshallPackageConfig(old)
 					if err != nil {
-						log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
 						return false
 					}
 
-					err = json.Unmarshal([]byte(new), &jconfig)
+					jconfig, err = unmarshallPackageConfig(new)
 					if err != nil {
-						log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
 						return false
 					}
 
@@ -113,6 +108,16 @@ func resourceDcosPackage() *schema.Resource {
 			},
 		},
 	}
+}
+
+func unmarshallPackageConfig(j string) (map[string]map[string]interface{}, error) {
+	config := make(map[string]map[string]interface{})
+	if err := json.Unmarshal([]byte(j), &config); err != nil {
+		log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
+		return nil, err
+	}
+
+	return config, nil
 }
 
 func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
