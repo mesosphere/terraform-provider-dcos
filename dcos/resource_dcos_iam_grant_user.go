@@ -52,6 +52,20 @@ func resourceDcosIAMGrantUser() *schema.Resource {
 	}
 }
 
+func ensureRid(ctx context.Context, client *dcos.APIClient, rid string) error {
+	ridRes, _, err := client.IAM.GetResourceACLs(ctx, rid)
+	if err != nil {
+		return err
+	}
+
+	if ridRes.Rid != "" {
+		return nil
+	}
+
+	_, err = client.IAM.CreateResourceACL(ctx, rid, dcos.IamaclCreate{})
+	return err
+}
+
 func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
@@ -59,6 +73,12 @@ func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) er
 	uid := d.Get("uid").(string)
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
+
+	err := ensureRid(ctx, client, rid)
+
+	if err != nil {
+		return err
+	}
 
 	resp, err := client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
 	log.Printf("[TRACE] PermitResourceUserAction - %v", resp.Request)
