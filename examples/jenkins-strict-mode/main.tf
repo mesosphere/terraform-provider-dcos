@@ -1,6 +1,4 @@
-provider "dcos" {
-  alias = "prod1"
-}
+provider "dcos" {}
 
 variable "app_id" {
   default = "jenkins"
@@ -31,17 +29,20 @@ resource "dcos_iam_grant_user" "testgrant" {
   action   = "create"
 }
 
+# could be predefined data resource or special "service_account_secret"
+locals {
+  jenkins_secret = {
+    scheme         = "RS256"
+    uid            = "${dcos_iam_service_account.jenkins_service_account.uid}"
+    private_key    = "${tls_private_key.jenkins_service_account_private_key.private_key_pem}"
+    login_endpoint = "https://master.mesos/acs/api/v1/auth/login"
+  }
+}
+
 resource "dcos_secret" "jenkins-secret" {
   path = "${var.app_id}/jenkins-secret"
 
-  value = <<EOF
-{
-    "scheme": "RS256",
-    "uid": "${dcos_iam_service_account.jenkins_service_account.uid}",
-    "private_key": "${tls_private_key.jenkins_service_account_private_key.private_key_pem}"",
-    "login_endpoint": "https://master.mesos/acs/api/v1/auth/login"
-}
-EOF
+  value = "${jsonencode(local.jenkins_secret)}"
 }
 
 resource "dcos_package" "jenkins" {
@@ -51,9 +52,4 @@ resource "dcos_package" "jenkins" {
   config_json = <<EOF
 {"security":{"secret-name":"${dcos_secret.jenkins-secret.path}","strict-mode":true},"service":{"user":"nobody", "mem": 4096}}
 EOF
-}
-
-#
-output "config_json" {
-  value = "${dcos_package.jenkins.config_json}"
 }
