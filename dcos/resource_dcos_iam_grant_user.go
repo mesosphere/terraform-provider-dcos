@@ -3,6 +3,7 @@ package dcos
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -10,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMGrant() *schema.Resource {
+func resourceDcosIAMGrantUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMGrantCreate,
-		Read:   resourceDcosIAMGrantRead,
-		Delete: resourceDcosIAMGrantDelete,
+		Create: resourceDcosIAMGrantUserCreate,
+		Read:   resourceDcosIAMGrantUserRead,
+		Delete: resourceDcosIAMGrantUserDelete,
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
@@ -51,7 +52,7 @@ func resourceDcosIAMGrant() *schema.Resource {
 	}
 }
 
-func resourceDcosIAMGrantCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -59,18 +60,12 @@ func resourceDcosIAMGrantCreate(d *schema.ResourceData, meta interface{}) error 
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
 
-	_, resp, _ := client.IAM.GetResourceACLs(ctx, rid)
-	if resp.StatusCode != http.StatusOK {
-		_, err := client.IAM.CreateResourceACL(ctx, rid, dcos.IamaclCreate{})
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err := client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
+	resp, err := client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
+	log.Printf("[TRACE] PermitResourceUserAction - %v", resp.Request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("PermitResourceUserAction - %v", err)
+
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", uid, rid, action))
@@ -78,6 +73,7 @@ func resourceDcosIAMGrantCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func inPermissions(permissions dcos.IamUserPermissions, rid string, action string) bool {
+	log.Printf("[TRACE] InPermission - %v", permissions)
 	for _, perm := range permissions.Direct {
 		if perm.Rid == rid {
 			for _, permAction := range perm.Actions {
@@ -90,7 +86,7 @@ func inPermissions(permissions dcos.IamUserPermissions, rid string, action strin
 	return false
 }
 
-func resourceDcosIAMGrantRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -118,7 +114,7 @@ func resourceDcosIAMGrantRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceDcosIAMGrantDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMGrantUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
