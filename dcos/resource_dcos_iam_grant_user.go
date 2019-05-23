@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -52,20 +51,6 @@ func resourceDcosIAMGrantUser() *schema.Resource {
 	}
 }
 
-func ensureRid(ctx context.Context, client *dcos.APIClient, rid string) error {
-	ridRes, _, err := client.IAM.GetResourceACLs(ctx, rid)
-	if err != nil {
-		return err
-	}
-
-	if ridRes.Rid != "" {
-		return nil
-	}
-
-	_, err = client.IAM.CreateResourceACL(ctx, rid, dcos.IamaclCreate{})
-	return err
-}
-
 func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
@@ -74,14 +59,14 @@ func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) er
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
 
-	err := ensureRid(ctx, client, rid)
+	err := iamEnsureRid(ctx, client, rid)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("EnsureRID error - %v", err)
 	}
 
 	resp, err := client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
-	log.Printf("[TRACE] PermitResourceUserAction - %v", resp.Request)
+	log.Printf("[TRACE] PermitResourceUserAction - %v", resp)
 
 	if err != nil {
 		return fmt.Errorf("PermitResourceUserAction - %v", err)
@@ -92,20 +77,6 @@ func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func inPermissions(permissions dcos.IamUserPermissions, rid string, action string) bool {
-	log.Printf("[TRACE] InPermission - %v", permissions)
-	for _, perm := range permissions.Direct {
-		if perm.Rid == rid {
-			for _, permAction := range perm.Actions {
-				if permAction.Name == action {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
 func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
@@ -114,23 +85,17 @@ func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) erro
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
 
-	permissions, resp, err := client.IAM.GetUserPermissions(ctx, uid)
-
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	}
+	allowed, _, err := client.IAM.GetResourceUserAction(ctx, rid, uid, action)
 
 	if err != nil {
 		return err
 	}
 
-	if inPermissions(permissions, rid, action) {
-		d.SetId(fmt.Sprintf("%s-%s-%s", uid, rid, action))
-		return nil
+	if !allowed.Allowed {
+		d.SetId("")
 	}
 
-	d.SetId("")
+	d.SetId(fmt.Sprintf("%s-%s-%s", rid, uid, action))
 	return nil
 }
 

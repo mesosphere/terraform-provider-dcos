@@ -99,6 +99,9 @@ func resourceDcosIAMServiceAccountCreate(d *schema.ResourceData, meta interface{
 	log.Printf("[TRACE] IAM.CreateUser - %v", resp)
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
@@ -124,6 +127,9 @@ func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
@@ -154,6 +160,9 @@ func resourceDcosIAMServiceAccountUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[TRACE] IAM.UpdateUser - %v", resp)
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
@@ -172,6 +181,9 @@ func resourceDcosIAMServiceAccountDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 

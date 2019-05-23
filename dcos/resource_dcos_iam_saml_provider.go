@@ -114,6 +114,9 @@ func resourceDcosSAMLProviderCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] IAM.ConfigureSAMLProvider - %v", resp)
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
@@ -133,6 +136,9 @@ func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
@@ -199,6 +205,9 @@ func resourceDcosSAMLProviderUpdate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] IAM.UpdateSAMLProvider - %v", resp)
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
@@ -216,6 +225,9 @@ func resourceDcosSAMLProviderDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] IAM.DeleteSAMLProvider - %v", resp)
 
 	if err != nil {
+		if iamErr, ok := iamErrorOK(err); ok {
+			return iamPrettyError(iamErr)
+		}
 		return err
 	}
 
