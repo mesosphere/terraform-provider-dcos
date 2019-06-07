@@ -72,13 +72,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	// Configure custom cluster URL
 	dcosUrl := d.Get("dcos_url").(string)
-	if dcosUrl == "" {
+	if dcosUrl != "" {
 		config = dcos.NewConfig(nil)
 		config.SetURL(dcosUrl)
 
 		// Require a log-in username
 		iamLogin.Uid = d.Get("user").(string)
-		if iamLogin.Uid != "" {
+		if iamLogin.Uid == "" {
 			return nil, fmt.Errorf("Missing required 'user' field")
 		}
 
@@ -108,7 +108,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	tlsVerify := d.Get("ssl_verify").(bool)
 	if !tlsVerify {
 		tls := config.TLS()
-		tls.Insecure = false
+		tls.Insecure = true
 		config.SetTLS(tls)
 	}
 
