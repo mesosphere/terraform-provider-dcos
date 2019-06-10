@@ -2,6 +2,7 @@ package dcos
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -49,52 +50,52 @@ func resourceDcosSecret() *schema.Resource {
 				Required:      true,
 				ForceNew:      true,
 			},
-      "args": {
+			"args": {
 				Type:          schema.TypeString,
 				ConflictsWith: []string{"cmd"},
 				Required:      true,
 				ForceNew:      true,
 			},
-      "artifacts_uri": {
-        Type:          schema.TypeString,
-        Required:      false,
-        ForceNew:      true,
-      },
-      "artificats_exectuable" {
-        Type:          schema.TypeBool,
-        Required:      false,
-        ForceNew:      true,
-      },
-      "artifacts_extract": {
-        Type:          schema.TypeBool,
-        Required:      false,
-        ForceNew:      true,
-      },
-      "artifacts_cache": {
-        Type:          schema.TypeBool,
-        Required:      false,
-        ForceNew:      true,
-      },
-      "docker_image": {
-        Type:          schema.TypeString,
-        Required:      true,
-        ForceNew:      true,
-      },
-      "cpus": {
-        Type:          schema.TypeFloat,
-        Required:      true,
-        ForceNew:      true,
-      },
-      "mem": {
-        Type:          schema.TypeInt,
-        Required:      true,
-        ForceNew:      true,
-      },
-      "disk": {
-        Type:          schema.TypeInt,
-        Required:      true,
-        ForceNew:      true,
-      }
+			"artifacts_uri": {
+				Type:     schema.TypeString,
+				Required: false,
+				ForceNew: true,
+			},
+			"artificats_exectuable": {
+				Type:     schema.TypeBool,
+				Required: false,
+				ForceNew: true,
+			},
+			"artifacts_extract": {
+				Type:     schema.TypeBool,
+				Required: false,
+				ForceNew: true,
+			},
+			"artifacts_cache": {
+				Type:     schema.TypeBool,
+				Required: false,
+				ForceNew: true,
+			},
+			"docker_image": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"cpus": {
+				Type:     schema.TypeFloat,
+				Required: true,
+				ForceNew: true,
+			},
+			"mem": {
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
+			},
+			"disk": {
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -103,27 +104,27 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-  var metronome_job dcos.MetronomeV1Job
-  metronome_job.Id  = d.Get("id")
-  metronome_job.Run = dcos.MetronomeV1JobRun {
-    Cmd:    d.Get("cmd"),
-    Cpus:   d.Get("cpus"),
-    Mem:    d.Get("mem"),
-    Disk:   d.Get("disk"),
-    Docker: dcos.MetronomeV1JobRunDocker {
-      Image: d.Get("docker_image"),
-    }
-  }
+	var metronome_job dcos.MetronomeV1Job
+	metronome_job.Id = d.Get("id")
+	metronome_job.Run = dcos.MetronomeV1JobRun{
+		Cmd:  d.Get("cmd"),
+		Cpus: d.Get("cpus"),
+		Mem:  d.Get("mem"),
+		Disk: d.Get("disk"),
+		Docker: dcos.MetronomeV1JobRunDocker{
+			Image: d.Get("docker_image"),
+		},
+	}
 
-  resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
-  if err != nil {
-    return err
-  }
+	resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
+	if err != nil {
+		return err
+	}
 
-  fmt.Printf("%+v\n", resp_metronome_job)
-  fmt.Printf("%+v\n", resp)
+	fmt.Printf("%+v\n", resp_metronome_job)
+	fmt.Printf("%+v\n", resp)
 
-  return nil
+	return nil
 }
 
 func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
