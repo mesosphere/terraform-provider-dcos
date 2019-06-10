@@ -74,6 +74,26 @@ func resourceDcosSecret() *schema.Resource {
         Type:          schema.TypeBool,
         Required:      false,
         ForceNew:      true,
+      },
+      "docker_image": {
+        Type:          schema.TypeString,
+        Required:      true,
+        ForceNew:      true,
+      },
+      "cpus": {
+        Type:          schema.TypeFloat,
+        Required:      true,
+        ForceNew:      true,
+      },
+      "mem": {
+        Type:          schema.TypeInt,
+        Required:      true,
+        ForceNew:      true,
+      },
+      "disk": {
+        Type:          schema.TypeInt,
+        Required:      true,
+        ForceNew:      true,
       }
 		},
 	}
