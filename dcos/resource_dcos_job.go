@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosSecret() *schema.Resource {
+func resourceDcosJob() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDcosJobCreate,
 		Read:   resourceDcosJobRead,
