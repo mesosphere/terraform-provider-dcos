@@ -104,15 +104,15 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	var metronome_job dcos.MetronomeV1Job
-	metronome_job.Id = d.Get("id")
-	metronome_job.Run = dcos.MetronomeV1JobRun{
-		Cmd:  d.Get("cmd"),
-		Cpus: d.Get("cpus"),
-		Mem:  d.Get("mem"),
-		Disk: d.Get("disk"),
-		Docker: dcos.MetronomeV1JobRunDocker{
-			Image: d.Get("docker_image"),
+	metronome_job := dcos.MetronomeV1Job{
+		Run: dcos.MetronomeV1JobRun{
+			Cmd:  d.Get("cmd").(string),
+			Cpus: d.Get("cpus").(float32),
+			Mem:  d.Get("mem").(float32),
+			Disk: d.Get("disk").(float32),
+			Docker: &dcos.MetronomeV1JobRunDocker{
+				Image: d.Get("docker_image").(string),
+			},
 		},
 	}
 
