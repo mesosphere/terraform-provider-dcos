@@ -103,23 +103,27 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	secretsV1Secret := dcos.SecretsV1Secret{}
-	secretsV1Secret.Value = d.Get("value").(string)
+  var metronome_job dcos.MetronomeV1Job
+  metronome_job.Id  = d.Get("id")
+  metronome_job.Run = dcos.MetronomeV1JobRun {
+    Cmd:    d.Get("cmd"),
+    Cpus:   d.Get("cpus"),
+    Mem:    d.Get("mem"),
+    Disk:   d.Get("disk"),
+    Docker: dcos.MetronomeV1JobRunDocker {
+      Image: d.Get("docker_image"),
+    }
+  }
 
-	pathToSecret := d.Get("path").(string)
+  resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
+  if err != nil {
+    return err
+  }
 
-	store := d.Get("store").(string)
+  fmt.Printf("%+v\n", resp_metronome_job)
+  fmt.Printf("%+v\n", resp)
 
-	resp, err := client.Secrets.CreateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
-
-	log.Printf("[TRACE] Create %s, %s - %v", store, pathToSecret, resp)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(generateID(store, pathToSecret))
-	return nil
+  return nil
 }
 
 func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
