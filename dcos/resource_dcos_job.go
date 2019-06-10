@@ -29,7 +29,7 @@ func resourceDcosJob() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -41,39 +41,37 @@ func resourceDcosJob() *schema.Resource {
 			},
 			"labels": {
 				Type:     schema.TypeMap,
-				Required: false,
+				Optional: true,
 				ForceNew: false,
 			},
 			"cmd": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"args"},
-				Required:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"args": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"cmd"},
-				Required:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"artifacts_uri": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 			},
 			"artificats_exectuable": {
 				Type:     schema.TypeBool,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 			},
 			"artifacts_extract": {
 				Type:     schema.TypeBool,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 			},
 			"artifacts_cache": {
 				Type:     schema.TypeBool,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 			},
 			"docker_image": {
@@ -105,6 +103,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.TODO()
 
 	metronome_job := dcos.MetronomeV1Job{
+		Id:          d.Get("name").(string),
+		Description: d.Get("description").(string),
 		Run: dcos.MetronomeV1JobRun{
 			Cmd:  d.Get("cmd").(string),
 			Cpus: d.Get("cpus").(float32),
