@@ -54,6 +54,7 @@ func Provider() terraform.ResourceProvider {
 			"dcos_iam_saml_provider":   resourceDcosSAMLProvider(),
 			"dcos_iam_grant_user":      resourceDcosIAMGrantUser(),
 			"dcos_package":             resourceDcosPackage(),
+			"dcos_job":                 resourceDcosJob(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_service": dataSourceDcosService(),

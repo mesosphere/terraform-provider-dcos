@@ -28,23 +28,53 @@ func resourceDcosSecret() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"path": {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"value": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  false,
-				Sensitive: true,
-			},
-			"store": {
+			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Default:  "default",
 			},
+			"labels": {
+				Type:     schema.TypeMap,
+				Required: false,
+				ForceNew: false,
+			},
+			"cmd": {
+				Type:          schema.TypeString,
+				ConflictsWith: []string{"args"},
+				Required:      true,
+				ForceNew:      true,
+			},
+      "args": {
+				Type:          schema.TypeString,
+				ConflictsWith: []string{"cmd"},
+				Required:      true,
+				ForceNew:      true,
+			},
+      "artifacts_uri": {
+        Type:          schema.TypeString,
+        Required:      false,
+        ForceNew:      true,
+      },
+      "artificats_exectuable" {
+        Type:          schema.TypeBool,
+        Required:      false,
+        ForceNew:      true,
+      },
+      "artifacts_extract": {
+        Type:          schema.TypeBool,
+        Required:      false,
+        ForceNew:      true,
+      },
+      "artifacts_cache": {
+        Type:          schema.TypeBool,
+        Required:      false,
+        ForceNew:      true,
+      }
 		},
 	}
 }
