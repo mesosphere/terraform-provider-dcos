@@ -107,9 +107,9 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Description: d.Get("description").(string),
 		Run: dcos.MetronomeV1JobRun{
 			Cmd:  d.Get("cmd").(string),
-			Cpus: d.Get("cpus").(float32),
-			Mem:  d.Get("mem").(float32),
-			Disk: d.Get("disk").(float32),
+			Cpus: d.Get("cpus").(float64),
+			Mem:  int64(d.Get("mem").(int)),
+			Disk: int64(d.Get("disk").(int)),
 			Docker: &dcos.MetronomeV1JobRunDocker{
 				Image: d.Get("docker_image").(string),
 			},
