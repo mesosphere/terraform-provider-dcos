@@ -162,7 +162,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("[ERROR] Expecting response code of 201 (job created), but received %d", resp.StatusCode)
 	}
 
-	log.Printf("[INFO] DCOS job successfull created (%s)", d.Get("name").(string))
+	log.Printf("[INFO] DCOS job successfully created (%s)", d.Get("name").(string))
 	log.Printf("[TRACE] Metronome Job Response object: %+v", resp_metronome_job)
 
 	return nil
