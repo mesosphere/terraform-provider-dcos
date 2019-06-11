@@ -245,13 +245,36 @@ func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
 		PackageName: packageName,
 	}
 
+	// Uninstall package
 	_, resp, err := client.Cosmos.PackageUninstall(ctx, cosmosPackageUninstallV1Request, nil)
-
 	log.Printf("[TRACE] Cosmos.PackageUninstall - %v", resp)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to uninstall package: %s", err.Error())
 	}
+
+	// Wait until it does no longer appear on the enumeration
+	listOpts := &dcos.PackageListOpts{
+		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{
+			AppId:       appID,
+			PackageName: packageName,
+		}),
+	}
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+
+		lst, resp, err := client.Cosmos.PackageList(ctx, listOpts)
+		log.Printf("[TRACE] Cosmos.PackageList - %v, lst: %#v", resp, lst)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		log.Printf("[TRACE] Cosmos.ServiceDescribe - Packages %v, %d", lst.Packages, len(lst.Packages))
+		if len(lst.Packages) == 0 {
+			d.SetId("")
+			return resource.NonRetryableError(nil)
+		}
+
+		return resource.RetryableError(fmt.Errorf("AppID %s still uninstalling", appID))
+	})
 
 	d.SetId("")
 	return nil
