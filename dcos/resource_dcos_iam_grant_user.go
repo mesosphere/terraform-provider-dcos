@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -52,20 +53,6 @@ func resourceDcosIAMGrantUser() *schema.Resource {
 	}
 }
 
-func ensureRid(ctx context.Context, client *dcos.APIClient, rid string) error {
-	ridRes, _, err := client.IAM.GetResourceACLs(ctx, rid)
-	if err != nil {
-		return err
-	}
-
-	if ridRes.Rid != "" {
-		return nil
-	}
-
-	_, err = client.IAM.CreateResourceACL(ctx, rid, dcos.IamaclCreate{})
-	return err
-}
-
 func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
@@ -74,18 +61,31 @@ func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) er
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
 
-	err := ensureRid(ctx, client, rid)
-
+	// Ensure that the ACL exists
+	rid = strings.Replace(rid, "/", "%252F", -1)
+	resp, err := client.IAM.CreateResourceACL(context.TODO(), rid, dcos.IamaclCreate{})
 	if err != nil {
-		return err
+		if resp == nil || resp.StatusCode != 409 {
+			return fmt.Errorf(
+				"Unable to create resource ACL for '%s': %s",
+				rid,
+				err.Error(),
+			)
+		}
+		log.Printf("permission '%s:%s' for user '%s' already exists", rid, action, uid)
 	}
 
-	resp, err := client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
+	// Grant permission
+	resp, err = client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
 	log.Printf("[TRACE] PermitResourceUserAction - %v", resp.Request)
-
 	if err != nil {
-		return fmt.Errorf("PermitResourceUserAction - %v", err)
-
+		return fmt.Errorf(
+			"Unable to grant '%s' action on '%s' resource for user '%s': %s",
+			action,
+			rid,
+			uid,
+			err.Error(),
+		)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", uid, rid, action))
