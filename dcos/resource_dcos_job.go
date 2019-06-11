@@ -212,28 +212,27 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceDcosSecretRead(d, meta)
+	return resourceDcosJobRead(d, meta)
 }
 
 func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	pathToSecret := d.Get("path").(string)
-	store := d.Get("store").(string)
+	jobId := d.Get("name").(string)
 
-	resp, err := client.Secrets.DeleteSecret(ctx, store, pathToSecret)
-
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	}
-
+	log.Printf("[INFO] Attempting to delete (%s)", jobId)
+	resp, err := client.Metronome.V1DeleteJob(ctx, jobId)
 	if err != nil {
 		return err
 	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("[ERROR] Expecting response code of 200 (job deleted), but received %d", resp.StatusCode)
+	}
+	log.Printf("[INFO] DCOS job successfully deleted (%s)", jobId)
 
 	d.SetId("")
+
 	return nil
 }
 
