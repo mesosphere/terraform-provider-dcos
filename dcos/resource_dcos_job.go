@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -172,25 +171,17 @@ func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	store := d.Get("store").(string)
-	pathToSecret := d.Get("path").(string)
+	jobId := d.Get("name").(string)
 
-	secret, resp, err := client.Secrets.GetSecret(ctx, store, encodePath(pathToSecret), nil)
-
-	log.Printf("[TRACE] Read - %v", resp)
-
-	if resp.StatusCode == http.StatusNotFound {
-		log.Printf("[INFO] Read - %s not found", pathToSecret)
-		d.SetId("")
-		return nil
-	}
-
+	log.Printf("[INFO] Attempting to delete (%s)", jobId)
+	resp, err := client.Metronome.V1GetJob(ctx, jobId)
 	if err != nil {
-		return nil
+		return err
 	}
-
-	d.Set("value", secret.Value)
-	d.SetId(generateID(store, pathToSecret))
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("[ERROR] Expecting response code of 200 (job found), but received %d", resp.StatusCode)
+	}
+	log.Printf("[INFO] DCOS job successfully retrieved (%s)", jobId)
 
 	return nil
 }
