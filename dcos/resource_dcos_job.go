@@ -107,6 +107,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 
+	d.SetId(d.Get("name").(string))
+
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job.Description = d.Get("description").(string)
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
@@ -149,13 +151,19 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
+	log.Printf("[INFO] Creating DCOS Job: %s", d.Get("name").(string))
+
 	resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%+v\n", resp_metronome_job)
-	fmt.Printf("%+v\n", resp)
+	if resp.StatusCode != 201 {
+		return fmt.Errorf("[ERROR] Expecting response code of 201 (job created), but received %d", resp.StatusCode)
+	}
+
+	log.Printf("[INFO] DCOS job successfull created (%s)", d.Get("name").(string))
+	log.Printf("[TRACE] Metronome Job Response object: %+v", resp_metronome_job)
 
 	return nil
 }
