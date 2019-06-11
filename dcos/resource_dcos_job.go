@@ -102,19 +102,52 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	metronome_job := dcos.MetronomeV1Job{
-		Id:          d.Get("name").(string),
-		Description: d.Get("description").(string),
-		Run: dcos.MetronomeV1JobRun{
-			Cmd:  d.Get("cmd").(string),
-			Cpus: d.Get("cpus").(float64),
-			Mem:  int64(d.Get("mem").(int)),
-			Disk: int64(d.Get("disk").(int)),
-			Docker: &dcos.MetronomeV1JobRunDocker{
-				Image: d.Get("docker_image").(string),
-			},
-		},
+	var metronome_job dcos.MetronomeV1Job
+	var metronome_job_run dcos.MetronomeV1JobRun
+	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
+	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
+
+	metronome_job.Id = d.Get("name").(string)
+	metronome_job.Description = d.Get("description").(string)
+	metronome_job_run.Cpus = d.Get("cpus").(float64)
+	metronome_job_run.Mem = int64(d.Get("mem").(int))
+	metronome_job_run.Disk = int64(d.Get("disk").(int))
+
+	if labels, ok := d.GetOk("labels"); ok {
+		metronome_job.Labels = labels.(map[string]string)
 	}
+
+	if cmd, ok := d.GetOk("cmd"); ok {
+		metronome_job_run.Cmd = cmd.(string)
+	}
+
+	if args, ok := d.GetOk("args"); ok {
+		metronome_job_run.Args = args.([]string)
+	}
+
+	if artifacts_uri, ok := d.GetOk("artifacts_uri"); ok {
+		metronome_job_artifacts[0].Uri = artifacts_uri.(string)
+	}
+
+	if artificats_exectuable, ok := d.GetOk("artificats_exectuable"); ok {
+		metronome_job_artifacts[0].Executable = artificats_exectuable.(bool)
+	}
+
+	if artifacts_extract, ok := d.GetOk("artifacts_extract"); ok {
+		metronome_job_artifacts[0].Extract = artifacts_extract.(bool)
+	}
+
+	if artifacts_cache, ok := d.GetOk("artifacts_cache"); ok {
+		metronome_job_artifacts[0].Cache = artifacts_cache.(bool)
+	}
+
+	if docker_image, ok := d.GetOk("docker_image"); ok {
+		metronome_job_run_docker.Image = docker_image.(string)
+	}
+
+	metronome_job_run.Artifacts = metronome_job_artifacts
+	metronome_job_run.Docker = &metronome_job_run_docker
+	metronome_job.Run = metronome_job_run
 
 	resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
 	if err != nil {
