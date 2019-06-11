@@ -174,7 +174,7 @@ func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 	jobId := d.Get("name").(string)
 
 	log.Printf("[INFO] Attempting to delete (%s)", jobId)
-	resp, err := client.Metronome.V1GetJob(ctx, jobId)
+	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
 	if err != nil {
 		return err
 	}
@@ -182,6 +182,7 @@ func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("[ERROR] Expecting response code of 200 (job found), but received %d", resp.StatusCode)
 	}
 	log.Printf("[INFO] DCOS job successfully retrieved (%s)", jobId)
+	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
 
 	return nil
 }
