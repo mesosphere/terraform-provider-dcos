@@ -44,3 +44,4 @@ override.tf.json
 # example: *tfplan*
 
 examples/terraform.d/**
+examples/*/terraform.d/**
