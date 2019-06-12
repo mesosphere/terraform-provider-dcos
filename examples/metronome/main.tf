@@ -1,5 +1,5 @@
 resource "dcos_job" "ajob" {
-  name = "ajobid"
+  name = "ajobid2"
   cmd  = "echo foo"
   cpus = 1
   mem  = 32
