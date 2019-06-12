@@ -42,6 +42,7 @@ func resourceDcosJob() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: false,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"cmd": {
 				Type:     schema.TypeString,
