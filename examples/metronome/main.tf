@@ -1,9 +1,9 @@
 resource "dcos_job" "ajob" {
-  name = "ajobid2"
-  cmd  = "echo foobar"
+  name = "ajobid"
+  cmd  = "echo foo"
   cpus = 1
-  mem  = 64
+  mem  = 32
   disk = 0
-  docker_image = "ubuntu:18.04"
+  docker_image = "ubuntu:latest"
   description  = "the best description ever"
 }
