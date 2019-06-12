@@ -282,7 +282,7 @@ func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (dcos.MetronomeV1Job, error) {
-	log.Printf("[INFO] Attempting to delete (%s)", jobId)
+	log.Printf("[INFO] Attempting to read job info (%s)", jobId)
 
 	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
 	if err != nil {
