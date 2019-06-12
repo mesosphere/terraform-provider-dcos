@@ -54,25 +54,29 @@ func resourceDcosJob() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
-			"artifacts_uri": {
-				Type:     schema.TypeString,
+			"artifacts": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: false,
-			},
-			"artificats_exectuable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: false,
-			},
-			"artifacts_extract": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: false,
-			},
-			"artifacts_cache": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uri": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"executable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"extract": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"cache": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"docker_image": {
 				Type:     schema.TypeString,
@@ -125,21 +129,43 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 		metronome_job_run.Args = args.([]string)
 	}
 
-	if artifacts_uri, ok := d.GetOk("artifacts_uri"); ok {
-		metronome_job_artifacts[0].Uri = artifacts_uri.(string)
+	artifacts := d.Get("artifacts").(*schema.Set).List()
+
+	log.Printf("[TRACE] artifacts (config): %+v", artifacts)
+
+	for artifact := range artifacts {
+		a := artifacts[artifact].(map[string]interface{})
+		log.Printf("[TRACE] artifact (loop): %+v", a)
+
+		uri, ok := a["uri"].(string)
+		if !ok {
+			log.Print("[ERROR] artifact.uri is not a string!")
+		}
+
+		extract, ok := a["extract"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.extract is not a bool!")
+		}
+
+		executable, ok := a["executable"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.executable is not a bool!")
+		}
+
+		cache, ok := a["cache"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.cache is not a bool!")
+		}
+
+		metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
+			Uri:        uri,
+			Extract:    extract,
+			Executable: executable,
+			Cache:      cache,
+		})
 	}
 
-	if artificats_exectuable, ok := d.GetOk("artificats_exectuable"); ok {
-		metronome_job_artifacts[0].Executable = artificats_exectuable.(bool)
-	}
-
-	if artifacts_extract, ok := d.GetOk("artifacts_extract"); ok {
-		metronome_job_artifacts[0].Extract = artifacts_extract.(bool)
-	}
-
-	if artifacts_cache, ok := d.GetOk("artifacts_cache"); ok {
-		metronome_job_artifacts[0].Cache = artifacts_cache.(bool)
-	}
+	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
 	if docker_image, ok := d.GetOk("docker_image"); ok {
 		metronome_job_run_docker.Image = docker_image.(string)
@@ -149,6 +175,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
+	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
 	log.Printf("[INFO] Creating DCOS Job: %s", d.Get("name").(string))
 
 	resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
