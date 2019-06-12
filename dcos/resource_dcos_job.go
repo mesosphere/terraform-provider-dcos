@@ -79,10 +79,19 @@ func resourceDcosJob() *schema.Resource {
 					},
 				},
 			},
-			"docker_image": {
-				Type:     schema.TypeString,
+			"docker": {
+				Type:     schema.TypeMap,
 				Required: true,
 				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: false,
+						},
+					},
+				},
 			},
 			"cpus": {
 				Type:     schema.TypeFloat,
@@ -168,9 +177,15 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
-	if docker_image, ok := d.GetOk("docker_image"); ok {
-		metronome_job_run_docker.Image = docker_image.(string)
+	docker_config := d.Get("docker").(map[string]interface{})
+	log.Printf("[TRACE] docker (config): %+v", docker_config)
+
+	image, ok := docker_config["image"].(string)
+	if !ok {
+		log.Print("[ERROR] docker.image is not a string!")
 	}
+
+	metronome_job_run_docker.Image = image
 
 	metronome_job_run.Artifacts = metronome_job_artifacts
 	metronome_job_run.Docker = &metronome_job_run_docker
@@ -284,9 +299,15 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
-	if docker_image, ok := d.GetOk("docker_image"); ok {
-		metronome_job_run_docker.Image = docker_image.(string)
+	docker_config := d.Get("docker").(map[string]interface{})
+	log.Printf("[TRACE] docker (config): %+v", docker_config)
+
+	image, ok := docker_config["image"].(string)
+	if !ok {
+		log.Print("[ERROR] docker.image is not a string!")
 	}
+
+	metronome_job_run_docker.Image = image
 
 	metronome_job_run.Artifacts = metronome_job_artifacts
 	metronome_job_run.Docker = &metronome_job_run_docker

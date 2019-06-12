@@ -4,8 +4,11 @@ resource "dcos_job" "ajob" {
   cpus = 1
   mem  = 32
   disk = 0
-  docker_image = "ubuntu:latest"
   description  = "the best description ever"
+
+  docker {
+    image = "ubuntu:latest"
+  }
 
   artifacts {
     uri = "https://s3.amazonaws.com/soak-clusters/artifacts/soak113s/logs-elasticsearch-indices-rotate2.sh"
