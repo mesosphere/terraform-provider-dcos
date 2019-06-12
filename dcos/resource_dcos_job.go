@@ -257,7 +257,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(d.Get("name").(string))
 
-	return nil
+	return resourceDcosJobRead(d, meta)
 }
 
 func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
