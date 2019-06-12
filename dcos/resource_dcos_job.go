@@ -36,7 +36,7 @@ func resourceDcosJob() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"labels": {
 				Type:     schema.TypeMap,
@@ -46,52 +46,52 @@ func resourceDcosJob() *schema.Resource {
 			"cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"args": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"artifacts_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"artificats_exectuable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"artifacts_extract": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"artifacts_cache": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"docker_image": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"cpus": {
 				Type:     schema.TypeFloat,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"mem": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"disk": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 		},
 	}
