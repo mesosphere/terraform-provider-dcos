@@ -8,12 +8,6 @@ resource "dcos_job" "ajob" {
   description  = "the best description ever"
 
   artifacts {
-    uri = "https://s3.amazonaws.com/soak-clusters/artifacts/soak113s/logs-elasticsearch-indices-rotate.sh"
-    extract = false
-    executable = true
-  }
-
-  artifacts {
     uri = "https://s3.amazonaws.com/soak-clusters/artifacts/soak113s/logs-elasticsearch-indices-rotate2.sh"
     extract = false
     executable = true
