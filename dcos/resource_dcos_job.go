@@ -173,16 +173,10 @@ func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 
 	jobId := d.Get("name").(string)
 
-	log.Printf("[INFO] Attempting to delete (%s)", jobId)
-	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
+	_, err := getDCOSJobInfo(jobId, client, ctx)
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("[ERROR] Expecting response code of 200 (job found), but received %d", resp.StatusCode)
-	}
-	log.Printf("[INFO] DCOS job successfully retrieved (%s)", jobId)
-	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
 
 	return nil
 }
@@ -210,4 +204,21 @@ func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
+}
+
+func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (dcos.MetronomeV1Job, error) {
+	log.Printf("[INFO] Attempting to delete (%s)", jobId)
+
+	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
+	if err != nil {
+		return dcos.MetronomeV1Job{}, err
+	}
+	if resp.StatusCode != 200 {
+		return dcos.MetronomeV1Job{}, fmt.Errorf("[ERROR] Expecting response code of 200 (job found), but received %d", resp.StatusCode)
+	}
+
+	log.Printf("[INFO] DCOS job successfully retrieved (%s)", jobId)
+	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
+
+	return mv1job, nil
 }
