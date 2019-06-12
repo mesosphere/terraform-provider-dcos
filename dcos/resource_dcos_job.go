@@ -106,8 +106,6 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 
-	d.SetId(d.Get("name").(string))
-
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job.Description = d.Get("description").(string)
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
@@ -163,6 +161,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] DCOS job successfully created (%s)", d.Get("name").(string))
 	log.Printf("[TRACE] Metronome Job Response object: %+v", resp_metronome_job)
+
+	d.SetId(d.Get("name").(string))
 
 	return nil
 }
