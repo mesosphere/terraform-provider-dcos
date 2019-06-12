@@ -286,6 +286,7 @@ func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (
 
 	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
 	if err != nil {
+		log.Printf("[ERROR] Failed to create DCOS job %s", err)
 		return dcos.MetronomeV1Job{}, err
 	}
 	if resp.StatusCode != 200 {
