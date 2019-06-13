@@ -12,6 +12,11 @@ resource "dcos_job" "ajob" {
     image = "ubuntu:latest"
   }
 
+  restart {
+    active_deadline_seconds = 120
+    policy = "NEVER"
+  }
+
   artifacts {
     uri = "http://downloads.mesosphere.com/robots.txt"
     extract = false

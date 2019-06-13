@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -111,6 +112,32 @@ func resourceDcosJob() *schema.Resource {
 					},
 				},
 			},
+			"restart": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Defines the behavior if a task fails.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"active_deadline_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     false,
+							Default:      120,
+							Description:  "If the job fails, how long should we try to restart the job. If no value is set, this means forever.",
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"policy": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     false,
+							Default:      "NEVER",
+							Description:  "The policy to use if a job fails. NEVER will never try to relaunch a job. ON_FAILURE will try to start a job in case of failure.",
+							ValidateFunc: validation.StringInSlice([]string{"NEVER", "ON_FAILURE"}, false),
+						},
+					},
+				},
+			},
 			"volume": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -178,6 +205,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
+	var metronome_job_restart dcos.MetronomeV1JobRunRestart
 
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job.Description = d.Get("description").(string)
@@ -286,6 +314,30 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
 
 	metronome_job_run.Volumes = metronome_job_volumes
+
+	// restart
+	restart_config := d.Get("restart").(map[string]interface{})
+	log.Printf("[TRACE] restart (config): %+v", restart_config)
+
+	policy, ok := restart_config["policy"].(string)
+	if !ok {
+		log.Print("[ERROR] restart.policy is not a string!")
+	}
+
+	// This is a hack; terraform is treating this TypeInt as a string
+	active_deadline_seconds, err := strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+	if !ok {
+		log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+	}
+
+	log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+	metronome_job_restart.Policy = policy
+	metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+
+	log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
+	metronome_job_run.Restart = &metronome_job_restart
 	metronome_job_run.Artifacts = metronome_job_artifacts
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
@@ -342,6 +394,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
+	var metronome_job_restart dcos.MetronomeV1JobRunRestart
 
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job.Description = d.Get("description").(string)
@@ -450,6 +503,30 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
 
 	metronome_job_run.Volumes = metronome_job_volumes
+
+	// restart
+	restart_config := d.Get("restart").(map[string]interface{})
+	log.Printf("[TRACE] restart (config): %+v", restart_config)
+
+	policy, ok := restart_config["policy"].(string)
+	if !ok {
+		log.Print("[ERROR] restart.policy is not a string!")
+	}
+
+	// This is a hack; terraform is treating this TypeInt as a string
+	active_deadline_seconds, err := strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+	if !ok {
+		log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+	}
+
+	log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+	metronome_job_restart.Policy = policy
+	metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+
+	log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
+	metronome_job_run.Restart = &metronome_job_restart
 	metronome_job_run.Artifacts = metronome_job_artifacts
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
