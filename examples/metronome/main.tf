@@ -12,6 +12,11 @@ resource "dcos_job" "ajob" {
     image = "ubuntu:latest"
   }
 
+  placement_constraint {
+    attribute = "host"
+    operator = "LIKE"
+  }
+
   restart {
     active_deadline_seconds = 120
     policy = "NEVER"

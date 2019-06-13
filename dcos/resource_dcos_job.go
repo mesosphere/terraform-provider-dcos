@@ -133,7 +133,7 @@ func resourceDcosJob() *schema.Resource {
 						},
 						"value": {
 							Type:        schema.TypeString,
-							Required:    false,
+							Optional:    true,
 							ForceNew:    false,
 							Description: "The value for this constraint.",
 						},
@@ -234,6 +234,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
 	var metronome_job_restart dcos.MetronomeV1JobRunRestart
+	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
+	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
 
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job.Description = d.Get("description").(string)
@@ -257,6 +259,42 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	if user, ok := d.GetOk("user"); ok {
 		metronome_job_run.User = user.(string)
 	}
+
+	// placement_constraints
+	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
+
+	log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
+
+	for constraint := range placement_constraints {
+		a := placement_constraints[constraint].(map[string]interface{})
+		log.Printf("[TRACE] constrant (loop): %+v", a)
+
+		attribute, ok := a["attribute"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.attribute is not a string!")
+		}
+
+		operator, ok := a["operator"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.operator is not a string!")
+		}
+
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.value is not a string!")
+		}
+
+		metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
+			Attribute: attribute,
+			Operator:  operator,
+			Value:     value,
+		})
+	}
+
+	log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
+
+	metronome_job_placement.Constraints = &metronome_job_placement_constraint
+	metronome_job_run.Placement = &metronome_job_placement
 
 	// artifacts
 	artifacts := d.Get("artifacts").(*schema.Set).List()
@@ -423,6 +461,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
 	var metronome_job_restart dcos.MetronomeV1JobRunRestart
+	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
+	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
 
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job.Description = d.Get("description").(string)
@@ -446,6 +486,42 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	if user, ok := d.GetOk("user"); ok {
 		metronome_job_run.User = user.(string)
 	}
+
+	// placement_constraints
+	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
+
+	log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
+
+	for constraint := range placement_constraints {
+		a := placement_constraints[constraint].(map[string]interface{})
+		log.Printf("[TRACE] constrant (loop): %+v", a)
+
+		attribute, ok := a["attribute"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.attribute is not a string!")
+		}
+
+		operator, ok := a["operator"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.operator is not a string!")
+		}
+
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.value is not a string!")
+		}
+
+		metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
+			Attribute: attribute,
+			Operator:  operator,
+			Value:     value,
+		})
+	}
+
+	log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
+
+	metronome_job_placement.Constraints = &metronome_job_placement_constraint
+	metronome_job_run.Placement = &metronome_job_placement
 
 	// artifacts
 	artifacts := d.Get("artifacts").(*schema.Set).List()
