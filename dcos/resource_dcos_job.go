@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -111,9 +112,10 @@ func resourceDcosJob() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_path": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The path of the volume in the container.",
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "The path of the volume in the container.",
+							ValidateFunc: validateRegexp("^/[^/].*$"),
 						},
 						"host_path": {
 							Type:        schema.TypeString,
@@ -136,16 +138,18 @@ func resourceDcosJob() *schema.Resource {
 				Description: "The number of CPU shares this job needs per instance. This number does not have to be integer, but can be a fraction.",
 			},
 			"mem": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				ForceNew:    false,
-				Description: "The amount of memory in MB that is needed for the job per instance.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     false,
+				Description:  "The amount of memory in MB that is needed for the job per instance.",
+				ValidateFunc: validation.IntAtLeast(32),
 			},
 			"disk": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				ForceNew:    false,
-				Description: "How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     false,
+				Description:  "How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.",
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 		},
 	}
@@ -408,4 +412,17 @@ func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (
 	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
 
 	return mv1job, nil
+}
+
+// validateRegexp is borrowed from https://github.com/terraform-providers/terraform-provider-google/blob/c5bbdce38eb1a971c95691ee3d9f26efca1d595e/google/validation.go#L73-L83
+func validateRegexp(re string) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (ws []string, errors []error) {
+		value := v.(string)
+		if !regexp.MustCompile(re).MatchString(value) {
+			errors = append(errors, fmt.Errorf(
+				"%q (%q) doesn't match regexp %q", k, value, re))
+		}
+
+		return
+	}
 }
