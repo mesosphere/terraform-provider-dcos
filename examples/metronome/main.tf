@@ -19,7 +19,7 @@ resource "dcos_job" "ajob" {
 
   volume {
     container_path = "/mnt/test"
-    host_path = "/dev/null"
+    host_path = "/dev/zero"
     mode = "RW"
   }
 }
