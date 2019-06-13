@@ -36,6 +36,12 @@ func resourceDcosJob() *schema.Resource {
 				ForceNew:    true,
 				Description: "Unique identifier for the job.",
 			},
+			"user": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "The user to use to run the tasks on the agent.",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -181,6 +187,10 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if args, ok := d.GetOk("args"); ok {
 		metronome_job_run.Args = args.([]string)
+	}
+
+	if user, ok := d.GetOk("user"); ok {
+		metronome_job_run.User = user.(string)
 	}
 
 	// artifacts
@@ -340,6 +350,10 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if args, ok := d.GetOk("args"); ok {
 		metronome_job_run.Args = args.([]string)
+	}
+
+	if user, ok := d.GetOk("user"); ok {
+		metronome_job_run.User = user.(string)
 	}
 
 	// artifacts

@@ -4,6 +4,7 @@ resource "dcos_job" "ajob" {
   cpus = 1
   mem  = 32
   disk = 0
+  user = "root"
   description  = "the best description ever"
 
   docker {
@@ -19,7 +20,7 @@ resource "dcos_job" "ajob" {
 
   volume {
     container_path = "/mnt/test"
-    host_path = "/dev/zero"
+    host_path = "/dev/null"
     mode = "RW"
   }
 }
