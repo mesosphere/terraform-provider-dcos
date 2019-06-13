@@ -157,6 +157,14 @@ func resourceDcosJob() *schema.Resource {
 				Description:  "How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.",
 				ValidateFunc: validation.IntAtLeast(0),
 			},
+			"max_launch_delay": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     false,
+				Default:      3600,
+				Description:  "The number of seconds until the job needs to be running. If the deadline is reached without successfully running the job, the job is aborted.",
+				ValidateFunc: validation.IntAtLeast(1),
+			},
 		},
 	}
 }
@@ -176,6 +184,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
 	metronome_job_run.Mem = int64(d.Get("mem").(int))
 	metronome_job_run.Disk = int64(d.Get("disk").(int))
+	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
 
 	if labels, ok := d.GetOk("labels"); ok {
 		metronome_job.Labels = labels.(map[string]string)
@@ -339,6 +348,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
 	metronome_job_run.Mem = int64(d.Get("mem").(int))
 	metronome_job_run.Disk = int64(d.Get("disk").(int))
+	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
 
 	if labels, ok := d.GetOk("labels"); ok {
 		metronome_job.Labels = labels.(map[string]string)

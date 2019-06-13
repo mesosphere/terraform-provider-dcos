@@ -6,6 +6,7 @@ resource "dcos_job" "ajob" {
   disk = 0
   user = "root"
   description  = "the best description ever"
+  max_launch_delay = 600
 
   docker {
     image = "ubuntu:latest"
