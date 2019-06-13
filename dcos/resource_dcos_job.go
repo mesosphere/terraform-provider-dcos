@@ -8,6 +8,7 @@ import (
 
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceDcosJob() *schema.Resource {
@@ -99,6 +100,31 @@ func resourceDcosJob() *schema.Resource {
 							Required:    true,
 							ForceNew:    false,
 							Description: "The docker repository image name.",
+						},
+					},
+				},
+			},
+			"volumes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_path": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The path of the volume in the container.",
+						},
+						"host_path": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The path of the volume on the host.",
+						},
+						"mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Possible values are RO for ReadOnly and RW for Read/Write.",
+							ValidateFunc: validation.StringInSlice([]string{"RO", "RW"}, false),
 						},
 					},
 				},
