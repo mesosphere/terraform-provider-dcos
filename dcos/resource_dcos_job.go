@@ -112,6 +112,34 @@ func resourceDcosJob() *schema.Resource {
 					},
 				},
 			},
+			"placement_constraint": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attribute": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The attribute name for this constraint.",
+						},
+						"operator": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     false,
+							Description:  "The operator for this constraint.",
+							ValidateFunc: validation.StringInSlice([]string{"EQ", "LIKE", "UNLIKE"}, false),
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Required:    false,
+							ForceNew:    false,
+							Description: "The value for this constraint.",
+						},
+					},
+				},
+			},
 			"restart": {
 				Type:        schema.TypeMap,
 				Optional:    true,
