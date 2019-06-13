@@ -16,4 +16,10 @@ resource "dcos_job" "ajob" {
     executable = true
     cache = false
   }
+
+  volume {
+    container_path = "/mnt/test"
+    host_path = "/dev/null"
+    mode = "RW"
+  }
 }
