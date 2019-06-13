@@ -11,7 +11,7 @@ resource "dcos_job" "ajob" {
   }
 
   artifacts {
-    uri = "https://s3.amazonaws.com/soak-clusters/artifacts/soak113s/logs-elasticsearch-indices-rotate2.sh"
+    uri = "http://downloads.mesosphere.com/robots.txt"
     extract = false
     executable = true
     cache = false
