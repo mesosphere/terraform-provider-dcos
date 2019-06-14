@@ -112,6 +112,12 @@ func resourceDcosJob() *schema.Resource {
 					},
 				},
 			},
+			"env": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: false,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"placement_constraint": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -259,6 +265,19 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	if user, ok := d.GetOk("user"); ok {
 		metronome_job_run.User = user.(string)
 	}
+
+	// env
+	env_config := d.Get("env").(map[string]interface{})
+	log.Printf("[TRACE] env (config): %+v", env_config)
+
+	env_map := make(map[string]string)
+	for k, v := range env_config {
+		env_map[k] = v.(string)
+	}
+
+	log.Printf("[TRACE] env_map %+s", env_map)
+
+	metronome_job_run.Env = env_map
 
 	// placement_constraints
 	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
@@ -486,6 +505,19 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	if user, ok := d.GetOk("user"); ok {
 		metronome_job_run.User = user.(string)
 	}
+
+	// env
+	env_config := d.Get("env").(map[string]interface{})
+	log.Printf("[TRACE] env (config): %+v", env_config)
+
+	env_map := make(map[string]string)
+	for k, v := range env_config {
+		env_map[k] = v.(string)
+	}
+
+	log.Printf("[TRACE] env_map %+s", env_map)
+
+	metronome_job_run.Env = env_map
 
 	// placement_constraints
 	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()

@@ -17,6 +17,11 @@ resource "dcos_job" "ajob" {
     operator = "LIKE"
   }
 
+  env {
+    this_is_not_a_key = "this_is_not_a_value"
+    some_key = "some_val"
+  }
+
   restart {
     active_deadline_seconds = 120
     policy = "NEVER"
