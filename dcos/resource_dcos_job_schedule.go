@@ -114,6 +114,18 @@ func resourceDcosJobScheduleRead(d *schema.ResourceData, meta interface{}) error
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
+	jobId := d.Get("name").(string)
+	scheduleId := jobId
+
+	mv1js, resp, err := client.Metronome.V1GetJobSchedulesByScheduleId(ctx, jobId, scheduleId)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("[ERROR] Expecting response code of 200 (schedule retreived), but received %d", resp.StatusCode)
+	}
+
 	return nil
 }
 
