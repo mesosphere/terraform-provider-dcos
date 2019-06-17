@@ -171,7 +171,7 @@ func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if starting_deadline_seconds, ok := d.GetOk("starting_deadline_seconds"); ok {
-		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int32)
+		metronome_job_schedule.StartingDeadlineSeconds = int32(starting_deadline_seconds.(int))
 	}
 
 	if timezone, ok := d.GetOk("timezone"); ok {
