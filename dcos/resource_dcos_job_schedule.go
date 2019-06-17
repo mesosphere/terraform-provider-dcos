@@ -29,11 +29,17 @@ func resourceDcosJobSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"dcos_job_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "Unique identifier for the job.",
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Unique identifier for the schedule.",
 			},
 			"cron": {
 				Type:         schema.TypeString,
@@ -82,9 +88,10 @@ func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) err
 
 	var metronome_job_schedule dcos.MetronomeV1JobSchedule
 
-	jobId := d.Get("name").(string)
+	scheduleId := d.Get("name").(string)
+	jobId := d.Get("dcos_job_id").(string)
 
-	metronome_job_schedule.Id = jobId
+	metronome_job_schedule.Id = scheduleId
 	metronome_job_schedule.Cron = d.Get("cron").(string)
 
 	if concurrency_policy, ok := d.GetOk("concurrency_policy"); ok {
@@ -116,6 +123,8 @@ func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] Expecting response code of 201 (schedule created), but received %d", resp.StatusCode)
 	}
 
+	d.SetId(scheduleId)
+
 	return nil
 }
 
@@ -146,10 +155,10 @@ func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) err
 
 	var metronome_job_schedule dcos.MetronomeV1JobSchedule
 
-	jobId := d.Get("name").(string)
-	scheduleId := jobId
+	scheduleId := d.Get("name").(string)
+	jobId := d.Get("dcos_job_id").(string)
 
-	metronome_job_schedule.Id = jobId
+	metronome_job_schedule.Id = scheduleId
 	metronome_job_schedule.Cron = d.Get("cron").(string)
 
 	if concurrency_policy, ok := d.GetOk("concurrency_policy"); ok {
@@ -173,6 +182,8 @@ func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	d.SetId(scheduleId)
+
 	return resourceDcosJobScheduleRead(d, meta)
 }
 
@@ -180,8 +191,8 @@ func resourceDcosJobScheduleDelete(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	jobId := d.Get("name").(string)
-	scheduleId := jobId
+	scheduleId := d.Get("name").(string)
+	jobId := d.Get("dcos_job_id").(string)
 
 	_, err := client.Metronome.V1DeleteJobSchedulesByScheduleId(ctx, jobId, scheduleId)
 	if err != nil {
