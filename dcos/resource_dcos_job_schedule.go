@@ -121,7 +121,36 @@ func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	return resourceDcosJobRead(d, meta)
+	var metronome_job_schedule dcos.MetronomeV1JobSchedule
+
+	jobId := d.Get("name").(string)
+	scheduleId := jobId
+
+	metronome_job_schedule.Id = jobId
+	metronome_job_schedule.Cron = d.Get("cron").(string)
+
+	if concurrency_policy, ok := d.GetOk("concurrency_policy"); ok {
+		metronome_job_schedule.ConcurrencyPolicy = concurrency_policy.(string)
+	}
+
+	if enabled, ok := d.GetOk("enabled"); ok {
+		metronome_job_schedule.Enabled = enabled.(bool)
+	}
+
+	if starting_deadline_seconds, ok := d.GetOk("starting_deadline_seconds"); ok {
+		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int)
+	}
+
+	if timezone, ok := d.GetOk("timezone"); ok {
+		metronome_job_schedule.Timezone = timezone.(string)
+	}
+
+	resp_metronome_job, resp, err := client.Metronome.V1PutJobSchedulesByScheduleId(ctx, jobId, scheduleId, metronome_job_schedule)
+	if err != nil {
+		return err
+	}
+
+	return resourceDcosJobScheduleRead(d, meta)
 }
 
 func resourceDcosJobScheduleDelete(d *schema.ResourceData, meta interface{}) error {
