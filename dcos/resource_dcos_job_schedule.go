@@ -2,6 +2,7 @@ package dcos
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -73,6 +74,38 @@ func resourceDcosJobSchedule() *schema.Resource {
 func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
+
+	var metronome_job_schedule dcos.MetronomeV1JobSchedule
+
+	jobId := d.Get("name").(string)
+
+	metronome_job_schedule.Id = jobId
+	metronome_job_schedule.Cron = d.Get("cron").(string)
+
+	if concurrency_policy, ok := d.GetOk("concurrency_policy"); ok {
+		metronome_job_schedule.ConcurrencyPolicy = concurrency_policy.(string)
+	}
+
+	if enabled, ok := d.GetOk("enabled"); ok {
+		metronome_job_schedule.Enabled = enabled.(bool)
+	}
+
+	if starting_deadline_seconds, ok := d.GetOk("starting_deadline_seconds"); ok {
+		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int)
+	}
+
+	if timezone, ok := d.GetOk("timezone"); ok {
+		metronome_job_schedule.Timezone = timezone.(string)
+	}
+
+	resp_metronome_job, resp, err := client.Metronome.V1CreateJobSchedules(ctx, jobId, metronome_job_schedule)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 201 {
+		return fmt.Errorf("[ERROR] Expecting response code of 201 (schedule created), but received %d", resp.StatusCode)
+	}
 
 	return nil
 }
