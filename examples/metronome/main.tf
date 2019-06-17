@@ -40,3 +40,8 @@ resource "dcos_job" "ajob" {
     mode = "RW"
   }
 }
+
+resource "dcos_job_schedule" "jobsched" {
+  name = "${dcos_job.ajob.name}"
+  cron = "5 * * * *"
+}
