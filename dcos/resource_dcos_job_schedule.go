@@ -36,10 +36,11 @@ func resourceDcosJobSchedule() *schema.Resource {
 				Description: "Unique identifier for the job.",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Unique identifier for the schedule.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Description:  "Unique identifier for the schedule.",
+				ValidateFunc: validateRegexp("^[a-zA-Z0-9]+$"),
 			},
 			"cron": {
 				Type:         schema.TypeString,
