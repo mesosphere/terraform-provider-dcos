@@ -157,6 +157,14 @@ func resourceDcosJobScheduleDelete(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
+	jobId := d.Get("name").(string)
+	scheduleId := jobId
+
+	resp, err := client.Metronome.V1DeleteJobSchedulesByScheduleId(ctx, metronomeV1Job.Id, v1mcjs.Id)
+	if err != nil {
+		return err
+	}
+
 	d.SetId("")
 
 	return nil
