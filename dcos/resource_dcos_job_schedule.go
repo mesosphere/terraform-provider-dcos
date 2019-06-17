@@ -3,6 +3,7 @@ package dcos
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -35,30 +36,34 @@ func resourceDcosJobSchedule() *schema.Resource {
 				Description: "Unique identifier for the job.",
 			},
 			"cron": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    false,
-				Description: "Cron based schedule string",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     false,
+				Description:  "Cron based schedule string",
+				ValidateFunc: validateRegexp("^[0-59\\*]\\/?[0-59]? [0-23\\*]\\/?[0-23]? [1-31\\*]\\/?[1-31]? [1-12\\*]\\/?[1-12]? [0-6\\*]\\/?[0-6]?$"),
 			},
 			"concurrency_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     false,
+				Default:      "",
 				Description:  "Defines the behavior if a job is started, before the current job has finished. ALLOW will launch a new job, even if there is an existing run.",
-				ValidateFunc: validation.StringInSlice([]string{"ALLOW"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ALLOW", ""}, false),
 			},
 			"enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    false,
+				Default:     true,
 				Description: "Defines if the schedule is enabled or not.",
 			},
 			"starting_deadline_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     false,
+				Default:      1,
 				Description:  "The number of seconds until the job is still considered valid to start.",
-				ValidateFunc: validation.IntAtLeast(32),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"timezone": {
 				Type:         schema.TypeString,
@@ -91,17 +96,21 @@ func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if starting_deadline_seconds, ok := d.GetOk("starting_deadline_seconds"); ok {
-		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int32)
+		metronome_job_schedule.StartingDeadlineSeconds = int32(starting_deadline_seconds.(int))
 	}
 
 	if timezone, ok := d.GetOk("timezone"); ok {
 		metronome_job_schedule.Timezone = timezone.(string)
 	}
 
-	_, resp, err := client.Metronome.V1CreateJobSchedules(ctx, jobId, metronome_job_schedule)
+	log.Printf("[TRACE] job schedule struct (create): %+v", metronome_job_schedule)
+
+	sched_struct, resp, err := client.Metronome.V1CreateJobSchedules(ctx, jobId, metronome_job_schedule)
 	if err != nil {
 		return err
 	}
+
+	log.Printf("[TRACE] schedule struct: %+v", sched_struct)
 
 	if resp.StatusCode != 201 {
 		return fmt.Errorf("[ERROR] Expecting response code of 201 (schedule created), but received %d", resp.StatusCode)
@@ -117,10 +126,12 @@ func resourceDcosJobScheduleRead(d *schema.ResourceData, meta interface{}) error
 	jobId := d.Get("name").(string)
 	scheduleId := jobId
 
-	_, resp, err := client.Metronome.V1GetJobSchedulesByScheduleId(ctx, jobId, scheduleId)
+	job_schedule, resp, err := client.Metronome.V1GetJobSchedulesByScheduleId(ctx, jobId, scheduleId)
 	if err != nil {
 		return err
 	}
+
+	log.Printf("[TRACE] job_schedule (read): %+v", job_schedule)
 
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("[ERROR] Expecting response code of 200 (schedule retreived), but received %d", resp.StatusCode)

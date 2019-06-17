@@ -43,5 +43,5 @@ resource "dcos_job" "ajob" {
 
 resource "dcos_job_schedule" "jobsched" {
   name = "${dcos_job.ajob.name}"
-  cron = "5 * * * *"
+  cron = "*/5 * * * *"
 }
