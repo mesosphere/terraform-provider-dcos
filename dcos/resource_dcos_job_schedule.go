@@ -91,14 +91,14 @@ func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if starting_deadline_seconds, ok := d.GetOk("starting_deadline_seconds"); ok {
-		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int)
+		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int32)
 	}
 
 	if timezone, ok := d.GetOk("timezone"); ok {
 		metronome_job_schedule.Timezone = timezone.(string)
 	}
 
-	resp_metronome_job, resp, err := client.Metronome.V1CreateJobSchedules(ctx, jobId, metronome_job_schedule)
+	_, resp, err := client.Metronome.V1CreateJobSchedules(ctx, jobId, metronome_job_schedule)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func resourceDcosJobScheduleRead(d *schema.ResourceData, meta interface{}) error
 	jobId := d.Get("name").(string)
 	scheduleId := jobId
 
-	mv1js, resp, err := client.Metronome.V1GetJobSchedulesByScheduleId(ctx, jobId, scheduleId)
+	_, resp, err := client.Metronome.V1GetJobSchedulesByScheduleId(ctx, jobId, scheduleId)
 	if err != nil {
 		return err
 	}
@@ -150,14 +150,14 @@ func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if starting_deadline_seconds, ok := d.GetOk("starting_deadline_seconds"); ok {
-		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int)
+		metronome_job_schedule.StartingDeadlineSeconds = starting_deadline_seconds.(int32)
 	}
 
 	if timezone, ok := d.GetOk("timezone"); ok {
 		metronome_job_schedule.Timezone = timezone.(string)
 	}
 
-	resp_metronome_job, resp, err := client.Metronome.V1PutJobSchedulesByScheduleId(ctx, jobId, scheduleId, metronome_job_schedule)
+	_, err := client.Metronome.V1PutJobSchedulesByScheduleId(ctx, jobId, scheduleId, metronome_job_schedule)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func resourceDcosJobScheduleDelete(d *schema.ResourceData, meta interface{}) err
 	jobId := d.Get("name").(string)
 	scheduleId := jobId
 
-	resp, err := client.Metronome.V1DeleteJobSchedulesByScheduleId(ctx, metronomeV1Job.Id, v1mcjs.Id)
+	_, err := client.Metronome.V1DeleteJobSchedulesByScheduleId(ctx, jobId, scheduleId)
 	if err != nil {
 		return err
 	}
