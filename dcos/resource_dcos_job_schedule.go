@@ -47,7 +47,7 @@ func resourceDcosJobSchedule() *schema.Resource {
 				Required:     true,
 				ForceNew:     false,
 				Description:  "Cron based schedule string",
-				ValidateFunc: validateRegexp("^[0-59\\*]\\/?[0-59]? [0-23\\*]\\/?[0-23]? [1-31\\*]\\/?[1-31]? [1-12\\*]\\/?[1-12]? [0-6\\*]\\/?[0-6]?$"),
+				ValidateFunc: validateRegexp("^[0-9\\*]\\/?[0-59]? [0-23\\*]\\/?[0-23]? [1-31\\*]\\/?[1-31]? [1-12\\*]\\/?[1-12]? [0-6\\*]\\/?[0-6]?$"),
 			},
 			"concurrency_policy": {
 				Type:         schema.TypeString,
@@ -133,8 +133,8 @@ func resourceDcosJobScheduleRead(d *schema.ResourceData, meta interface{}) error
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	jobId := d.Get("name").(string)
-	scheduleId := jobId
+	scheduleId := d.Get("name").(string)
+	jobId := d.Get("dcos_job_id").(string)
 
 	job_schedule, resp, err := client.Metronome.V1GetJobSchedulesByScheduleId(ctx, jobId, scheduleId)
 	if err != nil {
