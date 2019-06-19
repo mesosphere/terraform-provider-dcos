@@ -1,11 +1,11 @@
 resource "dcos_job" "ajob" {
-  name = "ajobid"
-  cmd  = "echo foo"
-  cpus = 1
-  mem  = 32
-  disk = 0
-  user = "root"
-  description  = "the best description ever"
+  name             = "ajobid"
+  cmd              = "echo foo"
+  cpus             = 1
+  mem              = 32
+  disk             = 0
+  user             = "root"
+  description      = "the best description ever"
   max_launch_delay = 600
 
   docker {
@@ -14,35 +14,35 @@ resource "dcos_job" "ajob" {
 
   placement_constraint {
     attribute = "host"
-    operator = "LIKE"
+    operator  = "LIKE"
   }
 
   env {
     this_is_not_a_key = "this_is_not_a_value"
-    some_key = "some_val"
+    some_key          = "some_val"
   }
 
   restart {
     active_deadline_seconds = 120
-    policy = "NEVER"
+    policy                  = "NEVER"
   }
 
   artifacts {
-    uri = "http://downloads.mesosphere.com/robots.txt"
-    extract = false
+    uri        = "http://downloads.mesosphere.com/robots.txt"
+    extract    = false
     executable = true
-    cache = false
+    cache      = false
   }
 
   volume {
     container_path = "/mnt/test"
-    host_path = "/dev/null"
-    mode = "RW"
+    host_path      = "/dev/null"
+    mode           = "RW"
   }
 }
 
 resource "dcos_job_schedule" "jobsched" {
   dcos_job_id = "${dcos_job.ajob.name}"
-  name = "someschedule"
-  cron = "*/30 * * * *"
+  name        = "someschedule"
+  cron        = "*/30 * * * *"
 }
