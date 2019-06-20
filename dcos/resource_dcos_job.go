@@ -269,8 +269,18 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	env_config := d.Get("env").(map[string]interface{})
 	log.Printf("[TRACE] env (config): %+v", env_config)
 
-	env_map := make(map[string]string)
+	env_map := make(map[string]interface{})
 	for k, v := range env_config {
+		_, ok := v.(string)
+
+		// A secret if not a string
+		if !ok {
+			env_map[k] = dcos.MetronomeV1EnvSecretValue{
+				Secret: v.(string),
+			}
+			continue
+		}
+
 		env_map[k] = v.(string)
 	}
 
@@ -509,8 +519,18 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	env_config := d.Get("env").(map[string]interface{})
 	log.Printf("[TRACE] env (config): %+v", env_config)
 
-	env_map := make(map[string]string)
+	env_map := make(map[string]interface{})
 	for k, v := range env_config {
+		_, ok := v.(string)
+
+		// A secret if not a string
+		if !ok {
+			env_map[k] = dcos.MetronomeV1EnvSecretValue{
+				Secret: v.(string),
+			}
+			continue
+		}
+
 		env_map[k] = v.(string)
 	}
 

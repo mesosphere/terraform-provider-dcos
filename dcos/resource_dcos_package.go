@@ -161,7 +161,8 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error reading config_json %v", err)
 		}
-		cosmosPackageInstallV1Request.Options = opt
+		// TODO: There is bug here
+		//cosmosPackageInstallV1Request.Options = opt
 
 		log.Printf("[TRACE] Prepare Cosmos.PackageInstall found config_json - %v", opt)
 	}
