@@ -22,9 +22,9 @@ resource "dcos_job" "ajob" {
     some_key          = "some_val"
   }
 
-  env_secret {
-    super = "secret"
-    shhhh = "this_is_secret"
+  secrets {
+    super     = "secret"
+    something = "important"
   }
 
   restart {

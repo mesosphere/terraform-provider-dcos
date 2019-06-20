@@ -2,7 +2,6 @@ package dcos
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -119,11 +118,11 @@ func resourceDcosJob() *schema.Resource {
 				Description: "Environment variables (non secret)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"env_secret": {
+			"secrets": {
 				Type:        schema.TypeMap,
 				Optional:    true,
 				ForceNew:    false,
-				Description: "Enviroment variables (secrets)",
+				Description: "Any secrets that are necessary for the job",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"placement_constraint": {
@@ -283,19 +282,24 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 		env_map[k] = v.(string)
 	}
 
-	env_config_secret := d.Get("env_secret").(map[string]interface{})
-	log.Printf("[TRACE] env_secret (config): %+v", env_config_secret)
-	for k, v := range env_config_secret {
+	config_secret := d.Get("secrets").(map[string]interface{})
+	secret_map := make(map[string]interface{})
+	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+	for k, v := range config_secret {
 		env_map[k] = dcos.MetronomeV1EnvSecretValue{
 			Secret: v.(string),
 		}
+
+		secret_map[v.(string)] = map[string]string{
+			"source": k,
+		}
 	}
 
-	env_json, _ := json.Marshal(env_map)
-	log.Printf("[TRACE] env_map (json): %s", env_json)
+	log.Printf("[TRACE] env_secret: %+v", secret_map)
 	log.Printf("[TRACE] env_map %+s", env_map)
 
 	metronome_job_run.Env = env_map
+	metronome_job_run.Secrets = secret_map
 
 	// placement_constraints
 	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
@@ -533,17 +537,24 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		env_map[k] = v.(string)
 	}
 
-	env_config_secret := d.Get("env_secret").(map[string]interface{})
-	log.Printf("[TRACE] env_secret (config): %+v", env_config_secret)
-	for k, v := range env_config_secret {
+	config_secret := d.Get("secrets").(map[string]interface{})
+	secret_map := make(map[string]interface{})
+	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+	for k, v := range config_secret {
 		env_map[k] = dcos.MetronomeV1EnvSecretValue{
 			Secret: v.(string),
 		}
+
+		secret_map[v.(string)] = map[string]string{
+			"source": k,
+		}
 	}
 
+	log.Printf("[TRACE] env_secret: %+v", secret_map)
 	log.Printf("[TRACE] env_map %+s", env_map)
 
 	metronome_job_run.Env = env_map
+	metronome_job_run.Secrets = secret_map
 
 	// placement_constraints
 	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
