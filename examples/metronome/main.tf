@@ -22,6 +22,11 @@ resource "dcos_job" "ajob" {
     some_key          = "some_val"
   }
 
+  env_secret {
+    super = "secret"
+    shhhh = "this_is_secret"
+  }
+
   restart {
     active_deadline_seconds = 120
     policy                  = "NEVER"
