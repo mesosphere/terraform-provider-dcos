@@ -59,6 +59,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_service": dataSourceDcosService(),
+			"dcos_job":     dataSourceDcosJob(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

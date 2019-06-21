@@ -1,3 +1,7 @@
+data "dcos_job" "job" {
+  name = "somejob"
+}
+
 resource "dcos_job" "ajob" {
   name             = "ajobid"
   cmd              = "echo foo"
@@ -23,7 +27,7 @@ resource "dcos_job" "ajob" {
   }
 
   secrets {
-    super     = "secret"
+    super = "secret"
     something = "important"
   }
 
@@ -50,4 +54,12 @@ resource "dcos_job_schedule" "jobsched" {
   dcos_job_id = "${dcos_job.ajob.name}"
   name        = "someschedule"
   cron        = "*/30 * * * *"
+}
+
+output "somejob_name" {
+  value = "${data.dcos_job.job.name}"
+}
+
+output "somejob_cpu" {
+  value = "${data.dcos_job.job.cpus}"
 }
