@@ -70,3 +70,15 @@ output "somejob_name" {
 output "somejob_cpu" {
   value = "${data.dcos_job.job.cpus}"
 }
+
+output "somejob_mem" {
+  value = "${data.dcos_job.job.mem}"
+}
+
+output "somejob_disk" {
+  value = "${data.dcos_job.job.disk}"
+}
+
+output "somejob_cmd" {
+  value = "${data.dcos_job.job.cmd}"
+}

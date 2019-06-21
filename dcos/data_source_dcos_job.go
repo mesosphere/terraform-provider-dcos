@@ -205,6 +205,9 @@ func dataSourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mem", metronome_v1_job.Run.Mem)
 	d.Set("disk", metronome_v1_job.Run.Disk)
 	d.Set("max_launch_delay", metronome_v1_job.Run.MaxLaunchDelay)
+	d.Set("args", metronome_v1_job.Run.Args)
+	d.Set("cmd", metronome_v1_job.Run.Cmd)
+	d.Set("user", metronome_v1_job.Run.User)
 
 	return nil
 }
