@@ -34,7 +34,7 @@ resource "dcos_job" "ajob" {
   }
 
   secrets {
-    secret1     = "something"
+    secret1     = "/something"
     cool_secret = "something_else"
   }
 
