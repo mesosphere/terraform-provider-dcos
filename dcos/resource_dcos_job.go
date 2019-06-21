@@ -2,6 +2,7 @@ package dcos
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -112,11 +113,32 @@ func resourceDcosJob() *schema.Resource {
 				},
 			},
 			"env": {
-				Type:        schema.TypeMap,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				ForceNew:    false,
-				Description: "Environment variables (non secret)",
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Environment variables",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The key/name of the variable",
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The value of the key/name",
+						},
+						"secret": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "The name of the secret.",
+						},
+					},
+				},
 			},
 			"secrets": {
 				Type:        schema.TypeMap,
@@ -274,31 +296,55 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// env
-	env_config := d.Get("env").(map[string]interface{})
+	env_config := d.Get("env").(*schema.Set).List()
 	log.Printf("[TRACE] env (config): %+v", env_config)
-
 	env_map := make(map[string]interface{})
-	for k, v := range env_config {
-		env_map[k] = v.(string)
-	}
 
-	config_secret := d.Get("secrets").(map[string]interface{})
-	secret_map := make(map[string]interface{})
-	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
-	for k, v := range config_secret {
-		env_map[k] = dcos.MetronomeV1EnvSecretValue{
-			Secret: v.(string),
+	for env := range env_config {
+		a := env_config[env].(map[string]interface{})
+
+		key, ok := a["key"].(string)
+		if !ok {
+			log.Print("[ERROR] env.key is not a string!")
 		}
 
-		secret_map[v.(string)] = map[string]string{
-			"source": k,
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] env.value is not a string!")
+		}
+
+		secret, ok := a["secret"].(string)
+		if !ok {
+			log.Print("[ERROR] env.secret is not a string!")
+		}
+
+		env_map[key] = value
+		env_map[secret] = map[string]string{
+			"secret": secret,
+		}
+	}
+
+	log.Printf("[TRACE] env_map %+s", env_map)
+
+	env_json, _ := json.Marshal(env_map)
+	log.Printf("[TRACE] env_json %s", env_json)
+	metronome_job_run.Env = env_map
+
+	// Secrets
+	secret_map := make(map[string]interface{})
+	config_secret := d.Get("secrets").(map[string]interface{})
+	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+
+	for k, v := range config_secret {
+		secret_map[k] = map[string]string{
+			"source": v.(string),
 		}
 	}
 
 	log.Printf("[TRACE] env_secret: %+v", secret_map)
-	log.Printf("[TRACE] env_map %+s", env_map)
 
-	metronome_job_run.Env = env_map
+	secret_map_json, _ := json.Marshal(secret_map)
+	log.Printf("[TRACE] secret_map_json %s", secret_map_json)
 	metronome_job_run.Secrets = secret_map
 
 	// placement_constraints
@@ -529,31 +575,55 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// env
-	env_config := d.Get("env").(map[string]interface{})
+	env_config := d.Get("env").(*schema.Set).List()
 	log.Printf("[TRACE] env (config): %+v", env_config)
-
 	env_map := make(map[string]interface{})
-	for k, v := range env_config {
-		env_map[k] = v.(string)
-	}
 
-	config_secret := d.Get("secrets").(map[string]interface{})
-	secret_map := make(map[string]interface{})
-	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
-	for k, v := range config_secret {
-		env_map[k] = dcos.MetronomeV1EnvSecretValue{
-			Secret: v.(string),
+	for env := range env_config {
+		a := env_config[env].(map[string]interface{})
+
+		key, ok := a["key"].(string)
+		if !ok {
+			log.Print("[ERROR] env.key is not a string!")
 		}
 
-		secret_map[v.(string)] = map[string]string{
-			"source": k,
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] env.value is not a string!")
+		}
+
+		secret, ok := a["secret"].(string)
+		if !ok {
+			log.Print("[ERROR] env.secret is not a string!")
+		}
+
+		env_map[key] = value
+		env_map[secret] = map[string]string{
+			"secret": secret,
+		}
+	}
+
+	log.Printf("[TRACE] env_map %+s", env_map)
+
+	env_json, _ := json.Marshal(env_map)
+	log.Printf("[TRACE] env_json %s", env_json)
+	metronome_job_run.Env = env_map
+
+	// Secrets
+	secret_map := make(map[string]interface{})
+	config_secret := d.Get("secrets").(map[string]interface{})
+	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+
+	for k, v := range config_secret {
+		secret_map[k] = map[string]string{
+			"source": v.(string),
 		}
 	}
 
 	log.Printf("[TRACE] env_secret: %+v", secret_map)
-	log.Printf("[TRACE] env_map %+s", env_map)
 
-	metronome_job_run.Env = env_map
+	secret_map_json, _ := json.Marshal(secret_map)
+	log.Printf("[TRACE] secret_map_json %s", secret_map_json)
 	metronome_job_run.Secrets = secret_map
 
 	// placement_constraints

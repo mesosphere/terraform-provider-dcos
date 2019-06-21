@@ -22,13 +22,20 @@ resource "dcos_job" "ajob" {
   }
 
   env {
-    this_is_not_a_key = "this_is_not_a_value"
-    some_key          = "some_val"
+    key    = "my_env_key"
+    value  = "my_env_value"
+    secret = "secret1"
+  }
+
+  env {
+    key    = "cool_key"
+    value  = "cool_value"
+    secret = "cool_secret"
   }
 
   secrets {
-    super = "secret"
-    something = "important"
+    secret1     = "something"
+    cool_secret = "something_else"
   }
 
   restart {
