@@ -320,12 +320,16 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if key != "" {
 			env_map[key] = value
+		} else {
+			log.Printf("[TRACE] env.key is not set")
 		}
 
 		if secret != "" {
 			env_map[secret] = map[string]string{
 				"secret": secret,
 			}
+		} else {
+			log.Printf("[TRACE] env.secret is not set")
 		}
 	}
 
@@ -604,12 +608,16 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if key != "" {
 			env_map[key] = value
+		} else {
+			log.Printf("[TRACE] env.key is not set")
 		}
 
 		if secret != "" {
 			env_map[secret] = map[string]string{
 				"secret": secret,
 			}
+		} else {
+			log.Printf("[TRACE] env.secret is not set")
 		}
 	}
 
