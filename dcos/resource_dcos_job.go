@@ -1,384 +1,851 @@
 package dcos
 
-//
-// import (
-// 	"time"
-//
-// 	"github.com/hashicorp/terraform/helper/schema"
-// 	"github.com/mesosphere/dcos-api-go/dcos"
-// 	"github.com/mesosphere/dcos-api-go/dcos/job"
-// )
-//
-// func resourceDcosJob() *schema.Resource {
-// 	return &schema.Resource{
-// 		Create: resourceDcosJobCreate,
-// 		Read:   resourceDcosJobRead,
-// 		Update: resourceDcosJobUpdate,
-// 		Delete: resourceDcosJobDelete,
-// 		Importer: &schema.ResourceImporter{
-// 			State: schema.ImportStatePassthrough,
-// 		},
-//
-// 		SchemaVersion: 1,
-// 		Timeouts: &schema.ResourceTimeout{
-// 			Create: schema.DefaultTimeout(10 * time.Minute),
-// 			Update: schema.DefaultTimeout(10 * time.Minute),
-// 			Delete: schema.DefaultTimeout(20 * time.Minute),
-// 		},
-//
-// 		Schema: map[string]*schema.Schema{
-// 			"jobid": {
-// 				Type:     schema.TypeString,
-// 				Required: true,
-// 				ForceNew: true,
-// 			},
-// 			"run": {
-// 				Type:     schema.TypeList,
-// 				Required: true,
-// 				MaxItems: 1,
-// 				Elem: &schema.Resource{
-// 					Schema: map[string]*schema.Schema{
-// 						"disk": {
-// 							Type:     schema.TypeFloat,
-// 							Required: true,
-// 						},
-// 						"cpus": {
-// 							Type:     schema.TypeFloat,
-// 							Required: true,
-// 						},
-// 						"mem": {
-// 							Type:     schema.TypeFloat,
-// 							Required: true,
-// 						},
-// 						"cmd": {
-// 							Type:     schema.TypeString,
-// 							Optional: true,
-// 						},
-// 						"env": {
-// 							Type:     schema.TypeMap,
-// 							Optional: true,
-// 						},
-// 						"maxlaunchdelay": {
-// 							Type:     schema.TypeInt,
-// 							Optional: true,
-// 						},
-// 						"artifacts": {
-// 							Type:     schema.TypeList,
-// 							Optional: true,
-// 							Elem: &schema.Resource{
-// 								Schema: map[string]*schema.Schema{
-// 									"uri": {
-// 										Type:     schema.TypeString,
-// 										Required: true,
-// 									},
-// 									"cache": {
-// 										Type:     schema.TypeBool,
-// 										Optional: true,
-// 									},
-// 									"executable": {
-// 										Type:     schema.TypeBool,
-// 										Optional: true,
-// 									},
-// 									"extract": {
-// 										Type:     schema.TypeBool,
-// 										Optional: true,
-// 									},
-// 								},
-// 							},
-// 						},
-// 						"volumes": {
-// 							Type:     schema.TypeList,
-// 							Optional: true,
-// 							Elem: &schema.Resource{
-// 								Schema: map[string]*schema.Schema{
-// 									"containerpath": {
-// 										Type:     schema.TypeString,
-// 										Required: true,
-// 									},
-// 									"hostpath": {
-// 										Type:     schema.TypeString,
-// 										Required: true,
-// 									},
-// 									"mode": {
-// 										Type:     schema.TypeString,
-// 										Required: true,
-// 									},
-// 								},
-// 							},
-// 						},
-// 						"docker": {
-// 							Type:     schema.TypeList,
-// 							Optional: true,
-// 							MaxItems: 1,
-// 							Elem: &schema.Resource{
-// 								Schema: map[string]*schema.Schema{
-// 									"image": {
-// 										Type:     schema.TypeString,
-// 										Required: true,
-// 									},
-// 								},
-// 							},
-// 						},
-// 						"restart": {
-// 							Type:     schema.TypeList,
-// 							Optional: true,
-// 							MaxItems: 1,
-// 							Elem: &schema.Resource{
-// 								Schema: map[string]*schema.Schema{
-// 									"activedeadlineseconds": {
-// 										Type:     schema.TypeInt,
-// 										Required: true,
-// 									},
-// 									"policy": {
-// 										Type:     schema.TypeString,
-// 										Required: true,
-// 									},
-// 								},
-// 							},
-// 						},
-// 						"placement": {
-// 							Type:     schema.TypeList,
-// 							Optional: true,
-// 							MaxItems: 1,
-// 							Elem: &schema.Resource{
-// 								Schema: map[string]*schema.Schema{
-// 									"constraints": {
-// 										Type:     schema.TypeList,
-// 										Optional: true,
-// 										Elem: &schema.Resource{
-// 											Schema: map[string]*schema.Schema{
-// 												"attribute": {
-// 													Type:     schema.TypeString,
-// 													Required: true,
-// 												},
-// 												"operator": {
-// 													Type:     schema.TypeString,
-// 													Required: true,
-// 												},
-// 												"value": {
-// 													Type:     schema.TypeString,
-// 													Optional: true,
-// 												},
-// 											},
-// 										},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			"description": {
-// 				Type:     schema.TypeString,
-// 				Optional: true,
-// 			},
-// 			"labels": {
-// 				Type:     schema.TypeMap,
-// 				Optional: true,
-// 			},
-// 		},
-// 	}
-// }
-//
-// func schemaToJob(d *schema.ResourceData) *job.Job {
-// 	jobdef := job.Job{
-// 		ID:          d.Get("jobid").(string),
-// 		Description: d.Get("description").(string),
-// 		Labels:      d.Get("labels").(map[string]string),
-// 	}
-//
-// 	if r, ok := d.GetOk("run"); ok {
-// 		runData := r.(*schema.ResourceData)
-// 		run := &job.Run{}
-//
-// 		run.Cpus = runData.Get("cpus").(float64)
-// 		run.Disk = runData.Get("disk").(float64)
-// 		run.Mem = runData.Get("mem").(float64)
-//
-// 		run.Cmd = runData.Get("cmd").(string)
-// 		run.MaxLaunchDelay = runData.Get("maxlaunchdelay").(int)
-// 		run.User = runData.Get("user").(string)
-// 		run.Env = runData.Get("env").(map[string]string)
-//
-// 		if a, ok := runData.GetOk("args"); ok {
-// 			var args []string
-//
-// 			for _, arg := range a.(*schema.Set).List() {
-// 				args = append(args, arg.(string))
-// 			}
-//
-// 			run.Args = args
-// 		}
-//
-// 		if a, ok := runData.GetOk("artifacts"); ok {
-// 			arts := a.(*schema.Set).List()
-// 			for _, artI := range arts {
-// 				art := artI.(map[string]interface{})
-// 				artifact := job.Artifact{
-// 					URI: art["uri"].(string),
-// 				}
-//
-// 				if v, ok := art["cache"].(bool); ok {
-// 					artifact.Cache = v
-// 				}
-//
-// 				if v, ok := art["executable"].(bool); ok {
-// 					artifact.Executable = v
-// 				}
-//
-// 				if v, ok := art["extract"].(bool); ok {
-// 					artifact.Extract = v
-// 				}
-// 			}
-// 		}
-//
-// 		if a, ok := runData.GetOk("docker"); ok {
-// 			var d job.Docker
-// 			dockerData := a.(*schema.ResourceData)
-// 			d.Image = dockerData.Get("image").(string)
-//
-// 			run.Docker = &d
-// 		}
-//
-// 		if p, ok := runData.GetOk("placement"); ok {
-// 			var placement job.Placement
-// 			placementData := p.(*schema.ResourceData)
-//
-// 			c := placementData.Get("constraints").(*schema.Set).List()
-//
-// 			for _, constr := range c {
-// 				constrData := constr.(map[string]string)
-// 				constraint := job.Constraint{
-// 					Attribute: constrData["attribute"],
-// 					Operator:  constrData["operator"],
-// 				}
-//
-// 				if val, ok := constrData["value"]; ok {
-// 					constraint.Value = val
-// 				}
-//
-// 				placement.Constraints = append(placement.Constraints, &constraint)
-// 			}
-//
-// 			run.Placement = &placement
-// 		}
-//
-// 		if r, ok := runData.GetOk("restart"); ok {
-// 			var restart job.Restart
-// 			rest := r.(map[string]interface{})
-//
-// 			if val, ok := rest["policy"].(string); ok {
-// 				restart.Policy = val
-// 			}
-//
-// 			if val, ok := rest["activedeadlineseconds"].(int); ok {
-// 				restart.ActiveDeadlineSeconds = val
-// 			}
-//
-// 			run.Restart = &restart
-// 		}
-//
-// 		if a, ok := runData.GetOk("volumes"); ok {
-// 			var volumes []*job.Volume
-// 			vols := a.(*schema.Set).List()
-// 			for _, volI := range vols {
-// 				volData := volI.(map[string]interface{})
-//
-// 				volume := job.Volume{
-// 					ContainerPath: volData["containerpath"].(string),
-// 					HostPath:      volData["hostpath"].(string),
-// 					Mode:          volData["mode"].(string),
-// 				}
-//
-// 				volumes = append(volumes, &volume)
-// 			}
-// 		}
-//
-// 		jobdef.Run = run
-// 	}
-//
-// 	return &jobdef
-// }
-//
-// func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*dcos.Client)
-// 	//
-//
-// 	jobdef := schemaToJob(d)
-//
-// 	client.Job.CreateJob(jobdef)
-// 	//
-// 	// app, err := client.Marathon.MarathonClient.CreateApplication(&application)
-// 	//
-// 	// if err != nil {
-// 	// 	return err
-// 	// }
-// 	//
-// 	// d.SetId(app.ID)
-//
-// 	return resourceDcosJobRead(d, meta)
-// }
-//
-// func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*dcos.Client)
-//
-// 	app, err := client.Marathon.MarathonClient.Application(d.Id())
-//
-// 	d.Set("cmd", app.Cmd)
-// 	d.Set("instances", app.Instances)
-// 	d.Set("cpus", app.CPUs)
-// 	d.Set("disk", app.Disk)
-// 	d.Set("mem", app.Mem)
-//
-// 	return err
-// }
-//
-// func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*dcos.Client)
-//
-// 	app, err := client.Marathon.MarathonClient.Application(d.Id())
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	d.Set("cmd", app.Cmd)
-//
-// 	if d.HasChange("cmd") {
-// 		cmd := d.Get("cmd").(string)
-// 		app.Cmd = &cmd
-// 	}
-// 	if d.HasChange("instances") {
-// 		instances := d.Get("instances").(int)
-// 		app.Instances = &instances
-// 	}
-// 	if d.HasChange("cpus") {
-// 		app.CPUs = d.Get("cpus").(float64)
-// 	}
-// 	d.Set("disk", app.Disk)
-// 	if d.HasChange("disk") {
-// 		disk := d.Get("disk").(float64)
-// 		app.Disk = &disk
-// 	}
-//
-// 	d.Set("mem", app.Mem)
-// 	if d.HasChange("mem") {
-// 		mem := d.Get("mem").(float64)
-// 		app.Mem = &mem
-// 	}
-//
-// 	_, err = client.Marathon.MarathonClient.UpdateApplication(app, false)
-//
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	return resourceDcosJobRead(d, meta)
-// }
-//
-// func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*dcos.Client)
-//
-// 	_, err := client.Marathon.MarathonClient.DeleteApplication(d.Id(), false)
-//
-// 	return err
-// }
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"strconv"
+	"time"
+
+	"github.com/dcos/client-go/dcos"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
+)
+
+func resourceDcosJob() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceDcosJobCreate,
+		Read:   resourceDcosJobRead,
+		Update: resourceDcosJobUpdate,
+		Delete: resourceDcosJobDelete,
+		// Importer: &schema.ResourceImporter{
+		// 	State: schema.ImportStatePassthrough,
+		// },
+
+		SchemaVersion: 1,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Unique identifier for the job.",
+			},
+			"user": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "The user to use to run the tasks on the agent.",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "A description of this job.",
+			},
+			"labels": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    false,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Attaching metadata to jobs can be useful to expose additional information to other services.",
+			},
+			"cmd": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "The command that is executed. This value is wrapped by Mesos via `/bin/sh -c ${job.cmd}`. Either `cmd` or `args` must be supplied. It is invalid to supply both `cmd` and `args` in the same job.",
+			},
+			"args": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "An array of strings that represents an alternative mode of specifying the command to run. This was motivated by safe usage of containerizer features like a custom Docker ENTRYPOINT. Either `cmd` or `args` must be supplied. It is invalid to supply both `cmd` and `args` in the same job.",
+			},
+			"artifacts": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uri": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "URI to be fetched by Mesos fetcher module.",
+						},
+						"executable": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Set fetched artifact as executable.",
+						},
+						"extract": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Extract fetched artifact if supported by Mesos fetcher module.",
+						},
+						"cache": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Cache fetched artifact if supported by Mesos fetcher module.",
+						},
+					},
+				},
+			},
+			"docker": {
+				Type:     schema.TypeMap,
+				Required: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The docker repository image name.",
+						},
+					},
+				},
+			},
+			"env": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Environment variables",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The key/name of the variable",
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The value of the key/name",
+						},
+						"secret": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "The name of the secret.",
+						},
+					},
+				},
+			},
+			"secrets": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Any secrets that are necessary for the job",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"placement_constraint": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attribute": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The attribute name for this constraint.",
+						},
+						"operator": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     false,
+							Description:  "The operator for this constraint.",
+							ValidateFunc: validation.StringInSlice([]string{"EQ", "LIKE", "UNLIKE"}, false),
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "The value for this constraint.",
+						},
+					},
+				},
+			},
+			"restart": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Defines the behavior if a task fails.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"active_deadline_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     false,
+							Default:      120,
+							Description:  "If the job fails, how long should we try to restart the job. If no value is set, this means forever.",
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"policy": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     false,
+							Default:      "NEVER",
+							Description:  "The policy to use if a job fails. NEVER will never try to relaunch a job. ON_FAILURE will try to start a job in case of failure.",
+							ValidateFunc: validation.StringInSlice([]string{"NEVER", "ON_FAILURE"}, false),
+						},
+					},
+				},
+			},
+			"volume": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_path": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "The path of the volume in the container.",
+							ValidateFunc: validateRegexp("^/[^/].*$"),
+						},
+						"host_path": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The path of the volume on the host.",
+						},
+						"mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Possible values are RO for ReadOnly and RW for Read/Write.",
+							ValidateFunc: validation.StringInSlice([]string{"RO", "RW"}, false),
+						},
+					},
+				},
+			},
+			"cpus": {
+				Type:        schema.TypeFloat,
+				Required:    true,
+				ForceNew:    false,
+				Description: "The number of CPU shares this job needs per instance. This number does not have to be integer, but can be a fraction.",
+			},
+			"mem": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     false,
+				Description:  "The amount of memory in MB that is needed for the job per instance.",
+				ValidateFunc: validation.IntAtLeast(32),
+			},
+			"disk": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     false,
+				Description:  "How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.",
+				ValidateFunc: validation.IntAtLeast(0),
+			},
+			"max_launch_delay": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     false,
+				Default:      3600,
+				Description:  "The number of seconds until the job needs to be running. If the deadline is reached without successfully running the job, the job is aborted.",
+				ValidateFunc: validation.IntAtLeast(1),
+			},
+		},
+	}
+}
+
+func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	var metronome_job dcos.MetronomeV1Job
+	var metronome_job_run dcos.MetronomeV1JobRun
+	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
+	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
+	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
+	var metronome_job_restart dcos.MetronomeV1JobRunRestart
+	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
+	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
+
+	metronome_job.Id = d.Get("name").(string)
+	metronome_job.Description = d.Get("description").(string)
+	metronome_job_run.Cpus = d.Get("cpus").(float64)
+	metronome_job_run.Mem = int64(d.Get("mem").(int))
+	metronome_job_run.Disk = int64(d.Get("disk").(int))
+	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
+
+	if labels, ok := d.GetOk("labels"); ok {
+		metronome_job.Labels = labels.(map[string]string)
+	}
+
+	if cmd, ok := d.GetOk("cmd"); ok {
+		metronome_job_run.Cmd = cmd.(string)
+	}
+
+	if args, ok := d.GetOk("args"); ok {
+		metronome_job_run.Args = args.([]string)
+	}
+
+	if user, ok := d.GetOk("user"); ok {
+		metronome_job_run.User = user.(string)
+	}
+
+	// env
+	env_config := d.Get("env").(*schema.Set).List()
+	log.Printf("[TRACE] env (config): %+v", env_config)
+	env_map := make(map[string]interface{})
+
+	for env := range env_config {
+		a := env_config[env].(map[string]interface{})
+
+		key, ok := a["key"].(string)
+		if !ok {
+			log.Print("[ERROR] env.key is not a string!")
+		}
+
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] env.value is not a string!")
+		}
+
+		secret, ok := a["secret"].(string)
+		if !ok {
+			log.Print("[ERROR] env.secret is not a string!")
+		}
+
+		if key != "" {
+			env_map[key] = value
+		} else {
+			log.Printf("[TRACE] env.key is not set")
+		}
+
+		if secret != "" {
+			env_map[secret] = map[string]string{
+				"secret": secret,
+			}
+		} else {
+			log.Printf("[TRACE] env.secret is not set")
+		}
+	}
+
+	log.Printf("[TRACE] env_map %+s", env_map)
+
+	env_json, _ := json.Marshal(env_map)
+	log.Printf("[TRACE] env_json %s", env_json)
+	metronome_job_run.Env = env_map
+
+	// Secrets
+	secret_map := make(map[string]interface{})
+	config_secret := d.Get("secrets").(map[string]interface{})
+	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+
+	for k, v := range config_secret {
+		secret_map[k] = map[string]string{
+			"source": v.(string),
+		}
+	}
+
+	log.Printf("[TRACE] env_secret: %+v", secret_map)
+
+	secret_map_json, _ := json.Marshal(secret_map)
+	log.Printf("[TRACE] secret_map_json %s", secret_map_json)
+	metronome_job_run.Secrets = secret_map
+
+	// placement_constraints
+	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
+
+	log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
+
+	for constraint := range placement_constraints {
+		a := placement_constraints[constraint].(map[string]interface{})
+		log.Printf("[TRACE] constrant (loop): %+v", a)
+
+		attribute, ok := a["attribute"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.attribute is not a string!")
+		}
+
+		operator, ok := a["operator"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.operator is not a string!")
+		}
+
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.value is not a string!")
+		}
+
+		metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
+			Attribute: attribute,
+			Operator:  operator,
+			Value:     value,
+		})
+	}
+
+	log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
+
+	metronome_job_placement.Constraints = &metronome_job_placement_constraint
+	metronome_job_run.Placement = &metronome_job_placement
+
+	// artifacts
+	artifacts := d.Get("artifacts").(*schema.Set).List()
+
+	log.Printf("[TRACE] artifacts (config): %+v", artifacts)
+
+	for artifact := range artifacts {
+		a := artifacts[artifact].(map[string]interface{})
+		log.Printf("[TRACE] artifact (loop): %+v", a)
+
+		uri, ok := a["uri"].(string)
+		if !ok {
+			log.Print("[ERROR] artifact.uri is not a string!")
+		}
+
+		extract, ok := a["extract"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.extract is not a bool!")
+		}
+
+		executable, ok := a["executable"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.executable is not a bool!")
+		}
+
+		cache, ok := a["cache"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.cache is not a bool!")
+		}
+
+		metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
+			Uri:        uri,
+			Extract:    extract,
+			Executable: executable,
+			Cache:      cache,
+		})
+	}
+
+	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
+
+	// docker
+	docker_config := d.Get("docker").(map[string]interface{})
+	log.Printf("[TRACE] docker (config): %+v", docker_config)
+
+	image, ok := docker_config["image"].(string)
+	if !ok {
+		log.Print("[ERROR] docker.image is not a string!")
+	}
+
+	metronome_job_run_docker.Image = image
+
+	// volumes
+	vols := d.Get("volume").(*schema.Set).List()
+
+	log.Printf("[TRACE] volumes (config): %+v", vols)
+
+	for vol := range vols {
+		a := vols[vol].(map[string]interface{})
+		log.Printf("[TRACE] volume (loop): %+v", a)
+
+		container_path, ok := a["container_path"].(string)
+		if !ok {
+			log.Print("[ERROR] volume.container_path is not a string!")
+		}
+
+		host_path, ok := a["host_path"].(string)
+		if !ok {
+			log.Print("[ERROR] volume.host_path is not a string!")
+		}
+
+		mode, ok := a["mode"].(string)
+		if !ok {
+			log.Print("[ERROR] volume.mode is not a string!")
+		}
+
+		metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
+			ContainerPath: container_path,
+			HostPath:      host_path,
+			Mode:          mode,
+		})
+	}
+
+	log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
+
+	metronome_job_run.Volumes = metronome_job_volumes
+
+	// restart
+	restart_config := d.Get("restart").(map[string]interface{})
+	log.Printf("[TRACE] restart (config): %+v", restart_config)
+
+	policy, ok := restart_config["policy"].(string)
+	if !ok {
+		log.Print("[ERROR] restart.policy is not a string!")
+	}
+
+	// This is a hack; terraform is treating this TypeInt as a string
+	active_deadline_seconds, err := strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+	if !ok {
+		log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+	}
+
+	log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+	metronome_job_restart.Policy = policy
+	metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+
+	log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
+	metronome_job_run.Restart = &metronome_job_restart
+	metronome_job_run.Artifacts = metronome_job_artifacts
+	metronome_job_run.Docker = &metronome_job_run_docker
+	metronome_job.Run = metronome_job_run
+
+	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
+	log.Printf("[INFO] Creating DCOS Job: %s", d.Get("name").(string))
+
+	resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 201 {
+		return fmt.Errorf("[ERROR] Expecting response code of 201 (job created), but received %d", resp.StatusCode)
+	}
+
+	log.Printf("[INFO] DCOS job successfully created (%s)", d.Get("name").(string))
+	log.Printf("[TRACE] Metronome Job Response object: %+v", resp_metronome_job)
+
+	d.SetId(d.Get("name").(string))
+
+	return nil
+}
+
+func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	jobId := d.Get("name").(string)
+
+	_, err := getDCOSJobInfo(jobId, client, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	jobId := d.Get("name").(string)
+
+	// Perform read on "name" to confirm it actually exists...
+	_, err := getDCOSJobInfo(jobId, client, ctx)
+	if err != nil {
+		return err
+	}
+
+	// Update the job
+	var metronome_job dcos.MetronomeV1Job
+	var metronome_job_run dcos.MetronomeV1JobRun
+	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
+	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
+	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
+	var metronome_job_restart dcos.MetronomeV1JobRunRestart
+	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
+	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
+
+	metronome_job.Id = d.Get("name").(string)
+	metronome_job.Description = d.Get("description").(string)
+	metronome_job_run.Cpus = d.Get("cpus").(float64)
+	metronome_job_run.Mem = int64(d.Get("mem").(int))
+	metronome_job_run.Disk = int64(d.Get("disk").(int))
+	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
+
+	if labels, ok := d.GetOk("labels"); ok {
+		metronome_job.Labels = labels.(map[string]string)
+	}
+
+	if cmd, ok := d.GetOk("cmd"); ok {
+		metronome_job_run.Cmd = cmd.(string)
+	}
+
+	if args, ok := d.GetOk("args"); ok {
+		metronome_job_run.Args = args.([]string)
+	}
+
+	if user, ok := d.GetOk("user"); ok {
+		metronome_job_run.User = user.(string)
+	}
+
+	// env
+	env_config := d.Get("env").(*schema.Set).List()
+	log.Printf("[TRACE] env (config): %+v", env_config)
+	env_map := make(map[string]interface{})
+
+	for env := range env_config {
+		a := env_config[env].(map[string]interface{})
+
+		key, ok := a["key"].(string)
+		if !ok {
+			log.Print("[ERROR] env.key is not a string!")
+		}
+
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] env.value is not a string!")
+		}
+
+		secret, ok := a["secret"].(string)
+		if !ok {
+			log.Print("[ERROR] env.secret is not a string!")
+		}
+
+		if key != "" {
+			env_map[key] = value
+		} else {
+			log.Printf("[TRACE] env.key is not set")
+		}
+
+		if secret != "" {
+			env_map[secret] = map[string]string{
+				"secret": secret,
+			}
+		} else {
+			log.Printf("[TRACE] env.secret is not set")
+		}
+	}
+
+	log.Printf("[TRACE] env_map %+s", env_map)
+
+	env_json, _ := json.Marshal(env_map)
+	log.Printf("[TRACE] env_json %s", env_json)
+	metronome_job_run.Env = env_map
+
+	// Secrets
+	secret_map := make(map[string]interface{})
+	config_secret := d.Get("secrets").(map[string]interface{})
+	log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+
+	for k, v := range config_secret {
+		secret_map[k] = map[string]string{
+			"source": v.(string),
+		}
+	}
+
+	log.Printf("[TRACE] env_secret: %+v", secret_map)
+
+	secret_map_json, _ := json.Marshal(secret_map)
+	log.Printf("[TRACE] secret_map_json %s", secret_map_json)
+	metronome_job_run.Secrets = secret_map
+
+	// placement_constraints
+	placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
+
+	log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
+
+	for constraint := range placement_constraints {
+		a := placement_constraints[constraint].(map[string]interface{})
+		log.Printf("[TRACE] constrant (loop): %+v", a)
+
+		attribute, ok := a["attribute"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.attribute is not a string!")
+		}
+
+		operator, ok := a["operator"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.operator is not a string!")
+		}
+
+		value, ok := a["value"].(string)
+		if !ok {
+			log.Print("[ERROR] placement_constraint.value is not a string!")
+		}
+
+		metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
+			Attribute: attribute,
+			Operator:  operator,
+			Value:     value,
+		})
+	}
+
+	log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
+
+	metronome_job_placement.Constraints = &metronome_job_placement_constraint
+	metronome_job_run.Placement = &metronome_job_placement
+
+	// artifacts
+	artifacts := d.Get("artifacts").(*schema.Set).List()
+
+	log.Printf("[TRACE] artifacts (config): %+v", artifacts)
+
+	for artifact := range artifacts {
+		a := artifacts[artifact].(map[string]interface{})
+		log.Printf("[TRACE] artifact (loop): %+v", a)
+
+		uri, ok := a["uri"].(string)
+		if !ok {
+			log.Print("[ERROR] artifact.uri is not a string!")
+		}
+
+		extract, ok := a["extract"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.extract is not a bool!")
+		}
+
+		executable, ok := a["executable"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.executable is not a bool!")
+		}
+
+		cache, ok := a["cache"].(bool)
+		if !ok {
+			log.Print("[ERROR] artifact.cache is not a bool!")
+		}
+
+		metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
+			Uri:        uri,
+			Extract:    extract,
+			Executable: executable,
+			Cache:      cache,
+		})
+	}
+
+	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
+
+	// docker
+	docker_config := d.Get("docker").(map[string]interface{})
+	log.Printf("[TRACE] docker (config): %+v", docker_config)
+
+	image, ok := docker_config["image"].(string)
+	if !ok {
+		log.Print("[ERROR] docker.image is not a string!")
+	}
+
+	metronome_job_run_docker.Image = image
+
+	// volumes
+	vols := d.Get("volume").(*schema.Set).List()
+
+	log.Printf("[TRACE] volumes (config): %+v", vols)
+
+	for vol := range vols {
+		a := vols[vol].(map[string]interface{})
+		log.Printf("[TRACE] volume (loop): %+v", a)
+
+		container_path, ok := a["container_path"].(string)
+		if !ok {
+			log.Print("[ERROR] volume.container_path is not a string!")
+		}
+
+		host_path, ok := a["host_path"].(string)
+		if !ok {
+			log.Print("[ERROR] volume.host_path is not a string!")
+		}
+
+		mode, ok := a["mode"].(string)
+		if !ok {
+			log.Print("[ERROR] volume.mode is not a string!")
+		}
+
+		metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
+			ContainerPath: container_path,
+			HostPath:      host_path,
+			Mode:          mode,
+		})
+	}
+
+	log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
+
+	metronome_job_run.Volumes = metronome_job_volumes
+
+	// restart
+	restart_config := d.Get("restart").(map[string]interface{})
+	log.Printf("[TRACE] restart (config): %+v", restart_config)
+
+	policy, ok := restart_config["policy"].(string)
+	if !ok {
+		log.Print("[ERROR] restart.policy is not a string!")
+	}
+
+	// This is a hack; terraform is treating this TypeInt as a string
+	active_deadline_seconds, err := strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+	if !ok {
+		log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+	}
+
+	log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+	metronome_job_restart.Policy = policy
+	metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+
+	log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
+	metronome_job_run.Restart = &metronome_job_restart
+	metronome_job_run.Artifacts = metronome_job_artifacts
+	metronome_job_run.Docker = &metronome_job_run_docker
+	metronome_job.Run = metronome_job_run
+
+	log.Printf("[INFO] Updating DCOS Job: %s", d.Get("name").(string))
+
+	resp_metronome_job, resp, err := client.Metronome.V1UpdateJob(ctx, jobId, metronome_job)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("[ERROR] Expecting response code of 201 (job updated), but received %d", resp.StatusCode)
+	}
+
+	log.Printf("[INFO] DCOS job successfully updated (%s)", d.Get("name").(string))
+	log.Printf("[TRACE] Metronome Job Response object: %+v", resp_metronome_job)
+
+	d.SetId(d.Get("name").(string))
+
+	return resourceDcosJobRead(d, meta)
+}
+
+func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	jobId := d.Get("name").(string)
+
+	log.Printf("[INFO] Attempting to delete (%s)", jobId)
+	resp, err := client.Metronome.V1DeleteJob(ctx, jobId)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("[ERROR] Expecting response code of 200 (job deleted), but received %d", resp.StatusCode)
+	}
+	log.Printf("[INFO] DCOS job successfully deleted (%s)", jobId)
+
+	d.SetId("")
+
+	return nil
+}
+
+func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (dcos.MetronomeV1Job, error) {
+	log.Printf("[INFO] Attempting to read job info (%s)", jobId)
+
+	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
+	if err != nil {
+		log.Printf("[ERROR] Failed to create DCOS job %s", err)
+		return dcos.MetronomeV1Job{}, err
+	}
+	if resp.StatusCode != 200 {
+		return dcos.MetronomeV1Job{}, fmt.Errorf("[ERROR] Expecting response code of 200 (job found), but received %d", resp.StatusCode)
+	}
+
+	log.Printf("[INFO] DCOS job successfully retrieved (%s)", jobId)
+	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
+
+	return mv1job, nil
+}
