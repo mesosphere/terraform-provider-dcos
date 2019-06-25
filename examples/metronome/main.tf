@@ -24,19 +24,19 @@ resource "dcos_job" "ajob" {
   env {
     key    = "my_env_key"
     value  = "my_env_value"
-    secret = "secret1"
+#    secret = "secret1"
   }
 
   env {
     key    = "cool_key"
     value  = "cool_value"
-    secret = "cool_secret"
+#    secret = "cool_secret"
   }
 
-  secrets {
-    secret1     = "/something"
-    cool_secret = "something_else"
-  }
+#  secrets {
+#    secret1     = "/something"
+#    cool_secret = "something_else"
+#  }
 
   restart {
     active_deadline_seconds = 120

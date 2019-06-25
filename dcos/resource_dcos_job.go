@@ -318,9 +318,14 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 			log.Print("[ERROR] env.secret is not a string!")
 		}
 
-		env_map[key] = value
-		env_map[secret] = map[string]string{
-			"secret": secret,
+		if key != "" {
+			env_map[key] = value
+		}
+
+		if secret != "" {
+			env_map[secret] = map[string]string{
+				"secret": secret,
+			}
 		}
 	}
 
@@ -597,9 +602,14 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 			log.Print("[ERROR] env.secret is not a string!")
 		}
 
-		env_map[key] = value
-		env_map[secret] = map[string]string{
-			"secret": secret,
+		if key != "" {
+			env_map[key] = value
+		}
+
+		if secret != "" {
+			env_map[secret] = map[string]string{
+				"secret": secret,
+			}
 		}
 	}
 
