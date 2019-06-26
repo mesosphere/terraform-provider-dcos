@@ -279,14 +279,6 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Disk = int64(d.Get("disk").(int))
 	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
 
-	labels := d.Get("labels").(map[string]interface{})
-
-	tmp_lbl := make(map[string]string)
-	for k, v := range labels {
-		tmp_lbl[k] = v.(string)
-	}
-	metronome_job.Labels = tmp_lbl
-
 	if cmd, ok := d.GetOk("cmd"); ok {
 		metronome_job_run.Cmd = cmd.(string)
 	}
@@ -299,8 +291,22 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 		metronome_job_run.User = user.(string)
 	}
 
+	// labels
+	_, ok := d.GetOk("labels")
+	if ok {
+		labels := d.Get("labels").(map[string]interface{})
+
+		tmp_lbl := make(map[string]string)
+		for k, v := range labels {
+			tmp_lbl[k] = v.(string)
+		}
+		metronome_job.Labels = tmp_lbl
+	} else {
+		log.Printf("[TRACE] labels not set, skipping")
+	}
+
 	// env
-	_, ok := d.GetOk("env")
+	_, ok = d.GetOk("env")
 	if ok {
 
 		env_config := d.Get("env").(*schema.Set).List()
@@ -613,14 +619,6 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Disk = int64(d.Get("disk").(int))
 	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
 
-	labels := d.Get("labels").(map[string]interface{})
-
-	tmp_lbl := make(map[string]string)
-	for k, v := range labels {
-		tmp_lbl[k] = v.(string)
-	}
-	metronome_job.Labels = tmp_lbl
-
 	if cmd, ok := d.GetOk("cmd"); ok {
 		metronome_job_run.Cmd = cmd.(string)
 	}
@@ -633,8 +631,22 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		metronome_job_run.User = user.(string)
 	}
 
+	// labels
+	_, ok := d.GetOk("labels")
+	if ok {
+		labels := d.Get("labels").(map[string]interface{})
+
+		tmp_lbl := make(map[string]string)
+		for k, v := range labels {
+			tmp_lbl[k] = v.(string)
+		}
+		metronome_job.Labels = tmp_lbl
+	} else {
+		log.Printf("[TRACE] labels not set, skipping")
+	}
+
 	// env
-	_, ok := d.GetOk("env")
+	_, ok = d.GetOk("env")
 	if ok {
 
 		env_config := d.Get("env").(*schema.Set).List()
