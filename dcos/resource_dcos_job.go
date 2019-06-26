@@ -149,7 +149,7 @@ func resourceDcosJob() *schema.Resource {
 			},
 			"placement_constraint": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
