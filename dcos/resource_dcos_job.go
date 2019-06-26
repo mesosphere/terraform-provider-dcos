@@ -453,6 +453,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
+		metronome_job_run.Artifacts = metronome_job_artifacts
 	} else {
 		log.Printf("[TRACE] artifacts not set, skipping")
 	}
@@ -539,12 +540,11 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
 
+		metronome_job_run.Restart = &metronome_job_restart
 	} else {
 		log.Printf("[TRACE] restart not set, skipping")
 	}
 
-	metronome_job_run.Restart = &metronome_job_restart
-	metronome_job_run.Artifacts = metronome_job_artifacts
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
@@ -786,7 +786,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
-
+		metronome_job_run.Artifacts = metronome_job_artifacts
 	} else {
 		log.Printf("[TRACE] artifacts not set, skipping")
 	}
@@ -873,12 +873,11 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
 
+		metronome_job_run.Restart = &metronome_job_restart
 	} else {
 		log.Printf("[TRACE] restart not set, skipping")
 	}
 
-	metronome_job_run.Restart = &metronome_job_restart
-	metronome_job_run.Artifacts = metronome_job_artifacts
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
