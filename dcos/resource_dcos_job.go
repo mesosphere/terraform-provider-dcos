@@ -465,15 +465,21 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// docker
-	docker_config := d.Get("docker").(map[string]interface{})
-	log.Printf("[TRACE] docker (config): %+v", docker_config)
+	_, ok = d.GetOk("docker")
+	if ok {
+		docker_config := d.Get("docker").(map[string]interface{})
+		log.Printf("[TRACE] docker (config): %+v", docker_config)
 
-	image, ok := docker_config["image"].(string)
-	if !ok {
-		log.Print("[ERROR] docker.image is not a string!")
+		image, ok := docker_config["image"].(string)
+		if !ok {
+			log.Print("[ERROR] docker.image is not a string!")
+		}
+
+		metronome_job_run_docker.Image = image
+		metronome_job_run.Docker = &metronome_job_run_docker
+	} else {
+		log.Printf("[TRACE] docker not set, skipping (THIS SHOULD NEVER BE EXECUTED!)")
 	}
-
-	metronome_job_run_docker.Image = image
 
 	// volumes
 	_, ok = d.GetOk("volume")
@@ -551,7 +557,6 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[TRACE] restart not set, skipping")
 	}
 
-	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
 	m_json, _ := json.Marshal(metronome_job)
@@ -804,15 +809,21 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// docker
-	docker_config := d.Get("docker").(map[string]interface{})
-	log.Printf("[TRACE] docker (config): %+v", docker_config)
+	_, ok = d.GetOk("docker")
+	if ok {
+		docker_config := d.Get("docker").(map[string]interface{})
+		log.Printf("[TRACE] docker (config): %+v", docker_config)
 
-	image, ok := docker_config["image"].(string)
-	if !ok {
-		log.Print("[ERROR] docker.image is not a string!")
+		image, ok := docker_config["image"].(string)
+		if !ok {
+			log.Print("[ERROR] docker.image is not a string!")
+		}
+
+		metronome_job_run_docker.Image = image
+		metronome_job_run.Docker = &metronome_job_run_docker
+	} else {
+		log.Printf("[TRACE] docker not set, skipping (THIS SHOULD NEVER BE EXECUTED!)")
 	}
-
-	metronome_job_run_docker.Image = image
 
 	// volumes
 	_, ok = d.GetOk("volume")
@@ -890,7 +901,6 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[TRACE] restart not set, skipping")
 	}
 
-	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
 	m_json, _ := json.Marshal(metronome_job)
