@@ -47,7 +47,7 @@ func resourceDcosJobSchedule() *schema.Resource {
 				Required:     true,
 				ForceNew:     false,
 				Description:  "Cron based schedule string",
-				ValidateFunc: validateRegexp("^[0-9\\*\\/]{1,4} [0-9\\*\\/]{1,4} [0-9\\*\\/]{1,4} [0-9\\*\\/]{1,4} [0-9\\*\\/]{1,4}$"),
+				ValidateFunc: validateRegexp("^[0-9\\*\\/,]{1,5} [0-9\\*\\/,]{1,5} [0-9\\*\\/,]{1,5} [0-9\\*\\/,]{1,5} [0-9\\*\\/,]{1,5}$"),
 			},
 			"concurrency_policy": {
 				Type:         schema.TypeString,
