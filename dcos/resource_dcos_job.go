@@ -548,7 +548,9 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
+	m_json, _ := json.Marshal(metronome_job)
 	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
+	log.Printf("[TRACE] MetronomeV1Job (json): %s", m_json)
 	log.Printf("[INFO] Creating DCOS Job: %s", d.Get("name").(string))
 
 	resp_metronome_job, resp, err := client.Metronome.V1CreateJob(ctx, metronome_job)
@@ -880,6 +882,9 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Docker = &metronome_job_run_docker
 	metronome_job.Run = metronome_job_run
 
+	m_json, _ := json.Marshal(metronome_job)
+	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
+	log.Printf("[TRACE] MetronomeV1Job (json): %s", m_json)
 	log.Printf("[INFO] Updating DCOS Job: %s", d.Get("name").(string))
 
 	resp_metronome_job, resp, err := client.Metronome.V1UpdateJob(ctx, jobId, metronome_job)
