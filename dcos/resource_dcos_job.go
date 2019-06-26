@@ -413,43 +413,49 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// artifacts
-	artifacts := d.Get("artifacts").(*schema.Set).List()
+	_, ok = d.GetOk("artifacts")
+	if ok {
+		artifacts := d.Get("artifacts").(*schema.Set).List()
 
-	log.Printf("[TRACE] artifacts (config): %+v", artifacts)
+		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
 
-	for artifact := range artifacts {
-		a := artifacts[artifact].(map[string]interface{})
-		log.Printf("[TRACE] artifact (loop): %+v", a)
+		for artifact := range artifacts {
+			a := artifacts[artifact].(map[string]interface{})
+			log.Printf("[TRACE] artifact (loop): %+v", a)
 
-		uri, ok := a["uri"].(string)
-		if !ok {
-			log.Print("[ERROR] artifact.uri is not a string!")
+			uri, ok := a["uri"].(string)
+			if !ok {
+				log.Print("[ERROR] artifact.uri is not a string!")
+			}
+
+			extract, ok := a["extract"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.extract is not a bool!")
+			}
+
+			executable, ok := a["executable"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.executable is not a bool!")
+			}
+
+			cache, ok := a["cache"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.cache is not a bool!")
+			}
+
+			metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
+				Uri:        uri,
+				Extract:    extract,
+				Executable: executable,
+				Cache:      cache,
+			})
 		}
 
-		extract, ok := a["extract"].(bool)
-		if !ok {
-			log.Print("[ERROR] artifact.extract is not a bool!")
-		}
+		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
-		executable, ok := a["executable"].(bool)
-		if !ok {
-			log.Print("[ERROR] artifact.executable is not a bool!")
-		}
-
-		cache, ok := a["cache"].(bool)
-		if !ok {
-			log.Print("[ERROR] artifact.cache is not a bool!")
-		}
-
-		metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
-			Uri:        uri,
-			Extract:    extract,
-			Executable: executable,
-			Cache:      cache,
-		})
+	} else {
+		log.Printf("[TRACE] artifacts not set, skipping")
 	}
-
-	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
 	// docker
 	docker_config := d.Get("docker").(map[string]interface{})
@@ -739,43 +745,49 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// artifacts
-	artifacts := d.Get("artifacts").(*schema.Set).List()
+	_, ok = d.GetOk("artifacts")
+	if ok {
+		artifacts := d.Get("artifacts").(*schema.Set).List()
 
-	log.Printf("[TRACE] artifacts (config): %+v", artifacts)
+		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
 
-	for artifact := range artifacts {
-		a := artifacts[artifact].(map[string]interface{})
-		log.Printf("[TRACE] artifact (loop): %+v", a)
+		for artifact := range artifacts {
+			a := artifacts[artifact].(map[string]interface{})
+			log.Printf("[TRACE] artifact (loop): %+v", a)
 
-		uri, ok := a["uri"].(string)
-		if !ok {
-			log.Print("[ERROR] artifact.uri is not a string!")
+			uri, ok := a["uri"].(string)
+			if !ok {
+				log.Print("[ERROR] artifact.uri is not a string!")
+			}
+
+			extract, ok := a["extract"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.extract is not a bool!")
+			}
+
+			executable, ok := a["executable"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.executable is not a bool!")
+			}
+
+			cache, ok := a["cache"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.cache is not a bool!")
+			}
+
+			metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
+				Uri:        uri,
+				Extract:    extract,
+				Executable: executable,
+				Cache:      cache,
+			})
 		}
 
-		extract, ok := a["extract"].(bool)
-		if !ok {
-			log.Print("[ERROR] artifact.extract is not a bool!")
-		}
+		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
-		executable, ok := a["executable"].(bool)
-		if !ok {
-			log.Print("[ERROR] artifact.executable is not a bool!")
-		}
-
-		cache, ok := a["cache"].(bool)
-		if !ok {
-			log.Print("[ERROR] artifact.cache is not a bool!")
-		}
-
-		metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
-			Uri:        uri,
-			Extract:    extract,
-			Executable: executable,
-			Cache:      cache,
-		})
+	} else {
+		log.Printf("[TRACE] artifacts not set, skipping")
 	}
-
-	log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
 
 	// docker
 	docker_config := d.Get("docker").(map[string]interface{})
