@@ -482,33 +482,39 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Volumes = metronome_job_volumes
 
 	// restart
-	restart_config := d.Get("restart").(map[string]interface{})
-	log.Printf("[TRACE] restart (config): %+v", restart_config)
+	_, ok = d.GetOk("restart")
+	if ok {
+		restart_config := d.Get("restart").(map[string]interface{})
+		log.Printf("[TRACE] restart (config): %+v", restart_config)
 
-	policy, ok := restart_config["policy"].(string)
-	if !ok {
-		log.Print("[ERROR] restart.policy is not a string!")
-	}
-
-	metronome_job_restart.Policy = policy
-
-	// This is a hack; terraform is treating this TypeInt as a string
-	var active_deadline_seconds int
-	if restart_config["active_deadline_seconds"] != nil {
-		var err2 error
-		active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
-		if err2 != nil {
-			log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+		policy, ok := restart_config["policy"].(string)
+		if !ok {
+			log.Print("[ERROR] restart.policy is not a string!")
+		} else {
+			metronome_job_restart.Policy = policy
 		}
 
-		log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+		// This is a hack; terraform is treating this TypeInt as a string
+		var active_deadline_seconds int
+		if restart_config["active_deadline_seconds"] != nil {
+			var err2 error
+			active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+			if err2 != nil {
+				log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+			}
 
-		metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+			log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+			metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+		} else {
+			log.Printf("[TRACE] active_deadline_seconds is nil")
+		}
+
+		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
 	} else {
-		log.Printf("[TRACE] active_deadline_seconds is nil")
+		log.Printf("[TRACE] restart not set, skipping")
 	}
-
-	log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
 
 	metronome_job_run.Restart = &metronome_job_restart
 	metronome_job_run.Artifacts = metronome_job_artifacts
@@ -781,33 +787,39 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run.Volumes = metronome_job_volumes
 
 	// restart
-	restart_config := d.Get("restart").(map[string]interface{})
-	log.Printf("[TRACE] restart (config): %+v", restart_config)
+	_, ok = d.GetOk("restart")
+	if ok {
+		restart_config := d.Get("restart").(map[string]interface{})
+		log.Printf("[TRACE] restart (config): %+v", restart_config)
 
-	policy, ok := restart_config["policy"].(string)
-	if !ok {
-		log.Print("[ERROR] restart.policy is not a string!")
-	}
-
-	metronome_job_restart.Policy = policy
-
-	// This is a hack; terraform is treating this TypeInt as a string
-	var active_deadline_seconds int
-	if restart_config["active_deadline_seconds"] != nil {
-		var err2 error
-		active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
-		if err2 != nil {
-			log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+		policy, ok := restart_config["policy"].(string)
+		if !ok {
+			log.Print("[ERROR] restart.policy is not a string!")
+		} else {
+			metronome_job_restart.Policy = policy
 		}
 
-		log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+		// This is a hack; terraform is treating this TypeInt as a string
+		var active_deadline_seconds int
+		if restart_config["active_deadline_seconds"] != nil {
+			var err2 error
+			active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+			if err2 != nil {
+				log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+			}
 
-		metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+			log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+			metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+		} else {
+			log.Printf("[TRACE] active_deadline_seconds is nil")
+		}
+
+		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
 	} else {
-		log.Printf("[TRACE] active_deadline_seconds is nil")
+		log.Printf("[TRACE] restart not set, skipping")
 	}
-
-	log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
 
 	metronome_job_run.Restart = &metronome_job_restart
 	metronome_job_run.Artifacts = metronome_job_artifacts
