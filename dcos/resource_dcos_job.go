@@ -447,39 +447,44 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run_docker.Image = image
 
 	// volumes
-	vols := d.Get("volume").(*schema.Set).List()
+	_, ok = d.GetOk("volume")
+	if ok {
+		vols := d.Get("volume").(*schema.Set).List()
 
-	log.Printf("[TRACE] volumes (config): %+v", vols)
+		log.Printf("[TRACE] volumes (config): %+v", vols)
 
-	for vol := range vols {
-		a := vols[vol].(map[string]interface{})
-		log.Printf("[TRACE] volume (loop): %+v", a)
+		for vol := range vols {
+			a := vols[vol].(map[string]interface{})
+			log.Printf("[TRACE] volume (loop): %+v", a)
 
-		container_path, ok := a["container_path"].(string)
-		if !ok {
-			log.Print("[ERROR] volume.container_path is not a string!")
+			container_path, ok := a["container_path"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.container_path is not a string!")
+			}
+
+			host_path, ok := a["host_path"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.host_path is not a string!")
+			}
+
+			mode, ok := a["mode"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.mode is not a string!")
+			}
+
+			metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
+				ContainerPath: container_path,
+				HostPath:      host_path,
+				Mode:          mode,
+			})
 		}
 
-		host_path, ok := a["host_path"].(string)
-		if !ok {
-			log.Print("[ERROR] volume.host_path is not a string!")
-		}
+		log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
 
-		mode, ok := a["mode"].(string)
-		if !ok {
-			log.Print("[ERROR] volume.mode is not a string!")
-		}
-
-		metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
-			ContainerPath: container_path,
-			HostPath:      host_path,
-			Mode:          mode,
-		})
+		metronome_job_run.Volumes = metronome_job_volumes
+	} else {
+		log.Printf("[TRACE] volume not set, skipping")
 	}
-
-	log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
-
-	metronome_job_run.Volumes = metronome_job_volumes
 
 	// restart
 	_, ok = d.GetOk("restart")
@@ -752,39 +757,44 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	metronome_job_run_docker.Image = image
 
 	// volumes
-	vols := d.Get("volume").(*schema.Set).List()
+	_, ok = d.GetOk("volume")
+	if ok {
+		vols := d.Get("volume").(*schema.Set).List()
 
-	log.Printf("[TRACE] volumes (config): %+v", vols)
+		log.Printf("[TRACE] volumes (config): %+v", vols)
 
-	for vol := range vols {
-		a := vols[vol].(map[string]interface{})
-		log.Printf("[TRACE] volume (loop): %+v", a)
+		for vol := range vols {
+			a := vols[vol].(map[string]interface{})
+			log.Printf("[TRACE] volume (loop): %+v", a)
 
-		container_path, ok := a["container_path"].(string)
-		if !ok {
-			log.Print("[ERROR] volume.container_path is not a string!")
+			container_path, ok := a["container_path"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.container_path is not a string!")
+			}
+
+			host_path, ok := a["host_path"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.host_path is not a string!")
+			}
+
+			mode, ok := a["mode"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.mode is not a string!")
+			}
+
+			metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
+				ContainerPath: container_path,
+				HostPath:      host_path,
+				Mode:          mode,
+			})
 		}
 
-		host_path, ok := a["host_path"].(string)
-		if !ok {
-			log.Print("[ERROR] volume.host_path is not a string!")
-		}
+		log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
 
-		mode, ok := a["mode"].(string)
-		if !ok {
-			log.Print("[ERROR] volume.mode is not a string!")
-		}
-
-		metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
-			ContainerPath: container_path,
-			HostPath:      host_path,
-			Mode:          mode,
-		})
+		metronome_job_run.Volumes = metronome_job_volumes
+	} else {
+		log.Printf("[TRACE] volume not set, skipping")
 	}
-
-	log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
-
-	metronome_job_run.Volumes = metronome_job_volumes
 
 	// restart
 	_, ok = d.GetOk("restart")
