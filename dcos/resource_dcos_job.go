@@ -263,294 +263,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	var metronome_job dcos.MetronomeV1Job
-	var metronome_job_run dcos.MetronomeV1JobRun
-	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
-	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
-	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
-	var metronome_job_restart dcos.MetronomeV1JobRunRestart
-	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
-	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
-
-	metronome_job.Id = d.Get("name").(string)
-	metronome_job.Description = d.Get("description").(string)
-	metronome_job_run.Cpus = d.Get("cpus").(float64)
-	metronome_job_run.Mem = int64(d.Get("mem").(int))
-	metronome_job_run.Disk = int64(d.Get("disk").(int))
-	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
-
-	if cmd, ok := d.GetOk("cmd"); ok {
-		metronome_job_run.Cmd = cmd.(string)
-	}
-
-	if args, ok := d.GetOk("args"); ok {
-		metronome_job_run.Args = args.([]string)
-	}
-
-	if user, ok := d.GetOk("user"); ok {
-		metronome_job_run.User = user.(string)
-	}
-
-	// labels
-	if l, ok := d.GetOk("labels"); ok {
-		labels := l.(map[string]interface{})
-
-		tmp_lbl := make(map[string]string)
-		for k, v := range labels {
-			tmp_lbl[k] = v.(string)
-		}
-		metronome_job.Labels = tmp_lbl
-	} else {
-		log.Printf("[TRACE] labels not set, skipping")
-	}
-
-	// env
-	if e, ok := d.GetOk("env"); ok {
-		env_config := e.(*schema.Set).List()
-
-		log.Printf("[TRACE] env (config): %+v", env_config)
-		env_map := make(map[string]interface{})
-
-		for env := range env_config {
-			a := env_config[env].(map[string]interface{})
-
-			key, ok := a["key"].(string)
-			if !ok {
-				log.Print("[ERROR] env.key is not a string!")
-			}
-
-			value, ok := a["value"].(string)
-			if !ok {
-				log.Print("[ERROR] env.value is not a string!")
-			}
-
-			secret, ok := a["secret"].(string)
-			if !ok {
-				log.Print("[ERROR] env.secret is not a string!")
-			}
-
-			if key != "" {
-				env_map[key] = value
-			} else {
-				log.Printf("[TRACE] env.key is not set")
-			}
-
-			if secret != "" {
-				env_map[secret] = map[string]string{
-					"secret": secret,
-				}
-			} else {
-				log.Printf("[TRACE] env.secret is not set")
-			}
-		}
-
-		log.Printf("[TRACE] env_map %+s", env_map)
-
-		env_json, _ := json.Marshal(env_map)
-		log.Printf("[TRACE] env_json %s", env_json)
-		metronome_job_run.Env = env_map
-	} else {
-		log.Printf("[TRACE] env not set, skipping")
-	}
-
-	// secrets
-	if s, ok := d.GetOk("secrets"); ok {
-		secret_map := make(map[string]interface{})
-		config_secret := s.(map[string]interface{})
-
-		log.Printf("[TRACE] config_secret (config): %+v", config_secret)
-
-		for k, v := range config_secret {
-			secret_map[k] = map[string]string{
-				"source": v.(string),
-			}
-		}
-
-		log.Printf("[TRACE] env_secret: %+v", secret_map)
-
-		secret_map_json, _ := json.Marshal(secret_map)
-		log.Printf("[TRACE] secret_map_json %s", secret_map_json)
-		metronome_job_run.Secrets = secret_map
-	} else {
-		log.Printf("[TRACE] secrets not set, skipping")
-	}
-
-	// placement_constraints
-	if p, ok := d.GetOk("placement_constraint"); ok {
-		placement_constraints := p.(*schema.Set).List()
-
-		log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
-
-		for constraint := range placement_constraints {
-			a := placement_constraints[constraint].(map[string]interface{})
-			log.Printf("[TRACE] constrant (loop): %+v", a)
-
-			attribute, ok := a["attribute"].(string)
-			if !ok {
-				log.Print("[ERROR] placement_constraint.attribute is not a string!")
-			}
-
-			operator, ok := a["operator"].(string)
-			if !ok {
-				log.Print("[ERROR] placement_constraint.operator is not a string!")
-			}
-
-			value, ok := a["value"].(string)
-			if !ok {
-				log.Print("[ERROR] placement_constraint.value is not a string!")
-			}
-
-			metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
-				Attribute: attribute,
-				Operator:  operator,
-				Value:     value,
-			})
-		}
-
-		log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
-
-		metronome_job_placement.Constraints = &metronome_job_placement_constraint
-		metronome_job_run.Placement = &metronome_job_placement
-	} else {
-		log.Printf("[TRACE] placement_constraint not set, skipping")
-	}
-
-	// artifacts
-	if a, ok := d.GetOk("artifacts"); ok {
-		artifacts := a.(*schema.Set).List()
-
-		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
-
-		for artifact := range artifacts {
-			a := artifacts[artifact].(map[string]interface{})
-			log.Printf("[TRACE] artifact (loop): %+v", a)
-
-			uri, ok := a["uri"].(string)
-			if !ok {
-				log.Print("[ERROR] artifact.uri is not a string!")
-			}
-
-			extract, ok := a["extract"].(bool)
-			if !ok {
-				log.Print("[ERROR] artifact.extract is not a bool!")
-			}
-
-			executable, ok := a["executable"].(bool)
-			if !ok {
-				log.Print("[ERROR] artifact.executable is not a bool!")
-			}
-
-			cache, ok := a["cache"].(bool)
-			if !ok {
-				log.Print("[ERROR] artifact.cache is not a bool!")
-			}
-
-			metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
-				Uri:        uri,
-				Extract:    extract,
-				Executable: executable,
-				Cache:      cache,
-			})
-		}
-
-		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
-
-		metronome_job_run.Artifacts = metronome_job_artifacts
-	} else {
-		log.Printf("[TRACE] artifacts not set, skipping")
-	}
-
-	// docker
-	if do, ok := d.GetOk("docker"); ok {
-		docker_config := do.(map[string]interface{})
-		log.Printf("[TRACE] docker (config): %+v", docker_config)
-
-		image, ok := docker_config["image"].(string)
-		if !ok {
-			log.Print("[ERROR] docker.image is not a string!")
-		}
-
-		metronome_job_run_docker.Image = image
-		metronome_job_run.Docker = &metronome_job_run_docker
-	} else {
-		log.Printf("[TRACE] docker not set, skipping (THIS SHOULD NEVER BE EXECUTED!)")
-	}
-
-	// volumes
-	if vo, ok := d.GetOk("volume"); ok {
-		vols := vo.(*schema.Set).List()
-
-		log.Printf("[TRACE] volumes (config): %+v", vols)
-
-		for vol := range vols {
-			a := vols[vol].(map[string]interface{})
-			log.Printf("[TRACE] volume (loop): %+v", a)
-
-			container_path, ok := a["container_path"].(string)
-			if !ok {
-				log.Print("[ERROR] volume.container_path is not a string!")
-			}
-
-			host_path, ok := a["host_path"].(string)
-			if !ok {
-				log.Print("[ERROR] volume.host_path is not a string!")
-			}
-
-			mode, ok := a["mode"].(string)
-			if !ok {
-				log.Print("[ERROR] volume.mode is not a string!")
-			}
-
-			metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
-				ContainerPath: container_path,
-				HostPath:      host_path,
-				Mode:          mode,
-			})
-		}
-
-		log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
-
-		metronome_job_run.Volumes = metronome_job_volumes
-	} else {
-		log.Printf("[TRACE] volume not set, skipping")
-	}
-
-	// restart
-	if re, ok := d.GetOk("restart"); ok {
-		restart_config := re.(map[string]interface{})
-		log.Printf("[TRACE] restart (config): %+v", restart_config)
-
-		policy, ok := restart_config["policy"].(string)
-		if !ok {
-			log.Print("[ERROR] restart.policy is not a string!")
-		} else {
-			metronome_job_restart.Policy = policy
-		}
-
-		// This is a hack; terraform is treating this TypeInt as a string
-		var active_deadline_seconds int
-		if restart_config["active_deadline_seconds"] != nil {
-			var err2 error
-			active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
-			if err2 != nil {
-				log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
-			}
-
-			log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
-
-			metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
-		} else {
-			log.Printf("[TRACE] active_deadline_seconds is nil")
-		}
-
-		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
-
-		metronome_job_run.Restart = &metronome_job_restart
-	} else {
-		log.Printf("[TRACE] restart not set, skipping")
-	}
-
-	metronome_job.Run = metronome_job_run
+	metronome_job := generateMetronomeJob(d, meta)
 
 	m_json, _ := json.Marshal(metronome_job)
 	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
@@ -600,294 +313,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// Update the job
-	var metronome_job dcos.MetronomeV1Job
-	var metronome_job_run dcos.MetronomeV1JobRun
-	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
-	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
-	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
-	var metronome_job_restart dcos.MetronomeV1JobRunRestart
-	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
-	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
-
-	metronome_job.Id = d.Get("name").(string)
-	metronome_job.Description = d.Get("description").(string)
-	metronome_job_run.Cpus = d.Get("cpus").(float64)
-	metronome_job_run.Mem = int64(d.Get("mem").(int))
-	metronome_job_run.Disk = int64(d.Get("disk").(int))
-	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
-
-	if cmd, ok := d.GetOk("cmd"); ok {
-		metronome_job_run.Cmd = cmd.(string)
-	}
-
-	if args, ok := d.GetOk("args"); ok {
-		metronome_job_run.Args = args.([]string)
-	}
-
-	if user, ok := d.GetOk("user"); ok {
-		metronome_job_run.User = user.(string)
-	}
-
-	// labels
-	if l, ok := d.GetOk("labels"); ok {
-		labels := l.(map[string]interface{})
-
-		tmp_lbl := make(map[string]string)
-		for k, v := range labels {
-			tmp_lbl[k] = v.(string)
-		}
-		metronome_job.Labels = tmp_lbl
-	} else {
-		log.Printf("[TRACE] labels not set, skipping")
-	}
-
-	// env
-	if e, ok := d.GetOk("env"); ok {
-		env_config := e.(*schema.Set).List()
-
-		log.Printf("[TRACE] env (config): %+v", env_config)
-		env_map := make(map[string]interface{})
-
-		for env := range env_config {
-			a := env_config[env].(map[string]interface{})
-
-			key, ok := a["key"].(string)
-			if !ok {
-				log.Print("[ERROR] env.key is not a string!")
-			}
-
-			value, ok := a["value"].(string)
-			if !ok {
-				log.Print("[ERROR] env.value is not a string!")
-			}
-
-			secret, ok := a["secret"].(string)
-			if !ok {
-				log.Print("[ERROR] env.secret is not a string!")
-			}
-
-			if key != "" {
-				env_map[key] = value
-			} else {
-				log.Printf("[TRACE] env.key is not set")
-			}
-
-			if secret != "" {
-				env_map[secret] = map[string]string{
-					"secret": secret,
-				}
-			} else {
-				log.Printf("[TRACE] env.secret is not set")
-			}
-		}
-
-		log.Printf("[TRACE] env_map %+s", env_map)
-
-		env_json, _ := json.Marshal(env_map)
-		log.Printf("[TRACE] env_json %s", env_json)
-		metronome_job_run.Env = env_map
-	} else {
-		log.Printf("[TRACE] env not set, skipping")
-	}
-
-	// secrets
-	if s, ok := d.GetOk("secrets"); ok {
-		secret_map := make(map[string]interface{})
-		config_secret := s.(map[string]interface{})
-
-		log.Printf("[TRACE] config_secret (config): %+v", config_secret)
-
-		for k, v := range config_secret {
-			secret_map[k] = map[string]string{
-				"source": v.(string),
-			}
-		}
-
-		log.Printf("[TRACE] env_secret: %+v", secret_map)
-
-		secret_map_json, _ := json.Marshal(secret_map)
-		log.Printf("[TRACE] secret_map_json %s", secret_map_json)
-		metronome_job_run.Secrets = secret_map
-	} else {
-		log.Printf("[TRACE] secrets not set, skipping")
-	}
-
-	// placement_constraints
-	if p, ok := d.GetOk("placement_constraint"); ok {
-		placement_constraints := p.(*schema.Set).List()
-
-		log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
-
-		for constraint := range placement_constraints {
-			a := placement_constraints[constraint].(map[string]interface{})
-			log.Printf("[TRACE] constrant (loop): %+v", a)
-
-			attribute, ok := a["attribute"].(string)
-			if !ok {
-				log.Print("[ERROR] placement_constraint.attribute is not a string!")
-			}
-
-			operator, ok := a["operator"].(string)
-			if !ok {
-				log.Print("[ERROR] placement_constraint.operator is not a string!")
-			}
-
-			value, ok := a["value"].(string)
-			if !ok {
-				log.Print("[ERROR] placement_constraint.value is not a string!")
-			}
-
-			metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
-				Attribute: attribute,
-				Operator:  operator,
-				Value:     value,
-			})
-		}
-
-		log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
-
-		metronome_job_placement.Constraints = &metronome_job_placement_constraint
-		metronome_job_run.Placement = &metronome_job_placement
-	} else {
-		log.Printf("[TRACE] placement_constraint not set, skipping")
-	}
-
-	// artifacts
-	if a, ok := d.GetOk("artifacts"); ok {
-		artifacts := a.(*schema.Set).List()
-
-		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
-
-		for artifact := range artifacts {
-			a := artifacts[artifact].(map[string]interface{})
-			log.Printf("[TRACE] artifact (loop): %+v", a)
-
-			uri, ok := a["uri"].(string)
-			if !ok {
-				log.Print("[ERROR] artifact.uri is not a string!")
-			}
-
-			extract, ok := a["extract"].(bool)
-			if !ok {
-				log.Print("[ERROR] artifact.extract is not a bool!")
-			}
-
-			executable, ok := a["executable"].(bool)
-			if !ok {
-				log.Print("[ERROR] artifact.executable is not a bool!")
-			}
-
-			cache, ok := a["cache"].(bool)
-			if !ok {
-				log.Print("[ERROR] artifact.cache is not a bool!")
-			}
-
-			metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
-				Uri:        uri,
-				Extract:    extract,
-				Executable: executable,
-				Cache:      cache,
-			})
-		}
-
-		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
-		metronome_job_run.Artifacts = metronome_job_artifacts
-	} else {
-		log.Printf("[TRACE] artifacts not set, skipping")
-	}
-
-	// docker
-	if do, ok := d.GetOk("docker"); ok {
-		docker_config := do.(map[string]interface{})
-		log.Printf("[TRACE] docker (config): %+v", docker_config)
-
-		image, ok := docker_config["image"].(string)
-		if !ok {
-			log.Print("[ERROR] docker.image is not a string!")
-		}
-
-		metronome_job_run_docker.Image = image
-		metronome_job_run.Docker = &metronome_job_run_docker
-	} else {
-		log.Printf("[TRACE] docker not set, skipping (THIS SHOULD NEVER BE EXECUTED!)")
-	}
-
-	// volumes
-	if vo, ok := d.GetOk("volume"); ok {
-		vols := vo.(*schema.Set).List()
-
-		log.Printf("[TRACE] volumes (config): %+v", vols)
-
-		for vol := range vols {
-			a := vols[vol].(map[string]interface{})
-			log.Printf("[TRACE] volume (loop): %+v", a)
-
-			container_path, ok := a["container_path"].(string)
-			if !ok {
-				log.Print("[ERROR] volume.container_path is not a string!")
-			}
-
-			host_path, ok := a["host_path"].(string)
-			if !ok {
-				log.Print("[ERROR] volume.host_path is not a string!")
-			}
-
-			mode, ok := a["mode"].(string)
-			if !ok {
-				log.Print("[ERROR] volume.mode is not a string!")
-			}
-
-			metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
-				ContainerPath: container_path,
-				HostPath:      host_path,
-				Mode:          mode,
-			})
-		}
-
-		log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
-
-		metronome_job_run.Volumes = metronome_job_volumes
-	} else {
-		log.Printf("[TRACE] volume not set, skipping")
-	}
-
-	// restart
-	if re, ok := d.GetOk("restart"); ok {
-		restart_config := re.(map[string]interface{})
-		log.Printf("[TRACE] restart (config): %+v", restart_config)
-
-		policy, ok := restart_config["policy"].(string)
-		if !ok {
-			log.Print("[ERROR] restart.policy is not a string!")
-		} else {
-			metronome_job_restart.Policy = policy
-		}
-
-		// This is a hack; terraform is treating this TypeInt as a string
-		var active_deadline_seconds int
-		if restart_config["active_deadline_seconds"] != nil {
-			var err2 error
-			active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
-			if err2 != nil {
-				log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
-			}
-
-			log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
-
-			metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
-		} else {
-			log.Printf("[TRACE] active_deadline_seconds is nil")
-		}
-
-		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
-
-		metronome_job_run.Restart = &metronome_job_restart
-	} else {
-		log.Printf("[TRACE] restart not set, skipping")
-	}
-
-	metronome_job.Run = metronome_job_run
+	metronome_job := generateMetronomeJob(d, meta)
 
 	m_json, _ := json.Marshal(metronome_job)
 	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
@@ -948,4 +374,297 @@ func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (
 	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
 
 	return mv1job, nil
+}
+
+func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.MetronomeV1Job {
+	var metronome_job dcos.MetronomeV1Job
+	var metronome_job_run dcos.MetronomeV1JobRun
+	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
+	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
+	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
+	var metronome_job_restart dcos.MetronomeV1JobRunRestart
+	var metronome_job_placement dcos.MetronomeV1JobRunPlacement
+	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
+
+	metronome_job.Id = d.Get("name").(string)
+	metronome_job.Description = d.Get("description").(string)
+	metronome_job_run.Cpus = d.Get("cpus").(float64)
+	metronome_job_run.Mem = int64(d.Get("mem").(int))
+	metronome_job_run.Disk = int64(d.Get("disk").(int))
+	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
+
+	if cmd, ok := d.GetOk("cmd"); ok {
+		metronome_job_run.Cmd = cmd.(string)
+	}
+
+	if args, ok := d.GetOk("args"); ok {
+		metronome_job_run.Args = args.([]string)
+	}
+
+	if user, ok := d.GetOk("user"); ok {
+		metronome_job_run.User = user.(string)
+	}
+
+	// labels
+	if l, ok := d.GetOk("labels"); ok {
+		labels := l.(map[string]interface{})
+
+		tmp_lbl := make(map[string]string)
+		for k, v := range labels {
+			tmp_lbl[k] = v.(string)
+		}
+		metronome_job.Labels = tmp_lbl
+	} else {
+		log.Printf("[TRACE] labels not set, skipping")
+	}
+
+	// env
+	if e, ok := d.GetOk("env"); ok {
+		env_config := e.(*schema.Set).List()
+
+		log.Printf("[TRACE] env (config): %+v", env_config)
+		env_map := make(map[string]interface{})
+
+		for env := range env_config {
+			a := env_config[env].(map[string]interface{})
+
+			key, ok := a["key"].(string)
+			if !ok {
+				log.Print("[ERROR] env.key is not a string!")
+			}
+
+			value, ok := a["value"].(string)
+			if !ok {
+				log.Print("[ERROR] env.value is not a string!")
+			}
+
+			secret, ok := a["secret"].(string)
+			if !ok {
+				log.Print("[ERROR] env.secret is not a string!")
+			}
+
+			if key != "" {
+				env_map[key] = value
+			} else {
+				log.Printf("[TRACE] env.key is not set")
+			}
+
+			if secret != "" {
+				env_map[secret] = map[string]string{
+					"secret": secret,
+				}
+			} else {
+				log.Printf("[TRACE] env.secret is not set")
+			}
+		}
+
+		log.Printf("[TRACE] env_map %+s", env_map)
+
+		env_json, _ := json.Marshal(env_map)
+		log.Printf("[TRACE] env_json %s", env_json)
+		metronome_job_run.Env = env_map
+	} else {
+		log.Printf("[TRACE] env not set, skipping")
+	}
+
+	// secrets
+	if s, ok := d.GetOk("secrets"); ok {
+		secret_map := make(map[string]interface{})
+		config_secret := s.(map[string]interface{})
+
+		log.Printf("[TRACE] config_secret (config): %+v", config_secret)
+
+		for k, v := range config_secret {
+			secret_map[k] = map[string]string{
+				"source": v.(string),
+			}
+		}
+
+		log.Printf("[TRACE] env_secret: %+v", secret_map)
+
+		secret_map_json, _ := json.Marshal(secret_map)
+		log.Printf("[TRACE] secret_map_json %s", secret_map_json)
+		metronome_job_run.Secrets = secret_map
+	} else {
+		log.Printf("[TRACE] secrets not set, skipping")
+	}
+
+	// placement_constraints
+	if p, ok := d.GetOk("placement_constraint"); ok {
+		placement_constraints := p.(*schema.Set).List()
+
+		log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
+
+		for constraint := range placement_constraints {
+			a := placement_constraints[constraint].(map[string]interface{})
+			log.Printf("[TRACE] constrant (loop): %+v", a)
+
+			attribute, ok := a["attribute"].(string)
+			if !ok {
+				log.Print("[ERROR] placement_constraint.attribute is not a string!")
+			}
+
+			operator, ok := a["operator"].(string)
+			if !ok {
+				log.Print("[ERROR] placement_constraint.operator is not a string!")
+			}
+
+			value, ok := a["value"].(string)
+			if !ok {
+				log.Print("[ERROR] placement_constraint.value is not a string!")
+			}
+
+			metronome_job_placement_constraint = append(metronome_job_placement_constraint, dcos.MetronomeV1JobRunPlacementConstraints{
+				Attribute: attribute,
+				Operator:  operator,
+				Value:     value,
+			})
+		}
+
+		log.Printf("[TRACE] placement_constraint (struct): %+v", metronome_job_placement_constraint)
+
+		metronome_job_placement.Constraints = &metronome_job_placement_constraint
+		metronome_job_run.Placement = &metronome_job_placement
+	} else {
+		log.Printf("[TRACE] placement_constraint not set, skipping")
+	}
+
+	// artifacts
+	if a, ok := d.GetOk("artifacts"); ok {
+		artifacts := a.(*schema.Set).List()
+
+		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
+
+		for artifact := range artifacts {
+			a := artifacts[artifact].(map[string]interface{})
+			log.Printf("[TRACE] artifact (loop): %+v", a)
+
+			uri, ok := a["uri"].(string)
+			if !ok {
+				log.Print("[ERROR] artifact.uri is not a string!")
+			}
+
+			extract, ok := a["extract"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.extract is not a bool!")
+			}
+
+			executable, ok := a["executable"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.executable is not a bool!")
+			}
+
+			cache, ok := a["cache"].(bool)
+			if !ok {
+				log.Print("[ERROR] artifact.cache is not a bool!")
+			}
+
+			metronome_job_artifacts = append(metronome_job_artifacts, dcos.MetronomeV1JobRunArtifacts{
+				Uri:        uri,
+				Extract:    extract,
+				Executable: executable,
+				Cache:      cache,
+			})
+		}
+
+		log.Printf("[TRACE] artifacts (struct): %+v", metronome_job_artifacts)
+
+		metronome_job_run.Artifacts = metronome_job_artifacts
+	} else {
+		log.Printf("[TRACE] artifacts not set, skipping")
+	}
+
+	// docker
+	if do, ok := d.GetOk("docker"); ok {
+		docker_config := do.(map[string]interface{})
+		log.Printf("[TRACE] docker (config): %+v", docker_config)
+
+		image, ok := docker_config["image"].(string)
+		if !ok {
+			log.Print("[ERROR] docker.image is not a string!")
+		}
+
+		metronome_job_run_docker.Image = image
+		metronome_job_run.Docker = &metronome_job_run_docker
+	} else {
+		log.Printf("[TRACE] docker not set, skipping (THIS SHOULD NEVER BE EXECUTED!)")
+	}
+
+	// volumes
+	if vo, ok := d.GetOk("volume"); ok {
+		vols := vo.(*schema.Set).List()
+
+		log.Printf("[TRACE] volumes (config): %+v", vols)
+
+		for vol := range vols {
+			a := vols[vol].(map[string]interface{})
+			log.Printf("[TRACE] volume (loop): %+v", a)
+
+			container_path, ok := a["container_path"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.container_path is not a string!")
+			}
+
+			host_path, ok := a["host_path"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.host_path is not a string!")
+			}
+
+			mode, ok := a["mode"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.mode is not a string!")
+			}
+
+			metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
+				ContainerPath: container_path,
+				HostPath:      host_path,
+				Mode:          mode,
+			})
+		}
+
+		log.Printf("[TRACE] volumes (struct): %+v", metronome_job_volumes)
+
+		metronome_job_run.Volumes = metronome_job_volumes
+	} else {
+		log.Printf("[TRACE] volume not set, skipping")
+	}
+
+	// restart
+	if re, ok := d.GetOk("restart"); ok {
+		restart_config := re.(map[string]interface{})
+		log.Printf("[TRACE] restart (config): %+v", restart_config)
+
+		policy, ok := restart_config["policy"].(string)
+		if !ok {
+			log.Print("[ERROR] restart.policy is not a string!")
+		} else {
+			metronome_job_restart.Policy = policy
+		}
+
+		// This is a hack; terraform is treating this TypeInt as a string
+		var active_deadline_seconds int
+		if restart_config["active_deadline_seconds"] != nil {
+			var err2 error
+			active_deadline_seconds, err2 = strconv.Atoi(restart_config["active_deadline_seconds"].(string))
+			if err2 != nil {
+				log.Print("[ERROR] restart.active_deadline_seconds is not an int!")
+			}
+
+			log.Printf("[TRACE] policy: %s, active_deadline_seconds: %d", policy, active_deadline_seconds)
+
+			metronome_job_restart.ActiveDeadlineSeconds = int32(active_deadline_seconds)
+		} else {
+			log.Printf("[TRACE] active_deadline_seconds is nil")
+		}
+
+		log.Printf("[TRACE] Metronome restart object: %+v", metronome_job_restart)
+
+		metronome_job_run.Restart = &metronome_job_restart
+	} else {
+		log.Printf("[TRACE] restart not set, skipping")
+	}
+
+	metronome_job.Run = metronome_job_run
+
+	return metronome_job
 }

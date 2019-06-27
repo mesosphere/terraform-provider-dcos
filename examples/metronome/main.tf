@@ -6,7 +6,7 @@ resource "dcos_job" "ajob" {
   name             = "ajobid"
   cmd              = "echo foo"
   cpus             = 1
-  mem              = 32
+  mem              = 64
   disk             = 0
   user             = "root"
   description      = "the best description ever"
