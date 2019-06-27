@@ -292,9 +292,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// labels
-	_, ok := d.GetOk("labels")
-	if ok {
-		labels := d.Get("labels").(map[string]interface{})
+	if l, ok := d.GetOk("labels"); ok {
+		labels := l.(map[string]interface{})
 
 		tmp_lbl := make(map[string]string)
 		for k, v := range labels {
@@ -306,10 +305,9 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// env
-	_, ok = d.GetOk("env")
-	if ok {
+	if e, ok := d.GetOk("env"); ok {
+		env_config := e.(*schema.Set).List()
 
-		env_config := d.Get("env").(*schema.Set).List()
 		log.Printf("[TRACE] env (config): %+v", env_config)
 		env_map := make(map[string]interface{})
 
@@ -356,10 +354,10 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// secrets
-	_, ok = d.GetOk("secrets")
-	if ok {
+	if s, ok := d.GetOk("secrets"); ok {
 		secret_map := make(map[string]interface{})
-		config_secret := d.Get("secrets").(map[string]interface{})
+		config_secret := s.(map[string]interface{})
+
 		log.Printf("[TRACE] config_secret (config): %+v", config_secret)
 
 		for k, v := range config_secret {
@@ -378,9 +376,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// placement_constraints
-	_, ok = d.GetOk("placement_constraint")
-	if ok {
-		placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
+	if p, ok := d.GetOk("placement_constraint"); ok {
+		placement_constraints := p.(*schema.Set).List()
 
 		log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
 
@@ -419,9 +416,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// artifacts
-	_, ok = d.GetOk("artifacts")
-	if ok {
-		artifacts := d.Get("artifacts").(*schema.Set).List()
+	if a, ok := d.GetOk("artifacts"); ok {
+		artifacts := a.(*schema.Set).List()
 
 		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
 
@@ -465,9 +461,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// docker
-	_, ok = d.GetOk("docker")
-	if ok {
-		docker_config := d.Get("docker").(map[string]interface{})
+	if do, ok := d.GetOk("docker"); ok {
+		docker_config := do.(map[string]interface{})
 		log.Printf("[TRACE] docker (config): %+v", docker_config)
 
 		image, ok := docker_config["image"].(string)
@@ -482,9 +477,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// volumes
-	_, ok = d.GetOk("volume")
-	if ok {
-		vols := d.Get("volume").(*schema.Set).List()
+	if vo, ok := d.GetOk("volume"); ok {
+		vols := vo.(*schema.Set).List()
 
 		log.Printf("[TRACE] volumes (config): %+v", vols)
 
@@ -522,9 +516,8 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// restart
-	_, ok = d.GetOk("restart")
-	if ok {
-		restart_config := d.Get("restart").(map[string]interface{})
+	if re, ok := d.GetOk("restart"); ok {
+		restart_config := re.(map[string]interface{})
 		log.Printf("[TRACE] restart (config): %+v", restart_config)
 
 		policy, ok := restart_config["policy"].(string)
@@ -637,9 +630,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// labels
-	_, ok := d.GetOk("labels")
-	if ok {
-		labels := d.Get("labels").(map[string]interface{})
+	if l, ok := d.GetOk("labels"); ok {
+		labels := l.(map[string]interface{})
 
 		tmp_lbl := make(map[string]string)
 		for k, v := range labels {
@@ -651,10 +643,9 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// env
-	_, ok = d.GetOk("env")
-	if ok {
+	if e, ok := d.GetOk("env"); ok {
+		env_config := e.(*schema.Set).List()
 
-		env_config := d.Get("env").(*schema.Set).List()
 		log.Printf("[TRACE] env (config): %+v", env_config)
 		env_map := make(map[string]interface{})
 
@@ -701,10 +692,10 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// secrets
-	_, ok = d.GetOk("secrets")
-	if ok {
+	if s, ok := d.GetOk("secrets"); ok {
 		secret_map := make(map[string]interface{})
-		config_secret := d.Get("secrets").(map[string]interface{})
+		config_secret := s.(map[string]interface{})
+
 		log.Printf("[TRACE] config_secret (config): %+v", config_secret)
 
 		for k, v := range config_secret {
@@ -723,9 +714,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// placement_constraints
-	_, ok = d.GetOk("placement_constraint")
-	if ok {
-		placement_constraints := d.Get("placement_constraint").(*schema.Set).List()
+	if p, ok := d.GetOk("placement_constraint"); ok {
+		placement_constraints := p.(*schema.Set).List()
 
 		log.Printf("[TRACE] placement_constraints (config): %+v", placement_constraints)
 
@@ -764,9 +754,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// artifacts
-	_, ok = d.GetOk("artifacts")
-	if ok {
-		artifacts := d.Get("artifacts").(*schema.Set).List()
+	if a, ok := d.GetOk("artifacts"); ok {
+		artifacts := a.(*schema.Set).List()
 
 		log.Printf("[TRACE] artifacts (config): %+v", artifacts)
 
@@ -809,9 +798,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// docker
-	_, ok = d.GetOk("docker")
-	if ok {
-		docker_config := d.Get("docker").(map[string]interface{})
+	if do, ok := d.GetOk("docker"); ok {
+		docker_config := do.(map[string]interface{})
 		log.Printf("[TRACE] docker (config): %+v", docker_config)
 
 		image, ok := docker_config["image"].(string)
@@ -826,9 +814,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// volumes
-	_, ok = d.GetOk("volume")
-	if ok {
-		vols := d.Get("volume").(*schema.Set).List()
+	if vo, ok := d.GetOk("volume"); ok {
+		vols := vo.(*schema.Set).List()
 
 		log.Printf("[TRACE] volumes (config): %+v", vols)
 
@@ -866,9 +853,8 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// restart
-	_, ok = d.GetOk("restart")
-	if ok {
-		restart_config := d.Get("restart").(map[string]interface{})
+	if re, ok := d.GetOk("restart"); ok {
+		restart_config := re.(map[string]interface{})
 		log.Printf("[TRACE] restart (config): %+v", restart_config)
 
 		policy, ok := restart_config["policy"].(string)
