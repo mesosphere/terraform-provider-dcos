@@ -45,7 +45,7 @@ func resourceDcosJob() *schema.Resource {
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    false,
 				Description: "A description of this job.",
 			},
@@ -387,7 +387,6 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 	var metronome_job_placement_constraint []dcos.MetronomeV1JobRunPlacementConstraints
 
 	metronome_job.Id = d.Get("name").(string)
-	metronome_job.Description = d.Get("description").(string)
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
 	metronome_job_run.Mem = int64(d.Get("mem").(int))
 	metronome_job_run.Disk = int64(d.Get("disk").(int))
@@ -395,6 +394,10 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 
 	if cmd, ok := d.GetOk("cmd"); ok {
 		metronome_job_run.Cmd = cmd.(string)
+	}
+
+	if desc, ok := d.GetOk("description"); ok {
+		metronome_job.Description = desc.(string)
 	}
 
 	if args, ok := d.GetOk("args"); ok {
