@@ -100,9 +100,10 @@ func resourceDcosJob() *schema.Resource {
 				},
 			},
 			"docker": {
-				Type:     schema.TypeMap,
-				Required: true,
-				ForceNew: false,
+				Type:          schema.TypeMap,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"ucr"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"image": {
@@ -110,6 +111,22 @@ func resourceDcosJob() *schema.Resource {
 							Required:    true,
 							ForceNew:    false,
 							Description: "The docker repository image name.",
+						},
+					},
+				},
+			},
+			"ucr": {
+				Type:          schema.TypeMap,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"docker"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ucr repository image name.",
 						},
 					},
 				},
@@ -382,6 +399,7 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 	var metronome_job dcos.MetronomeV1Job
 	var metronome_job_run dcos.MetronomeV1JobRun
 	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
+	var metronome_job_run_ucr dcos.MetronomeV1JobRunUcr
 	var metronome_job_artifacts []dcos.MetronomeV1JobRunArtifacts
 	var metronome_job_volumes []dcos.MetronomeV1JobRunVolumes
 	var metronome_job_restart dcos.MetronomeV1JobRunRestart
@@ -592,7 +610,25 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 		metronome_job_run_docker.Image = image
 		metronome_job_run.Docker = &metronome_job_run_docker
 	} else {
-		log.Printf("[TRACE] docker not set, skipping (THIS SHOULD NEVER BE EXECUTED!)")
+		log.Printf("[TRACE] docker not set, skipping")
+	}
+
+	// ucr
+	if uc, ok := d.GetOk("ucr"); ok {
+		ucr_config := uc.(map[string]interface{})
+		log.Printf("[TRACE] ucr (config): %+v", ucr_config)
+
+		image, ok := ucr_config["image"].(string)
+		if !ok {
+			log.Print("[ERROR] ucr.image is not a string!")
+		}
+
+		var metronome_job_run_ucr_image dcos.MetronomeV1JobRunUcrImage
+		metronome_job_run_ucr_image.Id = image
+		metronome_job_run_ucr.Image = metronome_job_run_ucr_image
+		metronome_job_run.Ucr = &metronome_job_run_ucr
+	} else {
+		log.Printf("[TRACE] ucr not set, skipping")
 	}
 
 	// volumes
