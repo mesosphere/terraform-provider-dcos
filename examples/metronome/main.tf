@@ -6,7 +6,7 @@ resource "dcos_job" "ajob" {
   name             = "ajobid"
   cmd              = "echo foo"
   cpus             = 1
-  mem              = 32
+  mem              = 64
   disk             = 0
   user             = "root"
   description      = "the best description ever"
@@ -60,7 +60,7 @@ resource "dcos_job" "ajob" {
 resource "dcos_job_schedule" "jobsched" {
   dcos_job_id = "${dcos_job.ajob.name}"
   name        = "someschedule"
-  cron        = "*/30 * * * *"
+  cron        = "0,30 * * * *"
 }
 
 output "somejob_name" {
