@@ -3,6 +3,7 @@ package dcos
 import (
 	"context"
 	"fmt"
+
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -60,8 +61,10 @@ func Provider() terraform.ResourceProvider {
 			"dcos_job_schedule":        resourceDcosJobSchedule(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"dcos_service": dataSourceDcosService(),
-			"dcos_job":     dataSourceDcosJob(),
+			"dcos_service":  dataSourceDcosService(),
+			"dcos_job":      dataSourceDcosJob(),
+			"dcos_token":    dataSourceDcosToken(),
+			"dcos_base_url": dataSourceDcosBaseURL(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
