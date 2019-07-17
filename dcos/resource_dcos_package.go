@@ -7,16 +7,14 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"strings"
 	"time"
-
-	"github.com/go-test/deep"
 
 	"github.com/antihax/optional"
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/imdario/mergo"
+	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
 
 func resourceDcosPackage() *schema.Resource {
@@ -37,12 +35,6 @@ func resourceDcosPackage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Description of the newly created service account",
-			},
 			"app_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -57,115 +49,134 @@ func resourceDcosPackage() *schema.Resource {
 				},
 				Description: "ID of the account is used by default",
 			},
-			"version": {
+			"config": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				ForceNew:    true,
-				Description: "Description of the newly created service account",
-			},
-
-			"config_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Description: "The package configuration to use",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					log.Printf("[Trace] Comparing old %s  with new %s", old, new)
-					jconfig := make(map[string]map[string]interface{})
 
-					oldConfig, err := unmarshallPackageConfig(old)
+					oldVer, oldConfig, err := collectPackageConfiguration(old)
 					if err != nil {
+						log.Printf("[WARNING] Unable to parse old package config: %s", err.Error())
 						return false
 					}
 
-					config, err := unmarshallPackageConfig(old)
+					newVer, newConfig, err := collectPackageConfiguration(new)
 					if err != nil {
+						log.Printf("[WARNING] Unable to parse new package config: %s", err.Error())
 						return false
 					}
 
-					jconfig, err = unmarshallPackageConfig(new)
-					if err != nil {
+					// Check if the version specifications have changed
+					if oldVer.Name != newVer.Name {
+						log.Printf("[TRACE] Old name '%s' does not match new name '%s'", oldVer.Name, newVer.Name)
+						return false
+					}
+					if oldVer.Version != newVer.Version {
+						log.Printf("[TRACE] Old version '%s' does not match new version '%s'", oldVer.Version, newVer.Version)
 						return false
 					}
 
-					err = mergo.MergeWithOverwrite(&config, &jconfig)
+					// Check if the configuration has changed (defaults included)
+					oldHash, err := util.HashDict(util.NestedToFlatMap(oldConfig))
 					if err != nil {
-						log.Printf("[WARNING] config_json.DiffSuppressFunc Merge - %v", err)
+						log.Printf("[WARNING] Unable to hash old package config: %s", err.Error())
 						return false
 					}
-					log.Printf("[Trace] Comparing old %#v  with new %#v", oldConfig, config)
-
-					if diff := deep.Equal(&oldConfig, &config); diff != nil {
-						log.Printf("[TRACE] config_json.DiffSuppressFunc Equal - %s", strings.Join(diff, ","))
-
+					newHash, err := util.HashDict(util.NestedToFlatMap(newConfig))
+					if err != nil {
+						log.Printf("[WARNING] Unable to hash new package config: %s", err.Error())
+						return false
+					}
+					if oldHash != newHash {
+						log.Printf("[TRACE] Old config hash '%s' does not match new config hash '%s'", oldHash, newHash)
 						return false
 					}
 
 					return true
 				},
-				Description: "Path to public key to use",
 			},
 		},
 	}
 }
 
-func unmarshallPackageConfig(j string) (map[string]map[string]interface{}, error) {
-	config := make(map[string]map[string]interface{})
-	if err := json.Unmarshal([]byte(j), &config); err != nil {
-		log.Printf("[WARNING] config_json.DiffSuppressFunc Unmarschal - %v", err)
-		return nil, err
+/**
+ * Collects the package configuration. This includes:
+ *
+ * - Getting the defaults from the version spec
+ * - Merging it with the configuration JSON
+ */
+func collectPackageConfiguration(configSpec string) (*packageVersionSpec, map[string]map[string]interface{}, error) {
+	packageSpec, err := deserializePackageConfigSpec(configSpec)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Unable to parse configuration: %s", err.Error())
+	}
+	if packageSpec.Version == nil {
+		return nil, nil, fmt.Errorf("The configuration given do not include a version spec")
 	}
 
-	return config, nil
+	// Extract default config from the schema. This is going to be the
+	// base where we are merge the config later.
+	//
+	// NOTE: We are merging here and not on the individual configuration data
+	//       resources because we must always apply the defaults *first*.
+	//
+	config, err := util.DefaultJSONFromSchema(packageSpec.Version.Schema)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Unable to extract package defaults from it's configuration schema")
+	}
+
+	// Merge package configuration
+	pkgConfig, err := util.FlatToNestedMap(packageSpec.Config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Unexpected error in the configuration: %s", err.Error())
+	}
+	err = mergo.MergeWithOverwrite(&config, &pkgConfig)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Unable to merge the configuration with the defaults: %s", err.Error())
+	}
+
+	// Done
+	return packageSpec.Version, config, nil
 }
 
 func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	packageName := d.Get("name").(string)
+	packageVersion, packageConfig, err := collectPackageConfiguration(d.Get("config").(string))
+	if err != nil {
+		return fmt.Errorf("Unable to parse package config: %s", err.Error())
+	}
 
+	// First, make sure the package exists on the cosmos registry
 	localVarOptionals := &dcos.PackageDescribeOpts{
 		CosmosPackageDescribeV1Request: optional.NewInterface(dcos.CosmosPackageDescribeV1Request{
-			PackageName: packageName,
+			PackageName: packageVersion.Name,
 		}),
 	}
 	_, resp, err := client.Cosmos.PackageDescribe(ctx, localVarOptionals)
 	log.Printf("[TRACE] Cosmos.PackageDescribe - %v", resp)
 	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("package %s does not exist", packageName)
+		return fmt.Errorf("Package %s does not exist", packageVersion.Name)
 	}
-
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to query cosmos: %s", err.Error())
 	}
 
-	// prepare packe install
-
+	// Prepare for package install
 	cosmosPackageInstallV1Request := dcos.CosmosPackageInstallV1Request{}
-	cosmosPackageInstallV1Request.PackageName = packageName
+	cosmosPackageInstallV1Request.PackageName = packageVersion.Name
 	if appID, ok := d.GetOk("app_id"); ok {
 		cosmosPackageInstallV1Request.AppId = appID.(string)
 	} else {
-		cosmosPackageInstallV1Request.AppId = packageName
+		cosmosPackageInstallV1Request.AppId = packageVersion.Name
 		d.Set("app_id", appID.(string))
 	}
-	if packageVersion, ok := d.GetOk("version"); ok {
-		cosmosPackageInstallV1Request.PackageVersion = packageVersion.(string)
-	}
-
-	if packageConfig, ok := d.GetOk("config_json"); ok {
-		var opt map[string]map[string]interface{}
-		err := json.Unmarshal([]byte(packageConfig.(string)), &opt)
-		if err != nil {
-			return fmt.Errorf("Error reading config_json %v", err)
-		}
-		// TODO: There is bug here
-		//cosmosPackageInstallV1Request.Options = opt
-
-		log.Printf("[TRACE] Prepare Cosmos.PackageInstall found config_json - %v", opt)
-	}
+	cosmosPackageInstallV1Request.PackageVersion = packageVersion.Version
+	cosmosPackageInstallV1Request.Options = util.NestedToFlatMap(packageConfig)
 
 	installedPkg, installResp, err := client.Cosmos.PackageInstall(ctx, cosmosPackageInstallV1Request)
 	log.Printf("[TRACE] Cosmos.PackageInstall - %v", installResp)
