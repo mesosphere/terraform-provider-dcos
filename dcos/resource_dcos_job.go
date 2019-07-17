@@ -261,7 +261,7 @@ func resourceDcosJob() *schema.Resource {
 			},
 			"disk": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     false,
 				Description:  "How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.",
 				ValidateFunc: validation.IntAtLeast(0),
@@ -409,7 +409,6 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
 	metronome_job_run.Mem = int64(d.Get("mem").(int))
-	metronome_job_run.Disk = int64(d.Get("disk").(int))
 	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
 
 	if cmd, ok := d.GetOk("cmd"); ok {
@@ -426,6 +425,10 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 
 	if user, ok := d.GetOk("user"); ok {
 		metronome_job_run.User = user.(string)
+	}
+
+	if disk, ok := d.GetOk("disk"); ok {
+		metronome_job_run.Disk = disk.(int64)
 	}
 
 	// labels
