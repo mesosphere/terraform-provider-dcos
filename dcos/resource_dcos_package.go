@@ -125,7 +125,7 @@ func collectPackageConfiguration(configSpec string) (*packageVersionSpec, map[st
 	//
 	config, err := util.DefaultJSONFromSchema(packageSpec.Version.Schema)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Unable to extract package defaults from it's configuration schema")
+		return nil, nil, fmt.Errorf("Unable to extract package defaults from it's configuration schema: %s", err.Error())
 	}
 
 	// Merge package configuration

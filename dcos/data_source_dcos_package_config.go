@@ -1,8 +1,12 @@
 package dcos
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 
@@ -80,17 +84,45 @@ func dataSourceDcosPackageConfig() *schema.Resource {
 }
 
 func serializePackageConfigSpec(model *packageConfigSpec) (string, error) {
-	bytes, err := json.Marshal(model)
+	bSpec, err := json.Marshal(model)
 	if err != nil {
 		return "", err
 	}
 
-	return string(bytes), nil
+	var gzBytesBuf bytes.Buffer
+	gz := gzip.NewWriter(&gzBytesBuf)
+	if _, err := gz.Write(bSpec); err != nil {
+		return "", err
+	}
+	if err := gz.Flush(); err != nil {
+		return "", err
+	}
+	if err := gz.Close(); err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(gzBytesBuf.Bytes()), nil
 }
 
 func deserializePackageConfigSpec(spec string) (*packageConfigSpec, error) {
 	var resp *packageConfigSpec
-	err := json.Unmarshal([]byte(spec), &resp)
+
+	gzBytes, err := base64.StdEncoding.DecodeString(spec)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to decode spec: %s", err.Error())
+	}
+
+	zReader, err := gzip.NewReader(bytes.NewReader(gzBytes))
+	if err != nil {
+		return nil, fmt.Errorf("Unable to unzip the gzip stream: %s", err.Error())
+	}
+
+	bSpec, err := ioutil.ReadAll(zReader)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to read from gzip stream: %s", err.Error())
+	}
+
+	err = json.Unmarshal(bSpec, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to parse configuration spec '%s': %s", spec, err.Error())
 	}

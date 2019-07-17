@@ -181,15 +181,29 @@ func AutotypeList(input []interface{}) []interface{} {
 }
 
 /**
+ * Gets or guesses a schema node type
+ */
+func getSchemaNodeType(input map[string]interface{}) string {
+	if varType, ok := input["type"]; ok {
+		return varType.(string)
+	}
+
+	// Guess
+	if _, ok := input["properties"]; ok {
+		return "object"
+	}
+
+	// Default to 'string'
+	return "string"
+}
+
+/**
  * Walk a {type: "object"} schema entry and return a map with the default values
  */
 func defaultFromSchemaObject(input map[string]interface{}) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
-	varType, ok := input["type"]
-	if !ok {
-		return nil, fmt.Errorf("Missing `type` property")
-	}
-	if varType.(string) != "object" {
+	varType := getSchemaNodeType(input)
+	if varType != "object" {
 		return nil, fmt.Errorf("Trying to process a non-object as object")
 	}
 
@@ -218,10 +232,7 @@ func defaultFromSchemaObject(input map[string]interface{}) (map[string]interface
  * Otherwise returns `nil` if a default value is missing
  */
 func defaultFromSchemaValue(input map[string]interface{}) (interface{}, error) {
-	varType, ok := input["type"]
-	if !ok {
-		return nil, fmt.Errorf("Missing `type` property")
-	}
+	varType := getSchemaNodeType(input)
 
 	// Objects require some nesting
 	if varType == "object" {
