@@ -428,7 +428,7 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 	}
 
 	if disk, ok := d.GetOk("disk"); ok {
-		metronome_job_run.Disk = disk.(int64)
+		metronome_job_run.Disk = int64(disk.(int))
 	}
 
 	// labels
