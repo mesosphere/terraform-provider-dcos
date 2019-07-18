@@ -12,7 +12,7 @@ resource "dcos_job" "ajob" {
   description      = "the best description ever"
   max_launch_delay = 600
 
-  ucr {
+  docker {
     image = "ubuntu:latest"
   }
 
@@ -54,7 +54,6 @@ resource "dcos_job" "ajob" {
     container_path = "/mnt/test"
     host_path      = "/dev/null"
     mode           = "RW"
-    secret         = "secret1"
   }
 }
 
