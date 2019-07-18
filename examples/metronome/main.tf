@@ -12,7 +12,7 @@ resource "dcos_job" "ajob" {
   description      = "the best description ever"
   max_launch_delay = 600
 
-  docker {
+  ucr {
     image = "ubuntu:latest"
   }
 
@@ -33,10 +33,10 @@ resource "dcos_job" "ajob" {
 #    secret = "cool_secret"
   }
 
-#  secrets {
-#    secret1     = "/something"
-#    cool_secret = "something_else"
-#  }
+  secrets {
+    secret1     = "/something"
+    cool_secret = "something_else"
+  }
 
   restart {
     active_deadline_seconds = 120
@@ -54,6 +54,7 @@ resource "dcos_job" "ajob" {
     container_path = "/mnt/test"
     host_path      = "/dev/null"
     mode           = "RW"
+    secret         = "secret1"
   }
 }
 
