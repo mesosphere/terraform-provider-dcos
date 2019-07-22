@@ -243,6 +243,12 @@ func resourceDcosJob() *schema.Resource {
 							Description:  "Possible values are RO for ReadOnly and RW for Read/Write.",
 							ValidateFunc: validation.StringInSlice([]string{"RO", "RW"}, false),
 						},
+						"secret": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Description:   "Allow for volume secrets if using UCR.",
+							ConflictsWith: []string{"docker"},
+						},
 					},
 				},
 			},
@@ -261,7 +267,7 @@ func resourceDcosJob() *schema.Resource {
 			},
 			"disk": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     false,
 				Description:  "How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.",
 				ValidateFunc: validation.IntAtLeast(0),
@@ -282,7 +288,10 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	metronome_job := generateMetronomeJob(d, meta)
+	metronome_job, err := generateMetronomeJob(d, meta)
+	if err != nil {
+		return err
+	}
 
 	m_json, _ := json.Marshal(metronome_job)
 	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
@@ -332,7 +341,10 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	metronome_job := generateMetronomeJob(d, meta)
+	metronome_job, err := generateMetronomeJob(d, meta)
+	if err != nil {
+		return err
+	}
 
 	m_json, _ := json.Marshal(metronome_job)
 	log.Printf("[TRACE] Pre-create MetronomeV1Job: %+v", metronome_job)
@@ -395,7 +407,7 @@ func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (
 	return mv1job, nil
 }
 
-func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.MetronomeV1Job {
+func generateMetronomeJob(d *schema.ResourceData, meta interface{}) (dcos.MetronomeV1Job, error) {
 	var metronome_job dcos.MetronomeV1Job
 	var metronome_job_run dcos.MetronomeV1JobRun
 	var metronome_job_run_docker dcos.MetronomeV1JobRunDocker
@@ -409,7 +421,6 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 	metronome_job.Id = d.Get("name").(string)
 	metronome_job_run.Cpus = d.Get("cpus").(float64)
 	metronome_job_run.Mem = int64(d.Get("mem").(int))
-	metronome_job_run.Disk = int64(d.Get("disk").(int))
 	metronome_job_run.MaxLaunchDelay = int32(d.Get("max_launch_delay").(int))
 
 	if cmd, ok := d.GetOk("cmd"); ok {
@@ -426,6 +437,10 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 
 	if user, ok := d.GetOk("user"); ok {
 		metronome_job_run.User = user.(string)
+	}
+
+	if disk, ok := d.GetOk("disk"); ok {
+		metronome_job_run.Disk = int64(disk.(int))
 	}
 
 	// labels
@@ -656,10 +671,29 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 				log.Print("[ERROR] volume.mode is not a string!")
 			}
 
+			secret, ok := a["secret"].(string)
+			if !ok {
+				log.Print("[ERROR] volume.secret is not a string!")
+			}
+
+			tmp_secret_set := false
+			for k, v := range metronome_job_run.Secrets {
+				log.Printf("[TRACE] volume.secrets: %s:%s", k, v)
+
+				if secret == k {
+					tmp_secret_set = true
+				}
+			}
+
+			if tmp_secret_set == false {
+				return dcos.MetronomeV1Job{}, fmt.Errorf("[ERROR] Expecting '%s' to be part of secrets configuration", secret)
+			}
+
 			metronome_job_volumes = append(metronome_job_volumes, dcos.MetronomeV1JobRunVolumes{
 				ContainerPath: container_path,
 				HostPath:      host_path,
 				Mode:          mode,
+				Secret:        secret,
 			})
 		}
 
@@ -707,5 +741,5 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) dcos.Metrono
 
 	metronome_job.Run = metronome_job_run
 
-	return metronome_job
+	return metronome_job, nil
 }

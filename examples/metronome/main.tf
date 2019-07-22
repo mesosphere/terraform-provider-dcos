@@ -33,10 +33,10 @@ resource "dcos_job" "ajob" {
 #    secret = "cool_secret"
   }
 
-#  secrets {
-#    secret1     = "/something"
-#    cool_secret = "something_else"
-#  }
+  secrets {
+    secret1     = "/something"
+    cool_secret = "something_else"
+  }
 
   restart {
     active_deadline_seconds = 120
