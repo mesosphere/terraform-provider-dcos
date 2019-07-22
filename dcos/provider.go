@@ -56,6 +56,8 @@ func Provider() terraform.ResourceProvider {
 			"dcos_iam_service_account": resourceDcosIAMServiceAccount(),
 			"dcos_iam_saml_provider":   resourceDcosSAMLProvider(),
 			"dcos_iam_grant_user":      resourceDcosIAMGrantUser(),
+			"dcos_iam_group":           resourceDcosIAMGroup(),
+			"dcos_iam_group_user":      resourceDcosIAMGroupUser(),
 			"dcos_package":             resourceDcosPackage(),
 			"dcos_job":                 resourceDcosJob(),
 			"dcos_job_schedule":        resourceDcosJobSchedule(),
