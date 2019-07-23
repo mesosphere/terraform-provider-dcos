@@ -2,11 +2,11 @@ package dcos
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/antihax/optional"
@@ -21,11 +21,8 @@ func resourceDcosPackage() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDcosPackageCreate,
 		Read:   resourceDcosPackageRead,
-		// Update: resourceDcosPackageUpdate,
+		Update: resourceDcosPackageUpdate,
 		Delete: resourceDcosPackageDelete,
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
 
 		SchemaVersion: 1,
 		Timeouts: &schema.ResourceTimeout{
@@ -49,10 +46,15 @@ func resourceDcosPackage() *schema.Resource {
 				},
 				Description: "ID of the account is used by default",
 			},
+			"wait": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Instructs the resource provider to wait until the resource is ready before continuing",
+			},
 			"config": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
 				Description: "The package configuration to use",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					log.Printf("[Trace] Comparing old %s  with new %s", old, new)
@@ -117,6 +119,14 @@ func collectPackageConfiguration(configSpec string) (*packageVersionSpec, map[st
 		return nil, nil, fmt.Errorf("The configuration given do not include a version spec")
 	}
 
+	return normalizePackageSpec(packageSpec)
+}
+
+/**
+ * Normalizes the package specifications, ensuring that the configuration sections
+ * are merged in the correct order.
+ */
+func normalizePackageSpec(packageSpec *packageConfigSpec) (*packageVersionSpec, map[string]map[string]interface{}, error) {
 	// Extract default config from the schema. This is going to be the
 	// base where we are merge the config later.
 	//
@@ -142,6 +152,95 @@ func collectPackageConfiguration(configSpec string) (*packageVersionSpec, map[st
 	return packageSpec.Version, config, nil
 }
 
+/**
+ * Get the app description
+ */
+func getAppDescription(client *dcos.APIClient, appId string) (*dcos.CosmosServiceDescribeV1Response, error) {
+	ctx := context.TODO()
+
+	describeOpts := &dcos.ServiceDescribeOpts{
+		CosmosServiceDescribeV1Request: optional.NewInterface(dcos.CosmosServiceDescribeV1Request{
+			AppId: appId,
+		}),
+	}
+
+	log.Printf("[DEBUG] Querying cosmos to describe service with appId='%s'", appId)
+	pkg, resp, err := client.Cosmos.ServiceDescribe(ctx, describeOpts)
+	log.Printf("[TRACE] HTTP Response: %v", util.GetVerboseCosmosError(err, resp))
+
+	if err != nil {
+		log.Printf("[WARN] Got service description error: %s", util.GetVerboseCosmosError(err, resp))
+		return nil, fmt.Errorf(util.GetVerboseCosmosError(err, resp))
+	}
+
+	log.Printf("[TRACE] Got service description: %v, %d", pkg.ResolvedOptions, len(pkg.ResolvedOptions))
+	if len(pkg.ResolvedOptions) > 0 {
+		return &pkg, nil
+	}
+
+	// If the service is not yet ready, return nil as a package response
+	return nil, nil
+}
+
+/**
+ * Gets the service description with the specified app ID, and waits up to <timeountMin> minutes until it's ready
+ */
+func waitAndGetAppDescription(client *dcos.APIClient, appId string, timeoutMin int) (*dcos.CosmosServiceDescribeV1Response, error) {
+	var describeResult *dcos.CosmosServiceDescribeV1Response
+
+	err := resource.Retry(time.Duration(timeoutMin)*time.Minute, func() *resource.RetryError {
+		pkg, err := getAppDescription(client, appId)
+		if err != nil {
+			log.Printf("[WARN] Breaking out of retry loop because of unrecoverable error")
+			return resource.NonRetryableError(err)
+		}
+
+		if pkg == nil {
+			log.Printf("[TRACE] Got `nil` as package description, still waiting for the app")
+			return resource.RetryableError(fmt.Errorf("Service %s still initializing", appId))
+		}
+
+		describeResult = pkg
+		return resource.NonRetryableError(nil)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return describeResult, nil
+}
+
+/**
+ * Get the specified package description
+ */
+func getPackageDescription(client *dcos.APIClient, packageName string, packageVersion string) (*dcos.CosmosPackage, error) {
+	ctx := context.TODO()
+
+	// Get the installed versions
+	localVarOptionals := &dcos.PackageDescribeOpts{
+		CosmosPackageDescribeV1Request: optional.NewInterface(dcos.CosmosPackageDescribeV1Request{
+			PackageName:    packageName,
+			PackageVersion: packageVersion,
+		}),
+	}
+
+	log.Printf("[DEBUG] Querying cosmos to describe package='%s', version='%s'", packageName, packageVersion)
+	descResp, httpResp, err := client.Cosmos.PackageDescribe(ctx, localVarOptionals)
+	log.Printf("[TRACE] HTTP Response: %v", httpResp)
+
+	if httpResp.StatusCode == http.StatusNotFound {
+		log.Printf("[WARN] Package was not found")
+		return nil, fmt.Errorf("Package %s does not exist", packageName)
+	}
+	if err != nil {
+		log.Printf("[WARN] Got general error: %s", err.Error())
+		return nil, fmt.Errorf("Unable to query cosmos: %s", util.GetVerboseCosmosError(err, httpResp))
+	}
+
+	log.Printf("[TRACE] Got package description: %v", descResp)
+	return &descResp.Package, nil
+}
+
 func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
@@ -152,18 +251,9 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// First, make sure the package exists on the cosmos registry
-	localVarOptionals := &dcos.PackageDescribeOpts{
-		CosmosPackageDescribeV1Request: optional.NewInterface(dcos.CosmosPackageDescribeV1Request{
-			PackageName: packageVersion.Name,
-		}),
-	}
-	_, resp, err := client.Cosmos.PackageDescribe(ctx, localVarOptionals)
-	log.Printf("[TRACE] Cosmos.PackageDescribe - %v", resp)
-	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("Package %s does not exist", packageVersion.Name)
-	}
+	_, err = getPackageDescription(client, packageVersion.Name, packageVersion.Version)
 	if err != nil {
-		return fmt.Errorf("Unable to query cosmos: %s", err.Error())
+		return err
 	}
 
 	// Prepare for package install
@@ -178,69 +268,226 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	cosmosPackageInstallV1Request.PackageVersion = packageVersion.Version
 	cosmosPackageInstallV1Request.Options = util.NestedToFlatMap(packageConfig)
 
-	installedPkg, installResp, err := client.Cosmos.PackageInstall(ctx, cosmosPackageInstallV1Request)
-	log.Printf("[TRACE] Cosmos.PackageInstall - %v", installResp)
+	log.Printf("[DEBUG] Installing package %s:%s using cosmos", packageVersion.Name, packageVersion.Version)
+	log.Printf("[DEBUG] Using options: %s", util.PrintJSON(cosmosPackageInstallV1Request.Options))
+	installedPkg, httpResp, err := client.Cosmos.PackageInstall(ctx, cosmosPackageInstallV1Request)
+	log.Printf("[TRACE] HTTP Response: %v", httpResp)
 
 	if err != nil {
-		return err
+		log.Printf("[WARN] Cosmos install error: %s", err.Error())
+		return fmt.Errorf("Unable to install package %s:%s: %s",
+			packageVersion.Name,
+			packageVersion.Version,
+			util.GetVerboseCosmosError(err, httpResp),
+		)
+	}
+	log.Printf("[DEBUG] Installed Package: %v", installedPkg)
+
+	// Make sure the app_id is always populated, since it's an optional field
+	d.Set("app_id", installedPkg.AppId)
+
+	// If we should wait for the service, do it now
+	if d.Get("wait").(bool) {
+		_, err := waitAndGetAppDescription(client, installedPkg.AppId, 5)
+		if err != nil {
+			return fmt.Errorf("Error while waiting for the app to become available: %s", err.Error())
+		}
 	}
 
-	log.Printf("[INFO] Installed Package - %v", installedPkg)
-
-	d.Set("app_id", installedPkg.AppId)
-	d.SetId(installedPkg.AppId)
-
+	d.SetId(fmt.Sprintf("%s:%s", packageVersion.Name, installedPkg.AppId))
 	return resourceDcosPackageRead(d, meta)
 }
 
 func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
+	var err error
+	var desc *dcos.CosmosServiceDescribeV1Response
 	client := meta.(*dcos.APIClient)
-	ctx := context.TODO()
 
-	var appID string
-	a, appIDok := d.GetOk("app_id")
+	// If the app_id is missing, this resource is never created. Guard against
+	// this case as early as possible.
+	vString, appIDok := d.GetOk("app_id")
 	if !appIDok {
+		log.Printf("[WARN] Missing 'app_id'. Assuming the service is not installed")
 		d.SetId("")
 		return nil
 	}
-	appID = a.(string)
+	appID := vString.(string)
 
-	describeOpts := &dcos.ServiceDescribeOpts{
-		CosmosServiceDescribeV1Request: optional.NewInterface(dcos.CosmosServiceDescribeV1Request{
-			AppId: appID,
-		}),
+	// We are going to wait for 5 minutes for the app to appear, just in case we
+	// were very quick on the previous deployment
+	if d.Get("wait").(bool) {
+		desc, err = waitAndGetAppDescription(client, appID, 5)
+	} else {
+		desc, err = getAppDescription(client, appID)
+	}
+	if err != nil {
+		return fmt.Errorf("Error while querying app status: %s", err.Error())
+	}
+	if desc == nil {
+		return fmt.Errorf("App '%s' was not available. Consider using `wait=true`")
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	// Try our best to the `packageConfigSpec` and `packageVersionSpec`
+	// residing solely on the information we have collected.
+	versionSpec := &packageVersionSpec{
+		Name:    desc.Package.Name,
+		Version: desc.Package.Version,
+		Schema:  desc.Package.Config,
+	}
+	packageSpec := &packageConfigSpec{
+		Version: versionSpec,
+		Config:  desc.UserProvidedOptions,
+	}
+	spec, err := serializePackageConfigSpec(packageSpec)
+	if err != nil {
+		return fmt.Errorf("Unable to serialize the package spec: %s", err.Error())
+	}
+	d.Set("config", spec)
 
-		pkg, resp, err := client.Cosmos.ServiceDescribe(ctx, describeOpts)
-
-		log.Printf("[TRACE] Cosmos.ServiceDescribe - %v, pkg: %#v", resp, pkg)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		log.Printf("[TRACE] Cosmos.ServiceDescribe - ResolvedOptions %v, %d", pkg.ResolvedOptions, len(pkg.ResolvedOptions))
-
-		if len(pkg.ResolvedOptions) > 0 {
-			d.Set("version", pkg.Package.Version)
-			if configJSON, err := json.Marshal(pkg.ResolvedOptions); err == nil {
-				d.Set("config_json", string(configJSON))
-			}
-			d.Set("name", pkg.Package.Name)
-			d.SetId(appID)
-
-			return resource.NonRetryableError(nil)
-		} else {
-			return resource.RetryableError(fmt.Errorf("AppID %s still initializing", appID))
-		}
-	})
+	d.SetId(fmt.Sprintf("%s:%s", desc.Package.Name, appID))
+	return nil
 }
 
 func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
-	// client := meta.(*dcos.APIClient)
-	// ctx := context.TODO()
+	var desc *dcos.CosmosServiceDescribeV1Response
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	appID := d.Get("app_id").(string)
+
+	// Enable partial state change, in order to properly manipulate the config
+	d.Partial(true)
+	if d.HasChange("config") {
+
+		iOld, iNew := d.GetChange("config")
+		oldVer, oldConfig, err := collectPackageConfiguration(iOld.(string))
+		if err != nil {
+			return fmt.Errorf("Unable to parse previous configuration: %s", err.Error())
+		}
+		newVer, newConfig, err := collectPackageConfiguration(iNew.(string))
+		if err != nil {
+			return fmt.Errorf("Unable to parse new configuration: %s", err.Error())
+		}
+
+		// We should never reach this case, but cover it just to be safe. (the ID
+		// contains the package version and therefore a package name change will
+		// *always* result into a new resource)
+		if newVer.Name != oldVer.Name {
+			return fmt.Errorf("Internal error: Reached unexpected `update` life-cycle event when package names have changed")
+		}
+
+		// Check if the configuration has changed (defaults included)
+		oldHash, err := util.HashDict(util.NestedToFlatMap(oldConfig))
+		if err != nil {
+			return fmt.Errorf("Unable to hash old package configuration: %s", err.Error())
+		}
+		newHash, err := util.HashDict(util.NestedToFlatMap(newConfig))
+		if err != nil {
+			return fmt.Errorf("Unable to hash new package configuration: %s", err.Error())
+		}
+
+		// Check for version and/or config changes
+		if newVer.Version != oldVer.Version {
+			// First of all, make sure that we can jump to the given version,
+			// stating from our current version
+
+			// We are going to wait for 5 minutes for the app to appear, just in case we
+			// were very quick on the previous deployment
+			if d.Get("wait").(bool) {
+				desc, err = waitAndGetAppDescription(client, appID, 5)
+			} else {
+				desc, err = getAppDescription(client, appID)
+			}
+			if err != nil {
+				return fmt.Errorf("Error while querying app status: %s", err.Error())
+			}
+			if desc == nil {
+				return fmt.Errorf("App '%s' was not available. Consider using `wait=true`")
+			}
+
+			// Guard against state discrepancies
+			if desc.Package.Version != oldVer.Version {
+				return fmt.Errorf(
+					"Terraform state indicates version '%s', but package version '%s' was installed",
+					oldVer.Version, desc.Package.Version,
+				)
+			}
+
+			// Check if we can upgrade/downgrade to the target version
+			var verEnum []string
+			verFound := false
+			log.Printf("[DEBUG] Checking if package upgrades to: %s", newVer.Version)
+			for _, ver := range desc.UpgradesTo {
+				log.Printf("[TRACE] Checking %s", ver)
+				if ver == newVer.Version {
+					verFound = true
+					break
+				}
+				verEnum = append(verEnum, ver)
+			}
+			if !verFound {
+				log.Printf("[DEBUG] Checking if package downgrades to: %s", newVer.Version)
+				for _, ver := range desc.DowngradesTo {
+					log.Printf("[TRACE] Checking %s", ver)
+					if ver == newVer.Version {
+						verFound = true
+						break
+					}
+					verEnum = append(verEnum, ver)
+				}
+			}
+
+			// If nothing found, we cannot continue
+			if !verFound {
+				return fmt.Errorf(
+					"Service '%s' cannot be upgraded to version '%s'. Possible options are: %s",
+					appID, newVer.Version, strings.Join(verEnum, ", "),
+				)
+			}
+
+			// All checks are passed, we are now ready to ask cosmos for
+			// a service upgrade to the new version. Any possible new option changes
+			// will be included in the same request.
+			cosmosServiceUpdateV1Request := dcos.CosmosServiceUpdateV1Request{
+				AppId:          appID,
+				PackageName:    newVer.Name,
+				PackageVersion: newVer.Version,
+				Options:        util.NestedToFlatMap(newConfig),
+			}
+
+			log.Printf("[DEBUG] Updating package %s:%s to version %s using cosmos", oldVer.Name, oldVer.Version, newVer.Version)
+			log.Printf("[DEBUG] Using options: %s", util.PrintJSON(cosmosServiceUpdateV1Request.Options))
+			_, httpResp, err := client.Cosmos.ServiceUpdate(ctx, cosmosServiceUpdateV1Request)
+			log.Printf("[TRACE] HTTP Response: %v", httpResp)
+			if err != nil {
+				return fmt.Errorf("Unable to update package %s: %s", appID, util.GetVerboseCosmosError(err, httpResp))
+			}
+
+		} else if oldHash != newHash {
+
+			// Plac
+			cosmosServiceUpdateV1Request := dcos.CosmosServiceUpdateV1Request{
+				AppId:          appID,
+				PackageName:    oldVer.Name,
+				PackageVersion: oldVer.Version,
+				Options:        util.NestedToFlatMap(newConfig),
+			}
+
+			log.Printf("[DEBUG] Updating package %s:%s configuration using cosmos", oldVer.Name, oldVer.Version)
+			log.Printf("[DEBUG] Using options: %s", util.PrintJSON(cosmosServiceUpdateV1Request.Options))
+			_, httpResp, err := client.Cosmos.ServiceUpdate(ctx, cosmosServiceUpdateV1Request)
+			log.Printf("[TRACE] HTTP Response: %v", httpResp)
+			if err != nil {
+				return fmt.Errorf("Unable to update service %s: %s", appID, util.GetVerboseCosmosError(err, httpResp))
+			}
+
+		} else {
+			log.Printf("[INFO] No changes to app version or configuration were detected")
+		}
+
+		d.SetPartial("config")
+	}
+	d.Partial(false)
 
 	return resourceDcosPackageRead(d, meta)
 }
@@ -248,45 +495,52 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
-
 	appID := d.Get("app_id").(string)
-	packageName := d.Get("name").(string)
+
+	packageVersion, _, err := collectPackageConfiguration(d.Get("config").(string))
+	if err != nil {
+		return fmt.Errorf("Unable to parse package config: %s", err.Error())
+	}
 
 	cosmosPackageUninstallV1Request := dcos.CosmosPackageUninstallV1Request{
 		AppId:       appID,
-		PackageName: packageName,
+		PackageName: packageVersion.Name,
 	}
 
-	// Uninstall package
+	// Unisntall package package
 	_, resp, err := client.Cosmos.PackageUninstall(ctx, cosmosPackageUninstallV1Request, nil)
 	log.Printf("[TRACE] Cosmos.PackageUninstall - %v", resp)
 	if err != nil {
-		return fmt.Errorf("Unable to uninstall package: %s", err.Error())
+		return fmt.Errorf("Unable to uninstall package: %s", util.GetVerboseCosmosError(err, resp))
 	}
 
-	// Wait until it does no longer appear on the enumeration
-	listOpts := &dcos.PackageListOpts{
-		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{
-			AppId:       appID,
-			PackageName: packageName,
-		}),
-	}
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	// If instructed, wait until it no loger appears on the enumeration
+	if d.Get("wait").(bool) {
+		listOpts := &dcos.PackageListOpts{
+			CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{
+				AppId:       appID,
+				PackageName: packageVersion.Name,
+			}),
+		}
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			lst, resp, err := client.Cosmos.PackageList(ctx, listOpts)
+			log.Printf("[TRACE] Cosmos.PackageList - %v, lst: %#v", resp, lst)
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf(util.GetVerboseCosmosError(err, resp)))
+			}
 
-		lst, resp, err := client.Cosmos.PackageList(ctx, listOpts)
-		log.Printf("[TRACE] Cosmos.PackageList - %v, lst: %#v", resp, lst)
+			log.Printf("[TRACE] Cosmos.ServiceDescribe - Packages %v, %d", lst.Packages, len(lst.Packages))
+			if len(lst.Packages) == 0 {
+				d.SetId("")
+				return resource.NonRetryableError(nil)
+			}
+
+			return resource.RetryableError(fmt.Errorf("AppID %s still uninstalling", appID))
+		})
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return fmt.Errorf("Error while waiting for the service to be uninstalled: %s", err.Error())
 		}
-
-		log.Printf("[TRACE] Cosmos.ServiceDescribe - Packages %v, %d", lst.Packages, len(lst.Packages))
-		if len(lst.Packages) == 0 {
-			d.SetId("")
-			return resource.NonRetryableError(nil)
-		}
-
-		return resource.RetryableError(fmt.Errorf("AppID %s still uninstalling", appID))
-	})
+	}
 
 	d.SetId("")
 	return nil

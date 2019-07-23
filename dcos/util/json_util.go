@@ -1,12 +1,31 @@
 package util
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 )
+
+/**
+ * Converts the given input object to a JSON string, even if there are errors
+ */
+func PrintJSON(anyJson interface{}) string {
+	if anyJson == nil {
+		return "null"
+	}
+
+	bt, err := json.Marshal(anyJson)
+	if err != nil {
+		return "{ <invalid json> }"
+	}
+
+	// Pretty-print
+	var out bytes.Buffer
+	json.Indent(&out, bt, "", "  ")
+	return out.String()
+}
 
 /**
  * Parses the given JSON string, sorts the keys and re-encodes to JSON
@@ -246,31 +265,4 @@ func defaultFromSchemaValue(input map[string]interface{}) (interface{}, error) {
 	}
 
 	return defaultValue, nil
-}
-
-/**
- * Normalize the given abstract JSON
- */
-func normalizeDict(dict map[string]interface{}) map[string]interface{} {
-	newMap := make(map[string]interface{})
-	for key, value := range dict {
-		key = strings.ToLower(key)
-
-		if valueDict, ok := value.(map[string]interface{}); ok {
-			newMap[key] = normalizeDict(valueDict)
-		} else if valueArray, ok := value.([]interface{}); ok {
-			var newArray []interface{} = nil
-			for _, value := range valueArray {
-				if valueDict, ok := value.(map[string]interface{}); ok {
-					newArray = append(newArray, normalizeDict(valueDict))
-				} else {
-					newArray = append(newArray, value)
-				}
-			}
-			newMap[key] = newArray
-		} else {
-			newMap[key] = value
-		}
-	}
-	return newMap
 }
