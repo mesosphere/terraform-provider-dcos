@@ -53,6 +53,12 @@ func resourceDcosPackage() *schema.Resource {
 				Default:     true,
 				Description: "Instructs the resource provider to wait until the resource is ready before continuing",
 			},
+			"sdk": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enables SDK-specific APIs for this package",
+			},
 			"config": schemaInPackageConfigSpecWithDiffSup(),
 		},
 	}
@@ -254,6 +260,34 @@ func waitAndgetServiceDesc(client *dcos.APIClient, appId string, timeoutMin int)
 }
 
 /**
+ * waitForSDKPlan keeps querying for the plan specified and waits until it enters
+ * the given status, or the timeout event occurs.
+ */
+func waitForSDKPlan(client *dcos.APIClient, appId string, planName string, waitStatus string, timeoutMin int) error {
+	sdkClient := util.CreateSDKAPIClient(client, appId)
+
+	return resource.Retry(time.Duration(timeoutMin)*time.Minute, func() *resource.RetryError {
+		plan, err := sdkClient.GetPlanStatus(planName)
+		if err != nil {
+			log.Printf("[WARN] Error querying plan %s status: %s", planName, err.Error())
+			return resource.RetryableError(
+				fmt.Errorf("Service %s is not yet responding", appId),
+			)
+		}
+
+		log.Printf("[TRACE] Got plan response: %v", plan)
+		if plan.Status != waitStatus {
+			return resource.RetryableError(fmt.Errorf(
+				"Service plan %s is %s (expecting %s)",
+				appId, planName, plan.Status, waitStatus,
+			))
+		}
+
+		return resource.NonRetryableError(nil)
+	})
+}
+
+/**
  * getPackageDesc queries cosmos for a package with the given name or version
  * and returns the package details.
  * `packageVersion` can be blank if you are querying for the latest version.
@@ -343,6 +377,14 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err := waitAndgetServiceDesc(client, installedPkg.AppId, 5)
 		if err != nil {
 			return fmt.Errorf("Error while waiting for the app to become available: %s", err.Error())
+		}
+
+		// If this is an SDK service, also wait for the deployment plan to be completed
+		if d.Get("sdk").(bool) {
+			err = waitForSDKPlan(client, appId, "deploy", "COMPLETED", 5)
+			if err != nil {
+				return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+			}
 		}
 	}
 
@@ -514,6 +556,14 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Unable to update package %s: %s", appId, util.GetVerboseCosmosError(err, httpResp))
 			}
 
+			// If this is an SDK service, also wait for the deployment plan to be completed
+			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
+				err = waitForSDKPlan(client, appId, "deploy", "COMPLETED", 5)
+				if err != nil {
+					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+				}
+			}
+
 		} else if oldHash != newHash {
 
 			// If the configuration has changed, do not supply a new package version
@@ -533,6 +583,14 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[TRACE] HTTP Response: %v", httpResp)
 			if err != nil {
 				return fmt.Errorf("Unable to update service %s: %s", appId, util.GetVerboseCosmosError(err, httpResp))
+			}
+
+			// If this is an SDK service, also wait for the deployment plan to be completed
+			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
+				err = waitForSDKPlan(client, appId, "deploy", "COMPLETED", 5)
+				if err != nil {
+					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+				}
 			}
 
 		} else {
