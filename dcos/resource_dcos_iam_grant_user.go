@@ -116,13 +116,14 @@ func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) erro
 
 	permissions, resp, err := client.IAM.GetUserPermissions(ctx, uid)
 
-	if resp.StatusCode == http.StatusNotFound {
+	// Note that 'BadRequest' (400) will occur if the user does not exist
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while reading permissions: %s", err.Error())
 	}
 
 	if inPermissions(permissions, rid, action) {
@@ -142,9 +143,15 @@ func resourceDcosIAMGrantUserDelete(d *schema.ResourceData, meta interface{}) er
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
 
-	_, err := client.IAM.ForbidResourceUserAction(ctx, rid, uid, action)
+	resp, err := client.IAM.ForbidResourceUserAction(ctx, rid, uid, action)
+
+	if resp.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while revoking permissions: %s", err.Error())
 	}
 
 	d.SetId("")

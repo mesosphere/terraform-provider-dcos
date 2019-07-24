@@ -2,10 +2,12 @@ package dcos
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/dcos/client-go/dcos"
@@ -66,12 +68,19 @@ func resourceDcosSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	store := d.Get("store").(string)
 
+	// Try to create the secret on DC/OS
 	resp, err := client.Secrets.CreateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
-
 	log.Printf("[TRACE] Create %s, %s - %v", store, pathToSecret, resp)
-
 	if err != nil {
-		return err
+
+		// If this was a conflict, replace the secret
+		if strings.Contains(err.Error(), "Conflict") {
+			resp, err = client.Secrets.UpdateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
+			log.Printf("[TRACE] Update %s, %s - %v", store, pathToSecret, resp)
+			return fmt.Errorf("Unable to update existing secret: %s", err.Error())
+		}
+
+		return fmt.Errorf("Unable to create secret: %s", err.Error())
 	}
 
 	d.SetId(generateID(store, pathToSecret))
@@ -123,7 +132,7 @@ func resourceDcosSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.Secrets.UpdateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to update secret: %s", err.Error())
 	}
 
 	return resourceDcosSecretRead(d, meta)
@@ -144,7 +153,7 @@ func resourceDcosSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to delete secret: %s", err.Error())
 	}
 
 	d.SetId("")

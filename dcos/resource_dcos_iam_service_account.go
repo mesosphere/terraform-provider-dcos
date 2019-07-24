@@ -117,7 +117,7 @@ func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[TRACE] IAM.GetUser - %v", resp)
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 		log.Printf("[INFO] IAM.GetUser - %s not found", uid)
 		d.SetId("")
 		return nil
