@@ -76,6 +76,10 @@ func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, 
 		iamUserCreate.Description = description.(string)
 	}
 
+	if password, ok := d.GetOk("password"); ok {
+		iamUserCreate.Password = password.(string)
+	}
+
 	if pkOK && secretOK {
 		return iamUserCreate, fmt.Errorf("Service Accounts should either use public_key or secret. Not both")
 	}
