@@ -53,6 +53,12 @@ func resourceDcosPackage() *schema.Resource {
 				Default:     true,
 				Description: "Instructs the resource provider to wait until the resource is ready before continuing",
 			},
+			"wait_duration": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "5m",
+				Description: "The duration to wait for a deployment or teardown to complete",
+			},
 			"sdk": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -62,6 +68,19 @@ func resourceDcosPackage() *schema.Resource {
 			"config": schemaInPackageConfigSpecWithDiffSup(),
 		},
 	}
+}
+
+/**
+ * stripRootSlash removes the leading '/' from App names
+ */
+func stripRootSlash(appId string) string {
+	// Trim leading slash from appId
+	serviceName := appId
+	if strings.HasPrefix(serviceName, "/") {
+		serviceName = appId[1:]
+	}
+
+	return serviceName
 }
 
 /**
@@ -120,7 +139,7 @@ func updateServiceName(options map[string]interface{}, appId string) {
 	}
 
 	// Update service name
-	serviceMap["name"] = appId
+	serviceMap["name"] = stripRootSlash(appId)
 }
 
 /**
@@ -234,10 +253,10 @@ func getServiceDesc(client *dcos.APIClient, appId string) (*dcos.CosmosServiceDe
  * waitAndgetServiceDesc gets the service description with the specified app ID,
  * and waits up to <timeountMin> minutes until it's ready.
  */
-func waitAndgetServiceDesc(client *dcos.APIClient, appId string, timeoutMin int) (*dcos.CosmosServiceDescribeV1Response, error) {
+func waitAndgetServiceDesc(client *dcos.APIClient, appId string, timeout time.Duration) (*dcos.CosmosServiceDescribeV1Response, error) {
 	var describeResult *dcos.CosmosServiceDescribeV1Response
 
-	err := resource.Retry(time.Duration(timeoutMin)*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		pkg, err := getServiceDesc(client, appId)
 		if err != nil {
 			log.Printf("[WARN] Breaking out of retry loop because of unrecoverable error")
@@ -263,10 +282,10 @@ func waitAndgetServiceDesc(client *dcos.APIClient, appId string, timeoutMin int)
  * waitForSDKPlan keeps querying for the plan specified and waits until it enters
  * the given status, or the timeout event occurs.
  */
-func waitForSDKPlan(client *dcos.APIClient, appId string, planName string, waitStatus string, timeoutMin int) error {
+func waitForSDKPlan(client *dcos.APIClient, appId string, planName string, waitStatus string, timeout time.Duration) error {
 	sdkClient := util.CreateSDKAPIClient(client, appId)
 
-	return resource.Retry(time.Duration(timeoutMin)*time.Minute, func() *resource.RetryError {
+	return resource.Retry(timeout, func() *resource.RetryError {
 		plan, err := sdkClient.GetPlanStatus(planName)
 		if err != nil {
 			log.Printf("[WARN] Error querying plan %s status: %s", planName, err.Error())
@@ -341,7 +360,7 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	// Then check if a similar application already exists
 	appId := packageVersion.Name
 	if v, ok := d.GetOk("app_id"); ok {
-		appId = v.(string)
+		appId = stripRootSlash(v.(string))
 	}
 	log.Printf("[TRACE] CREATE Lifecycle - app %s", appId)
 
@@ -370,18 +389,23 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Installed Package: %v", installedPkg)
 
 	// Make sure the app_id is always populated, since it's an optional field
-	d.Set("app_id", installedPkg.AppId)
+	d.Set("app_id", stripRootSlash(installedPkg.AppId))
 
 	// If we should wait for the service, do it now
 	if d.Get("wait").(bool) {
-		_, err := waitAndgetServiceDesc(client, installedPkg.AppId, 5)
+		waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
+		if err != nil {
+			return fmt.Errorf("Unable to parse wait duration")
+		}
+
+		_, err = waitAndgetServiceDesc(client, installedPkg.AppId, waitDuration)
 		if err != nil {
 			return fmt.Errorf("Error while waiting for the app to become available: %s", err.Error())
 		}
 
 		// If this is an SDK service, also wait for the deployment plan to be completed
 		if d.Get("sdk").(bool) {
-			err = waitForSDKPlan(client, appId, "deploy", "COMPLETED", 5)
+			err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
 			if err != nil {
 				return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
 			}
@@ -408,7 +432,7 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	appId := vString.(string)
+	appId := stripRootSlash(vString.(string))
 	log.Printf("[TRACE] UPDATE Lifecycle - app %s", appId)
 
 	// We are going to wait for 5 minutes for the app to appear, just in case we
@@ -442,7 +466,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	appId := d.Get("app_id").(string)
+	appId := stripRootSlash(d.Get("app_id").(string))
 	log.Printf("[TRACE] UPDATE Lifecycle - app %s", appId)
 
 	// Enable partial state change, in order to properly manipulate the config
@@ -484,7 +508,11 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			// We are going to wait for 5 minutes for the app to appear, just in case we
 			// were very quick on the previous deployment
 			if d.Get("wait").(bool) {
-				desc, err = waitAndgetServiceDesc(client, appId, 5)
+				waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
+				if err != nil {
+					return fmt.Errorf("Unable to parse wait duration")
+				}
+				desc, err = waitAndgetServiceDesc(client, appId, waitDuration)
 			} else {
 				desc, err = getServiceDesc(client, appId)
 			}
@@ -558,7 +586,12 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			// If this is an SDK service, also wait for the deployment plan to be completed
 			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
-				err = waitForSDKPlan(client, appId, "deploy", "COMPLETED", 5)
+				waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
+				if err != nil {
+					return fmt.Errorf("Unable to parse wait duration")
+				}
+
+				err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
 				if err != nil {
 					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
 				}
@@ -587,7 +620,12 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			// If this is an SDK service, also wait for the deployment plan to be completed
 			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
-				err = waitForSDKPlan(client, appId, "deploy", "COMPLETED", 5)
+				waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
+				if err != nil {
+					return fmt.Errorf("Unable to parse wait duration")
+				}
+
+				err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
 				if err != nil {
 					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
 				}
@@ -610,7 +648,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
-	appId := d.Get("app_id").(string)
+	appId := stripRootSlash(d.Get("app_id").(string))
 	log.Printf("[TRACE] DELETE Lifecycle - app %s", appId)
 
 	packageVersion, _, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
@@ -632,6 +670,7 @@ func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// If instructed, wait until it no loger appears on the enumeration
 	if d.Get("wait").(bool) {
+		log.Printf("[TRACE] Waiting for removal of app %s", appId)
 		listOpts := &dcos.PackageListOpts{
 			CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{
 				AppId:       appId,
