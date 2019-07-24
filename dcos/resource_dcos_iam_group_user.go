@@ -132,7 +132,10 @@ func resourceDcosIAMGroupUserDelete(d *schema.ResourceData, meta interface{}) er
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	resp, err := client.IAM.DeleteUser(ctx, d.Id())
+	gid := d.Get("gid").(string)
+	uid := d.Get("uid").(string)
+
+	resp, err := client.IAM.DeleteGroupUser(ctx, gid, uid)
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
