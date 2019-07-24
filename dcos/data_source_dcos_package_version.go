@@ -40,63 +40,145 @@ func dataSourceDcosPackageVersion() *schema.Resource {
 				Default:     "https://universe.mesosphere.com/repo",
 				Description: "The repository URL to use for resolving the package configuration",
 			},
-			"spec": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"spec": schemaOutPackageVersionSpec(),
+		},
+	}
+}
+
+func schemaOutPackageVersionSpec() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeMap,
+		Computed:    true,
+		Description: "The package version specifications",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"package": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"schema": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 			},
 		},
 	}
 }
 
-func serializePackageVersionSpec(pkg cosmos.CosmosPackage) (string, error) {
-	model := packageVersionSpec{
+func schemaInPackageVersionSpec(required bool) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeMap,
+		Required:    required,
+		Optional:    !required,
+		Description: "The package version specifications",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"package": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"schema": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func serializeCosmosPackage(pkg cosmos.CosmosPackage) (map[string]interface{}, error) {
+	return serializePackageVersionSpec(&packageVersionSpec{
 		Name:    pkg.GetName(),
 		Version: pkg.GetVersion(),
 		Schema:  pkg.GetConfig(),
-	}
-	bSpec, err := json.Marshal(model)
+	})
+}
+
+func serializePackageVersionSpec(pkg *packageVersionSpec) (map[string]interface{}, error) {
+	bSpec, err := json.Marshal(pkg.Schema)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var gzBytesBuf bytes.Buffer
 	gz := gzip.NewWriter(&gzBytesBuf)
 	if _, err := gz.Write(bSpec); err != nil {
-		return "", err
+		return nil, err
 	}
 	if err := gz.Flush(); err != nil {
-		return "", err
+		return nil, err
 	}
 	if err := gz.Close(); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return base64.StdEncoding.EncodeToString(gzBytesBuf.Bytes()), nil
+	ret := make(map[string]interface{})
+	ret["package"] = pkg.Name
+	ret["version"] = pkg.Version
+	ret["schema"] = base64.StdEncoding.EncodeToString(gzBytesBuf.Bytes())
+	return ret, nil
 }
 
-func deserializePackageVersionSpec(spec string) (*packageVersionSpec, error) {
-	var resp *packageVersionSpec
+func deserializePackageVersionSpec(spec map[string]interface{}) (*packageVersionSpec, error) {
+	var resp packageVersionSpec
 
-	gzBytes, err := base64.StdEncoding.DecodeString(spec)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to decode spec: %s", err.Error())
+	if v, ok := spec["package"]; ok {
+		if s, ok := v.(string); ok {
+			resp.Name = s
+		} else {
+			return nil, fmt.Errorf("Field `name` is not string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `name` is missing")
 	}
 
-	zReader, err := gzip.NewReader(bytes.NewReader(gzBytes))
-	if err != nil {
-		return nil, fmt.Errorf("Unable to unzip the gzip stream: %s", err.Error())
+	if v, ok := spec["version"]; ok {
+		if s, ok := v.(string); ok {
+			resp.Version = s
+		} else {
+			return nil, fmt.Errorf("Field `version` is not string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `version` is missing")
 	}
 
-	bSpec, err := ioutil.ReadAll(zReader)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to read from gzip stream: %s", err.Error())
+	if v, ok := spec["schema"]; ok {
+		if s, ok := v.(string); ok {
+			gzBytes, err := base64.StdEncoding.DecodeString(s)
+			if err != nil {
+				return nil, fmt.Errorf("Unable to decode spec: %s", err.Error())
+			}
+
+			zReader, err := gzip.NewReader(bytes.NewReader(gzBytes))
+			if err != nil {
+				return nil, fmt.Errorf("Unable to unzip the gzip stream: %s", err.Error())
+			}
+
+			bSpec, err := ioutil.ReadAll(zReader)
+			if err != nil {
+				return nil, fmt.Errorf("Unable to read from gzip stream: %s", err.Error())
+			}
+
+			err = json.Unmarshal(bSpec, &resp.Schema)
+			if err != nil {
+				return nil, fmt.Errorf("Unable to parse schema '%s': %s", s, err.Error())
+			}
+		} else {
+			return nil, fmt.Errorf("Field `schema` is not string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `schema` is missing")
 	}
 
-	err = json.Unmarshal(bSpec, &resp)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse version spec '%s': %s", spec, err.Error())
-	}
-	return resp, nil
+	return &resp, nil
 }
 
 func dataSourceDcosPackageVersionRead(d *schema.ResourceData, meta interface{}) error {
@@ -128,7 +210,7 @@ func dataSourceDcosPackageVersionRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	spec, err := serializePackageVersionSpec(pkg)
+	spec, err := serializeCosmosPackage(pkg)
 	if err != nil {
 		return fmt.Errorf("Unable to marshal package specifications: %s", err.Error())
 	}

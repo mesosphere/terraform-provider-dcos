@@ -33,6 +33,9 @@ func GetVerboseCosmosError(error error, resp *http.Response) string {
 					}
 					break
 
+				case "PackageAlreadyInstalled":
+					return "A package with the same name is already installed"
+
 				case "JsonSchemaMismatch":
 					var failures []string = nil
 					errors, hasErrors := cosmosError.Data["errors"].([]interface{})

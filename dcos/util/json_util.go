@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -57,6 +58,75 @@ func HashDict(input map[string]interface{}) (string, error) {
 
 	sum := sha256.Sum256(bytes)
 	return fmt.Sprintf("%x", sum), nil
+}
+
+/**
+ * GetDictDiff Returns a map with all the different keys in `input`, compared to `reference`
+ */
+func GetDictDiff(reference map[string]interface{}, input map[string]interface{}) map[string]interface{} {
+	ret := make(map[string]interface{})
+	for k, v := range input {
+		if rv, ok := reference[k]; ok {
+			replace, nv := getValueDiff(rv, v)
+			if replace {
+				ret[k] = nv
+			}
+		} else {
+			// If the value does not exist in reference, it's new, and we
+			// should include it.
+			ret[k] = v
+		}
+	}
+
+	return ret
+}
+
+/**
+ * getValueDiff compares a reference and an input value and checks if the input value
+ * should be included in the diff or not
+ */
+func getValueDiff(reference interface{}, input interface{}) (bool, interface{}) {
+	// Type change always indicates a replacement
+	if reflect.TypeOf(reference) != reflect.TypeOf(input) {
+		return true, input
+	}
+
+	// Otherwise, replacement depends on the underlying type
+	switch v := reference.(type) {
+	case map[string]interface{}:
+		// Maps are compared element-wise
+		diff := GetDictDiff(v, input.(map[string]interface{}))
+		if len(diff) == 0 {
+			return false, nil
+		}
+		return true, diff
+
+	case []interface{}:
+		// Arrays are compared against their content match
+		ia := input.([]interface{})
+		if len(v) != len(ia) {
+			return true, input
+		}
+		isEqual := true
+		for i, iv := range v {
+			if iv != ia[i] {
+				isEqual = false
+				break
+			}
+		}
+		if !isEqual {
+			return true, input
+		}
+
+	default:
+		// Dynamic types are compared according to their dynamic value
+		if v != input {
+			return true, input
+		}
+	}
+
+	// By default do not include this item
+	return false, nil
 }
 
 /**

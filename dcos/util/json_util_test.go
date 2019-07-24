@@ -114,3 +114,77 @@ func TestCleanupJSON(t *testing.T) {
 		t.Errorf("The result does not match")
 	}
 }
+
+/**
+ * Test dict diff
+ */
+func TestGetDictDiff(t *testing.T) {
+	const JSON_BASE = `{
+		"a.str1": "not included",
+		"a.str2": "",
+		"c.int1": 44,
+		"c.int2": 0,
+		"d.arr1": [ 1,2,3 ],
+		"d.arr2": [ 1,2,4 ],
+		"d.arr3": [ 1,2,3 ],
+		"e.map1": {
+			"a": 1,
+			"b": "test",
+			"c": true
+		},
+		"e.map2": {
+			"a": 1,
+			"b": "test",
+			"c": true
+		}
+	}`
+
+	const JSON_DIFF = `{
+		"a.str1": "not included",
+		"a.str2": "included",
+		"c.int1": 44,
+		"c.int2": 45,
+		"d.arr1": [ 1,2,3 ],
+		"d.arr2": [ 1,2,3 ],
+		"d.arr3": [ 1,2,3,4 ],
+		"e.map1": {
+			"a": 1,
+			"b": "test",
+			"c": true
+		},
+		"e.map2": {
+			"a": 1,
+			"b": "test",
+			"c": true,
+			"e": "new"
+		}
+	}`
+
+	baseMap := make(map[string]interface{})
+	err := json.Unmarshal([]byte(JSON_BASE), &baseMap)
+	if err != nil {
+		t.Errorf("Unable to load base stub data: %s", err.Error())
+		return
+	}
+
+	newMap := make(map[string]interface{})
+	err = json.Unmarshal([]byte(JSON_DIFF), &newMap)
+	if err != nil {
+		t.Errorf("Unable to load diff stub data: %s", err.Error())
+		return
+	}
+
+	diffMap := GetDictDiff(baseMap, newMap)
+
+	bytes, err := json.Marshal(diffMap)
+	str := string(bytes)
+	if err != nil {
+		t.Errorf("Unable to stringify the result: %s", err.Error())
+		return
+	}
+
+	if str != `{"a.str2":"included","c.int2":45,"d.arr2":[1,2,3],"d.arr3":[1,2,3,4],"e.map2":{"e":"new"}}` {
+		t.Errorf("The result does not match: %s", str)
+		return
+	}
+}
