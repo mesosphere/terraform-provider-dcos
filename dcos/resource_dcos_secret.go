@@ -98,7 +98,7 @@ func resourceDcosSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[TRACE] Read - %v", resp)
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		log.Printf("[INFO] Read - %s not found", pathToSecret)
 		d.SetId("")
 		return nil
@@ -147,7 +147,7 @@ func resourceDcosSecretDelete(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := client.Secrets.DeleteSecret(ctx, store, pathToSecret)
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}

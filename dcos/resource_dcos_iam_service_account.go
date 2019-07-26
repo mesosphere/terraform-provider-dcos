@@ -117,7 +117,7 @@ func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[TRACE] IAM.GetUser - %v", resp)
 
-	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
+	if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
 		log.Printf("[INFO] IAM.GetUser - %s not found", uid)
 		d.SetId("")
 		return nil
@@ -166,7 +166,7 @@ func resourceDcosIAMServiceAccountDelete(d *schema.ResourceData, meta interface{
 
 	resp, err := client.IAM.DeleteUser(ctx, d.Id())
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}

@@ -87,7 +87,7 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// As the "ID" we are using the name/URL combo, separated with a character
-	// that cannot appear neither in the URL nor the name '::'
+	// that cannot appear neither in the URL nor the name ':'
 	d.SetId(fmt.Sprintf("%s:%s", repoName, repoUrl))
 
 	return resourceDcosPackageRepoRead(d, meta)

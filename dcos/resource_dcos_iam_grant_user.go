@@ -117,7 +117,7 @@ func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) erro
 	permissions, resp, err := client.IAM.GetUserPermissions(ctx, uid)
 
 	// Note that 'BadRequest' (400) will occur if the user does not exist
-	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
+	if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
 		d.SetId("")
 		return nil
 	}
@@ -145,7 +145,7 @@ func resourceDcosIAMGrantUserDelete(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := client.IAM.ForbidResourceUserAction(ctx, rid, uid, action)
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
