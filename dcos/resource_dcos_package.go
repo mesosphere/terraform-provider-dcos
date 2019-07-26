@@ -91,26 +91,50 @@ func stripRootSlash(appId string) string {
 func schemaInPackageConfigSpecWithDiffSup() *schema.Schema {
 	baseSchema := schemaInPackageConfigSpec(true)
 	baseSchema.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-		log.Printf("[TRACE] Comparing old config %s <== with new ==> %s", old, new)
-
-		savedMap := make(map[string]interface{})
-		err := json.Unmarshal([]byte(old), &savedMap)
-		if err != nil {
-			log.Printf("[WARN] Unable to parse old package config: %s", old)
+		log.Printf("[TRACE] Comparing old %s '%s' <== with new ==> '%s'", k, old, new)
+		switch k {
+		case "config.%":
 			return false
-		}
 
-		userMap := make(map[string]interface{})
-		err = json.Unmarshal([]byte(new), &userMap)
-		if err != nil {
-			log.Printf("[WARN] Unable to parse new package config: %s", new)
+		case "config.config":
+
+			if new == "" {
+				log.Printf("[DEBUG] New config is blank, assuming no changed")
+				return true
+			}
+			if old == "" {
+				log.Printf("[DEBUG] Old config is blank, assuming changed")
+				return false
+			}
+
+			// If we cannot parse the contents, assume there are differences, so don't
+			// suppress the configuration.
+			savedMap := make(map[string]interface{})
+			err := json.Unmarshal([]byte(old), &savedMap)
+			if err != nil {
+				log.Printf("[WARN] Unable to parse old package config: %s", old)
+				return false
+			}
+			userMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(new), &userMap)
+			if err != nil {
+				log.Printf("[WARN] Unable to parse new package config: %s", new)
+				return false
+			}
+
+			// Check if whatever options are given from the new configuration are actually
+			// changing something on the saved map.
+			diff := util.GetDictDiff(savedMap, userMap)
+			log.Printf("[DEBUG] Delta between saved and user map: %s", util.PrintJSON(diff))
+			if len(diff) == 0 {
+				return true
+			}
 			return false
-		}
 
-		diff := util.GetDictDiff(savedMap, userMap)
-		log.Printf("[DEBUG] Delta between saved and user map: %s", util.PrintJSON(diff))
-		if len(diff) == 0 {
-			return true
+		default:
+			eq := old == new
+			log.Printf("[DEBUG] Equality: %v", eq)
+			return eq
 		}
 
 		return false
@@ -146,13 +170,13 @@ func updateServiceName(options map[string]interface{}, appId string) {
  * collectPackageConfiguration breaks down the given configSpec into the package version
  * and the normalized configuration.
  */
-func collectPackageConfiguration(configSpec map[string]interface{}) (*packageVersionSpec, map[string]map[string]interface{}, error) {
+func collectPackageConfiguration(configSpec map[string]interface{}) (*packageVersionSpec, string, map[string]map[string]interface{}, error) {
 	packageSpec, err := deserializePackageConfigSpec(configSpec)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Unable to parse configuration: %s", err.Error())
+		return nil, "", nil, fmt.Errorf("Unable to parse configuration: %s", err.Error())
 	}
 	if packageSpec.Version == nil {
-		return nil, nil, fmt.Errorf("The configuration given do not include a version spec")
+		return nil, "", nil, fmt.Errorf("The configuration given do not include a version spec")
 	}
 
 	return normalizePackageSpec(packageSpec)
@@ -163,7 +187,7 @@ func collectPackageConfiguration(configSpec map[string]interface{}) (*packageVer
  * the configuration sections are merged in the correct order and defaults are
  * included.
  */
-func normalizePackageSpec(packageSpec *packageConfigSpec) (*packageVersionSpec, map[string]map[string]interface{}, error) {
+func normalizePackageSpec(packageSpec *packageConfigSpec) (*packageVersionSpec, string, map[string]map[string]interface{}, error) {
 	// Extract default config from the schema. This is going to be the
 	// base where we are merge the config later.
 	//
@@ -173,21 +197,21 @@ func normalizePackageSpec(packageSpec *packageConfigSpec) (*packageVersionSpec, 
 	//
 	config, err := util.DefaultJSONFromSchema(packageSpec.Version.Schema)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Unable to extract package defaults from it's configuration schema: %s", err.Error())
+		return nil, "", nil, fmt.Errorf("Unable to extract package defaults from it's configuration schema: %s", err.Error())
 	}
 
 	// Merge package configuration
 	pkgConfig, err := util.FlatToNestedMap(packageSpec.Config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Unexpected error in the configuration: %s", err.Error())
+		return nil, "", nil, fmt.Errorf("Unexpected error in the configuration: %s", err.Error())
 	}
 	err = mergo.MergeWithOverwrite(&config, &pkgConfig)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Unable to merge the configuration with the defaults: %s", err.Error())
+		return nil, "", nil, fmt.Errorf("Unable to merge the configuration with the defaults: %s", err.Error())
 	}
 
 	// Done
-	return packageSpec.Version, config, nil
+	return packageSpec.Version, packageSpec.Checksum, config, nil
 }
 
 /**
@@ -286,7 +310,7 @@ func waitForSDKPlan(client *dcos.APIClient, appId string, planName string, waitS
 	sdkClient := util.CreateSDKAPIClient(client, appId)
 
 	return resource.Retry(timeout, func() *resource.RetryError {
-		plan, err := sdkClient.GetPlanStatus(planName)
+		plan, err := sdkClient.PlanGetStatus(planName)
 		if err != nil {
 			log.Printf("[WARN] Error querying plan %s status: %s", planName, err.Error())
 			return resource.RetryableError(
@@ -326,7 +350,7 @@ func getPackageDesc(client *dcos.APIClient, packageName string, packageVersion s
 	descResp, httpResp, err := client.Cosmos.PackageDescribe(ctx, localVarOptionals)
 	log.Printf("[TRACE] HTTP Response: %v", httpResp)
 
-	if httpResp.StatusCode == http.StatusNotFound {
+	if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 		log.Printf("[WARN] Package was not found")
 		return nil, fmt.Errorf("Package %s does not exist", packageName)
 	}
@@ -346,7 +370,7 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	packageVersion, packageConfig, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
+	packageVersion, configCsum, packageConfig, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
 	if err != nil {
 		return fmt.Errorf("Unable to parse package config: %s", err.Error())
 	}
@@ -412,6 +436,10 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Keep track of a configuration ID
+	sdkClient := util.CreateSDKAPIClient(client, appId)
+	sdkClient.SetMeta("csum", configCsum)
+
 	d.SetId(fmt.Sprintf("%s:%s", packageVersion.Name, installedPkg.AppId))
 	return resourceDcosPackageRead(d, meta)
 }
@@ -433,7 +461,9 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	appId := stripRootSlash(vString.(string))
-	log.Printf("[TRACE] UPDATE Lifecycle - app %s", appId)
+	log.Printf("[TRACE] READ Lifecycle - app %s", appId)
+
+	sdkClient := util.CreateSDKAPIClient(client, appId)
 
 	// We are going to wait for 5 minutes for the app to appear, just in case we
 	// were very quick on the previous deployment
@@ -446,8 +476,17 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	// Query SDK meta to get the old config checksum
+	csum, err := sdkClient.GetMeta("csum", "")
+	if err != nil {
+		return fmt.Errorf("Error fetching old config checksum: %s", err.Error())
+	}
+
 	// Compute package spec from the service description
 	packageSpec := getPackageSpecFromServiceDesc(desc)
+	packageSpec.Checksum = csum.(string)
+
+	// Serialize and store the new config
 	spec, err := serializePackageConfigSpec(packageSpec)
 	if err != nil {
 		return fmt.Errorf("Unable to serialize the package spec: %s", err.Error())
@@ -467,6 +506,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.TODO()
 
 	appId := stripRootSlash(d.Get("app_id").(string))
+	sdkClient := util.CreateSDKAPIClient(client, appId)
 	log.Printf("[TRACE] UPDATE Lifecycle - app %s", appId)
 
 	// Enable partial state change, in order to properly manipulate the config
@@ -474,11 +514,11 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("config") {
 
 		iOld, iNew := d.GetChange("config")
-		oldVer, oldConfig, err := collectPackageConfiguration(iOld.(map[string]interface{}))
+		oldVer, oldChecksum, oldConfig, err := collectPackageConfiguration(iOld.(map[string]interface{}))
 		if err != nil {
 			return fmt.Errorf("Unable to parse previous configuration: %s", err.Error())
 		}
-		newVer, newConfig, err := collectPackageConfiguration(iNew.(map[string]interface{}))
+		newVer, newChecksum, newConfig, err := collectPackageConfiguration(iNew.(map[string]interface{}))
 		if err != nil {
 			return fmt.Errorf("Unable to parse new configuration: %s", err.Error())
 		}
@@ -598,6 +638,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 		} else if oldHash != newHash {
+			log.Printf("[INFO] Configuration has changed. Going to re-deploy")
 
 			// If the configuration has changed, do not supply a new package version
 			// but do suupply the new configuration.
@@ -631,9 +672,27 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
+		} else if oldChecksum != newChecksum {
+			log.Printf("[INFO] Configuration and version is identical, but checksum has changed. Going to restart")
+
+			// We can only gracefully restart SDK services, by restarting the deploy plan.
+			// Standard cosmos packages have to be un-installed and re-installed.
+			if d.Get("sdk").(bool) {
+				err := sdkClient.PlanRestart("deploy")
+				if err != nil {
+					return fmt.Errorf("Unable to restart 'deploy' plan: %s", err.Error())
+				}
+			} else {
+				log.Printf("[WARN] We currently don't support restarting non-SDK services!")
+				// TODO: Remove and re-install service
+			}
+
 		} else {
 			log.Printf("[INFO] No changes to app version or configuration were detected")
 		}
+
+		// Update the configuration checksum
+		sdkClient.SetMeta("csum", newChecksum)
 
 		d.SetPartial("config")
 	}
@@ -651,7 +710,11 @@ func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
 	appId := stripRootSlash(d.Get("app_id").(string))
 	log.Printf("[TRACE] DELETE Lifecycle - app %s", appId)
 
-	packageVersion, _, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
+	// We are going to get reaped by the SDK uninstall, but just in case
+	sdkClient := util.CreateSDKAPIClient(client, appId)
+	sdkClient.SetMeta("csum", "")
+
+	packageVersion, _, _, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
 	if err != nil {
 		return fmt.Errorf("Unable to parse package config: %s", err.Error())
 	}

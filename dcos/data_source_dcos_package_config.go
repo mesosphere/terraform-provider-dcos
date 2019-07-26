@@ -1,6 +1,7 @@
 package dcos
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,6 +15,16 @@ import (
 type packageConfigSpec struct {
 	Version *packageVersionSpec    `json:"v,omitempty"`
 	Config  map[string]interface{} `json:"c"`
+
+	// The `Checksum` is used to compute a unique ID for this data resource,
+	// that can be later used by the `dcos_package` resource to consider
+	// package re-deployment even if the configuration map has not changed.
+	//
+	// For example, if the package configuration refers to a secret and the value
+	// of that secret has changed (even though it's name is intact), the `Config`
+	// map would be identical, by the `Checksum` will differ.
+	//
+	Checksum string `json:"s"`
 }
 
 func dataSourceDcosPackageConfig() *schema.Resource {
@@ -28,6 +39,14 @@ func dataSourceDcosPackageConfig() *schema.Resource {
 				Default:     true,
 				Optional:    true,
 				Description: "If `true`, the provider will try to convert string JSON values to their respective types",
+			},
+			"checksum": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Arbitrary string segments that can be used to calculate a unique configuration checksum",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"section": {
 				Type:        schema.TypeList,
@@ -93,6 +112,10 @@ func schemaOutPackageConfigSpec() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"csum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 			},
 		},
 	}
@@ -113,23 +136,33 @@ func schemaInPackageConfigSpec(required bool) *schema.Schema {
 				"package": {
 					Type:     schema.TypeString,
 					Optional: true,
+					Default:  "",
 				},
 				"version": {
 					Type:     schema.TypeString,
 					Optional: true,
+					Default:  "",
 				},
 				"schema": {
 					Type:     schema.TypeString,
 					Optional: true,
+					Default:  "",
 				},
 				"config": {
 					Type:     schema.TypeString,
 					Required: true,
+					Default:  "",
+				},
+				"csum": {
+					Type:     schema.TypeString,
+					Required: true,
+					Default:  "",
 				},
 			},
 		},
 	}
 }
+
 func serializePackageConfigSpec(model *packageConfigSpec) (map[string]interface{}, error) {
 	var err error
 
@@ -156,6 +189,7 @@ func serializePackageConfigSpec(model *packageConfigSpec) (map[string]interface{
 		}
 	}
 
+	ret["csum"] = model.Checksum
 	return ret, nil
 }
 
@@ -193,7 +227,31 @@ func deserializePackageConfigSpec(spec map[string]interface{}) (*packageConfigSp
 		return nil, fmt.Errorf("Field `package` is missing")
 	}
 
+	// Extract the package checksum
+	if v, ok := spec["csum"]; ok {
+		if s, ok := v.(string); ok {
+			resp.Checksum = s
+		} else {
+			return nil, fmt.Errorf("Field `csum` is not string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `csum` is missing")
+	}
+
 	return &resp, nil
+}
+
+/**
+ * computeCsum calculates a SHA256 checksum out of the given list of strings
+ */
+func computeCsum(previous string, data []interface{}) string {
+	var strList []string
+	strList = append(strList, previous)
+	for _, s := range data {
+		strList = append(strList, s.(string))
+	}
+	sum := sha256.Sum256([]byte(strings.Join(strList, "\n")))
+	return fmt.Sprintf("%x", sum)
 }
 
 func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, error) {
@@ -369,7 +427,7 @@ func dataSourceDcosPackageConfigRead(d *schema.ResourceData, meta interface{}) e
 	} else {
 		log.Printf("[INFO] Not using previous config spec")
 		configSpec = &packageConfigSpec{
-			nil, make(map[string]interface{}),
+			nil, make(map[string]interface{}), "",
 		}
 	}
 
@@ -399,15 +457,21 @@ func dataSourceDcosPackageConfigRead(d *schema.ResourceData, meta interface{}) e
 	}
 	log.Printf("[TRACE] User config merged to: %s", util.PrintJSON(&configSpec.Config))
 
+	// Compute a unique checksum from the checksum string fields
+	configSpec.Checksum = computeCsum(
+		configSpec.Checksum,
+		d.Get("checksum").([]interface{}),
+	)
+	log.Printf("[TRACE] Computing checksum of %v to: %s", d.Get("checksum"), configSpec.Checksum)
+
+	// Serialize config spec into a map
 	configMap, err := serializePackageConfigSpec(configSpec)
 	if err != nil {
 		return fmt.Errorf("Unable to serialize the package config spec: %s", err.Error())
 	}
-
 	d.Set("config", configMap)
 
 	// Compute an ID that consists of the version spec and the config spec
-
 	cfgHash, err := util.HashDict(configSpec.Config)
 	if err != nil {
 		return fmt.Errorf("Unable to hash the config: %s", err.Error())
