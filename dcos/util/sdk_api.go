@@ -11,10 +11,10 @@ import (
 )
 
 type SDKApiClient struct {
-	AppID   string
-	BaseURL string
-	Client  *http.Client
-	Headers map[string]string
+	AppID      string
+	ClusterURL string
+	Client     *http.Client
+	Headers    map[string]string
 }
 
 /**
@@ -27,10 +27,10 @@ func CreateSDKAPIClient(client *dcos.APIClient, appId string) *SDKApiClient {
 	}
 
 	return &SDKApiClient{
-		AppID:   appId,
-		BaseURL: fmt.Sprintf("%s/service/%s", config.URL(), appId),
-		Client:  client.HTTPClient(),
-		Headers: headers,
+		AppID:      appId,
+		ClusterURL: config.URL(),
+		Client:     client.HTTPClient(),
+		Headers:    headers,
 	}
 }
 
@@ -54,7 +54,7 @@ func (client *SDKApiClient) postJSON(endpoint string, reqBody interface{}, respB
 		return nil, fmt.Errorf("Unable to serialize body: %s", err.Error())
 	}
 
-	url := fmt.Sprintf("%s/%s", client.BaseURL, endpoint)
+	url := fmt.Sprintf("%s/service/%s/%s", client.ClusterURL, client.AppID, endpoint)
 	log.Printf("[TRACE] Placing POST request to %s with data: %s", url, string(payload))
 	request, err := http.NewRequest("POST", url, bytes.NewReader(payload))
 	if err != nil {
@@ -80,7 +80,7 @@ func (client *SDKApiClient) postJSON(endpoint string, reqBody interface{}, respB
  * requestGET places a GET request to the service endpoint
  */
 func (client *SDKApiClient) getJSON(endpoint string, respBody interface{}) (*http.Response, error) {
-	url := fmt.Sprintf("%s/%s", client.BaseURL, endpoint)
+	url := fmt.Sprintf("%s/service/%s/%s", client.ClusterURL, client.AppID, endpoint)
 	log.Printf("[TRACE] Placing GET request to %s", url)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {

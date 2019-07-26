@@ -25,10 +25,15 @@ type PlansListResponse struct {
 	Status   string      `json:"status"`
 }
 
+type PlanRestartRequest struct {
+	Phase string `json:"phase"`
+	Step  string `json:"step"`
+}
+
 /**
  * Describe package
  */
-func (client *SDKApiClient) GetPlanStatus(plan string) (*PlansListResponse, error) {
+func (client *SDKApiClient) PlanGetStatus(plan string) (*PlansListResponse, error) {
 	var jResp PlansListResponse
 	_, err := client.getJSON(fmt.Sprintf("v1/plans/%s", plan), &jResp)
 	if err != nil {
@@ -36,4 +41,19 @@ func (client *SDKApiClient) GetPlanStatus(plan string) (*PlansListResponse, erro
 	}
 
 	return &jResp, nil
+}
+
+/**
+ * Describe package
+ */
+func (client *SDKApiClient) PlanRestart(plan string) error {
+	var jResp map[string]interface{}
+	var jReq PlanRestartRequest
+
+	_, err := client.postJSON(fmt.Sprintf("v1/plans/%s/restart", plan), &jReq, &jResp)
+	if err != nil {
+		return fmt.Errorf("Unable to place plan restart POST request: %s", err.Error())
+	}
+
+	return nil
 }
