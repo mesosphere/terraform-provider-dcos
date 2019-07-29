@@ -2,7 +2,6 @@ package dcos
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -42,19 +41,10 @@ func resourceDcosIAMServiceAccount() *schema.Resource {
 				Description: "Description of the newly created service account",
 			},
 			"public_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"secret"},
-				Description:   "Path to public key to use",
-			},
-			"secret": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      false,
-				ConflictsWith: []string{"public_key"},
-				Sensitive:     true,
-				Description:   "Passphrase to use",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Path to public key to use",
 			},
 		},
 	}
@@ -63,13 +53,8 @@ func resourceDcosIAMServiceAccount() *schema.Resource {
 func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, error) {
 	iamUserCreate := dcos.IamUserCreate{}
 
-	var pkOK, secretOK bool
 	if publicKey, pkOK := d.GetOk("public_key"); pkOK {
 		iamUserCreate.PublicKey = publicKey.(string)
-	}
-
-	if secret, secretOK := d.GetOk("secret"); secretOK {
-		iamUserCreate.Password = secret.(string)
 	}
 
 	if description, ok := d.GetOk("description"); ok {
@@ -78,10 +63,6 @@ func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, 
 
 	if password, ok := d.GetOk("password"); ok {
 		iamUserCreate.Password = password.(string)
-	}
-
-	if pkOK && secretOK {
-		return iamUserCreate, fmt.Errorf("Service Accounts should either use public_key or secret. Not both")
 	}
 
 	return iamUserCreate, nil
@@ -144,10 +125,6 @@ func resourceDcosIAMServiceAccountUpdate(d *schema.ResourceData, meta interface{
 
 	uid := d.Id()
 	iamUserUpdate := dcos.IamUserUpdate{}
-
-	if secret, secretOK := d.GetOk("secret"); secretOK {
-		iamUserUpdate.Password = secret.(string)
-	}
 
 	if description, ok := d.GetOk("description"); ok {
 		iamUserUpdate.Description = description.(string)
