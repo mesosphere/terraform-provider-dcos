@@ -36,14 +36,12 @@ func resourceDcosIAMUser() *schema.Resource {
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    false,
+				Optional:    true,
 				Description: "Description of the newly created service account",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    false,
 				Sensitive:   true,
 				Description: "Path to public key to use",
 			},
