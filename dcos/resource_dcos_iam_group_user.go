@@ -56,7 +56,7 @@ func resourceDcosIAMGroupUserCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] IAM.CreateGroupUser - %v", resp)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to add user %s to group %s: %s", uid, gid, err.Error())
 	}
 
 	d.SetId(dcosIAMGroupUsergenID(d))
@@ -104,29 +104,13 @@ func resourceDcosIAMGroupUserRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to find user %s in group %s: %s", uid, gid, err.Error())
 	}
 
 	d.SetId(dcosIAMGroupUsergenID(d))
 
 	return nil
 }
-
-// func resourceDcosIAMGroupUserUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*dcos.APIClient)
-// 	ctx := context.TODO()
-//
-// 	gid := d.Id()
-//
-// 	iamGroupUpdate := dcos.IamGroupUpdate{}
-// 	if desc, ok := d.GetOk("description"); ok {
-// 		iamGroupUpdate.Description = desc.(string)
-// 	}
-//
-// 	client.IAM.UpdateGroup(ctx, gid, iamGroupUpdate)
-//
-// 	return resourceDcosIAMGroupUserRead(d, meta)
-// }
 
 func resourceDcosIAMGroupUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
@@ -143,7 +127,7 @@ func resourceDcosIAMGroupUserDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to delete user %s from group %s: %s", uid, gid, err.Error())
 	}
 
 	d.SetId("")

@@ -2,6 +2,7 @@ package dcos
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -37,13 +38,12 @@ func resourceDcosIAMGroup() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    false,
 				Description: "Description of the newly created group",
 			},
 			"group_provider": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    false,
+				Computed:    true,
 				Description: "Provider for this group",
 			},
 		},
@@ -65,7 +65,7 @@ func resourceDcosIAMGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[TRACE] IAM.CreateGroup - %v", resp)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to create group: %s", err.Error())
 	}
 
 	d.SetId(gid)
@@ -90,7 +90,7 @@ func resourceDcosIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to read group: %s", err.Error())
 	}
 
 	d.Set("description", group.Description)
@@ -127,7 +127,7 @@ func resourceDcosIAMGroupDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to delete group: %s", err.Error())
 	}
 
 	d.SetId("")
