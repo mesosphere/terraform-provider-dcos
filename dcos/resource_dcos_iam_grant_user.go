@@ -79,13 +79,16 @@ func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) er
 	resp, err = client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
 	log.Printf("[TRACE] PermitResourceUserAction - %v", resp.Request)
 	if err != nil {
-		return fmt.Errorf(
-			"Unable to grant '%s' action on '%s' resource for user '%s': %s",
-			action,
-			rid,
-			uid,
-			err.Error(),
-		)
+		if resp == nil || resp.StatusCode != 409 {
+			return fmt.Errorf(
+				"Unable to grant '%s' action on '%s' resource for user '%s': %s",
+				action,
+				rid,
+				uid,
+				err.Error(),
+			)
+		}
+		log.Printf("grant '%s' action on '%s' resource for user '%s' already exists", action, rid, uid)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", uid, rid, action))

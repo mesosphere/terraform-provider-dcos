@@ -72,15 +72,16 @@ func resourceDcosSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := client.Secrets.CreateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
 	log.Printf("[TRACE] Create %s, %s - %v", store, pathToSecret, resp)
 	if err != nil {
-
 		// If this was a conflict, replace the secret
 		if strings.Contains(err.Error(), "Conflict") {
-			resp, err = client.Secrets.UpdateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
+			resp, err := client.Secrets.UpdateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
 			log.Printf("[TRACE] Update %s, %s - %v", store, pathToSecret, resp)
-			return fmt.Errorf("Unable to update existing secret: %s", err.Error())
+			if err != nil {
+				return fmt.Errorf("Unable to update existing secret: %s", err.Error())
+			}
+		} else {
+			return fmt.Errorf("Unable to create secret: %s", err.Error())
 		}
-
-		return fmt.Errorf("Unable to create secret: %s", err.Error())
 	}
 
 	d.SetId(generateID(store, pathToSecret))
