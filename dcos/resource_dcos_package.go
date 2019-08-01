@@ -321,8 +321,8 @@ func waitForSDKPlan(client *dcos.APIClient, appId string, planName string, waitS
 		log.Printf("[TRACE] Got plan response: %v", plan)
 		if plan.Status != waitStatus {
 			return resource.RetryableError(fmt.Errorf(
-				"Service plan %s is %s (expecting %s)",
-				appId, planName, plan.Status, waitStatus,
+				"Plan %s of service '%s' is '%s' (expecting '%s')",
+				planName, appId, plan.Status, waitStatus,
 			))
 		}
 
@@ -436,11 +436,21 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// Keep track of a configuration ID
-	sdkClient := util.CreateSDKAPIClient(client, appId)
-	sdkClient.SetMeta("csum", configCsum)
+	// If the service is SDK-aware, we can gracefully restart it
+	// If it's not, we have to re-create it. Therefore, we should include the checksum
+	// as part of the ID in order to trigger the resource replacement.
+	if d.Get("sdk").(bool) {
 
-	d.SetId(fmt.Sprintf("%s:%s", packageVersion.Name, installedPkg.AppId))
+		// Keep track of a configuration ID in the meta-data store of the service
+		sdkClient := util.CreateSDKAPIClient(client, appId)
+		sdkClient.SetMeta("csum", configCsum)
+
+		d.SetId(fmt.Sprintf("%s:%s", packageVersion.Name, installedPkg.AppId))
+
+	} else {
+		d.SetId(fmt.Sprintf("%s:%s:%s", packageVersion.Name, installedPkg.AppId, configCsum))
+	}
+
 	return resourceDcosPackageRead(d, meta)
 }
 
@@ -477,14 +487,18 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Query SDK meta to get the old config checksum
-	csum, err := sdkClient.GetMeta("csum", "")
-	if err != nil {
-		return fmt.Errorf("Error fetching old config checksum: %s", err.Error())
+	csum := ""
+	if d.Get("sdk").(bool) {
+		v, err := sdkClient.GetMeta("csum", "")
+		if err != nil {
+			return fmt.Errorf("Error fetching old config checksum: %s", err.Error())
+		}
+		csum = v.(string)
 	}
 
 	// Compute package spec from the service description
 	packageSpec := getPackageSpecFromServiceDesc(desc)
-	packageSpec.Checksum = csum.(string)
+	packageSpec.Checksum = csum
 
 	// Serialize and store the new config
 	spec, err := serializePackageConfigSpec(packageSpec)
@@ -493,7 +507,17 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("config", spec)
 
-	d.SetId(fmt.Sprintf("%s:%s", desc.Package.Name, appId))
+	if d.Get("sdk").(bool) {
+		d.SetId(fmt.Sprintf("%s:%s", desc.Package.Name, appId))
+	} else {
+		// Carry the checksum from the previous ID
+		parts := strings.Split(d.Id(), ":")
+		if len(parts) < 3 {
+			d.SetId("")
+		} else {
+			d.SetId(fmt.Sprintf("%s:%s:%s", desc.Package.Name, appId, parts[2]))
+		}
+	}
 	return nil
 }
 
@@ -508,6 +532,11 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 	appId := stripRootSlash(d.Get("app_id").(string))
 	sdkClient := util.CreateSDKAPIClient(client, appId)
 	log.Printf("[TRACE] UPDATE Lifecycle - app %s", appId)
+
+	waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
+	if err != nil {
+		return fmt.Errorf("Unable to parse wait duration")
+	}
 
 	// Enable partial state change, in order to properly manipulate the config
 	d.Partial(true)
@@ -661,11 +690,6 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			// If this is an SDK service, also wait for the deployment plan to be completed
 			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
-				waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
-				if err != nil {
-					return fmt.Errorf("Unable to parse wait duration")
-				}
-
 				err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
 				if err != nil {
 					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
@@ -682,6 +706,15 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("Unable to restart 'deploy' plan: %s", err.Error())
 				}
+
+				// If we should wait for the plan to be completed, do it now
+				if d.Get("wait").(bool) {
+					err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
+					if err != nil {
+						return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+					}
+				}
+
 			} else {
 				log.Printf("[WARN] We currently don't support restarting non-SDK services!")
 				// TODO: Remove and re-install service
@@ -692,7 +725,9 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Update the configuration checksum
-		sdkClient.SetMeta("csum", newChecksum)
+		if d.Get("sdk").(bool) {
+			sdkClient.SetMeta("csum", newChecksum)
+		}
 
 		d.SetPartial("config")
 	}
