@@ -79,13 +79,16 @@ func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) er
 	resp, err = client.IAM.PermitResourceUserAction(ctx, rid, uid, action)
 	log.Printf("[TRACE] PermitResourceUserAction - %v", resp.Request)
 	if err != nil {
-		return fmt.Errorf(
-			"Unable to grant '%s' action on '%s' resource for user '%s': %s",
-			action,
-			rid,
-			uid,
-			err.Error(),
-		)
+		if resp == nil || resp.StatusCode != 409 {
+			return fmt.Errorf(
+				"Unable to grant '%s' action on '%s' resource for user '%s': %s",
+				action,
+				rid,
+				uid,
+				err.Error(),
+			)
+		}
+		log.Printf("grant '%s' action on '%s' resource for user '%s' already exists", action, rid, uid)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", uid, rid, action))
@@ -116,13 +119,14 @@ func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) erro
 
 	permissions, resp, err := client.IAM.GetUserPermissions(ctx, uid)
 
-	if resp.StatusCode == http.StatusNotFound {
+	// Note that 'BadRequest' (400) will occur if the user does not exist
+	if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while reading permissions: %s", err.Error())
 	}
 
 	if inPermissions(permissions, rid, action) {
@@ -142,9 +146,15 @@ func resourceDcosIAMGrantUserDelete(d *schema.ResourceData, meta interface{}) er
 	rid := d.Get("resource").(string)
 	action := d.Get("action").(string)
 
-	_, err := client.IAM.ForbidResourceUserAction(ctx, rid, uid, action)
+	resp, err := client.IAM.ForbidResourceUserAction(ctx, rid, uid, action)
+
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while revoking permissions: %s", err.Error())
 	}
 
 	d.SetId("")

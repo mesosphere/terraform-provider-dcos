@@ -127,7 +127,7 @@ func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) erro
 	providerId := d.Get("provider_id").(string)
 	providerConfig, resp, err := client.IAM.GetSAMLProvider(ctx, providerId)
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}

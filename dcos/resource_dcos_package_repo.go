@@ -30,7 +30,7 @@ func resourceDcosPackageRepo() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     "universe",
+				Default:     "Universe",
 				Description: "The name of the repository",
 			},
 			"url": {
@@ -39,6 +39,13 @@ func resourceDcosPackageRepo() *schema.Resource {
 				ForceNew:    true,
 				Default:     "https://universe.mesosphere.com/repo",
 				Description: "The URL of the repository",
+			},
+			"volatile": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "If set to `true`, the repository will be deleted when the resource is un-installed",
 			},
 		},
 	}
@@ -67,7 +74,7 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 				if cosmosErr, ok := oaErr.Model().(dcos.CosmosError); ok {
 					if cosmosErr.Type == "RepositoryAlreadyPresent" {
 						log.Println("[DEBUG] A repository with the same name/url is already present: %s", cosmosErr.Message)
-						d.SetId(fmt.Sprintf("%s::%s", repoName, repoUrl))
+						d.SetId(fmt.Sprintf("%s:%s", repoName, repoUrl))
 						return nil
 					} else {
 						return fmt.Errorf("Error adding repository: %s error: %s", cosmosErr.Type, cosmosErr.Message)
@@ -80,8 +87,8 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// As the "ID" we are using the name/URL combo, separated with a character
-	// that cannot appear neither in the URL nor the name '::'
-	d.SetId(fmt.Sprintf("%s::%s", repoName, repoUrl))
+	// that cannot appear neither in the URL nor the name ':'
+	d.SetId(fmt.Sprintf("%s:%s", repoName, repoUrl))
 
 	return resourceDcosPackageRepoRead(d, meta)
 }
@@ -97,12 +104,12 @@ func resourceDcosPackageRepoRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Separate Name/URL from the ID
-	nameUri := strings.SplitN(d.Id(), "::", 2)
+	nameUri := strings.SplitN(d.Id(), ":", 2)
 	for _, repo := range resp.Repositories {
 		if repo.Name == nameUri[0] || repo.Uri == nameUri[1] {
 			// If for any reason we have partial match (only name or only URL)
 			// then a create will definitely fail. Remove the resource
-			if repo.Name != nameUri[0] || repo.Uri != nameUri[1] {
+			if !(repo.Name == nameUri[0] && repo.Uri == nameUri[1]) {
 				log.Printf(
 					"[WARN] Mismatched requested (name='%s', url='%s') and existing (name='%s', url='%s') repositories",
 					nameUri[0],
@@ -132,28 +139,31 @@ func resourceDcosPackageRepoDelete(d *schema.ResourceData, meta interface{}) err
 	log.Println("[DEBUG] Deleting package repository")
 
 	// Separate Name/URL from the ID
-	nameUri := strings.SplitN(d.Id(), "::", 2)
+	nameUri := strings.SplitN(d.Id(), ":", 2)
 	repoDelRequest := dcos.CosmosPackageDeleteRepoV1Request{
 		Name: nameUri[0],
 		Uri:  nameUri[1],
 	}
 
-	// Place delete request
-	_, _, err := client.Cosmos.PackageRepositoryDelete(ctx, &dcos.PackageRepositoryDeleteOpts{
-		CosmosPackageDeleteRepoV1Request: optional.NewInterface(repoDelRequest),
-	})
-	if err != nil {
-		log.Printf("[DEBUG] Encountered error: %s", err)
-		if oaErr, ok := err.(dcos.GenericOpenAPIError); ok {
-			log.Printf("[DEBUG] Encountered GenericOpenAPIError: %s", oaErr)
-			if oaErr.Model() != nil {
-				log.Printf("[DEBUG] Found model: %s", oaErr.Model())
-				if cosmosErr, ok := oaErr.Model().(dcos.CosmosError); ok {
-					return fmt.Errorf("Error deleting repository: %s error: %s", cosmosErr.Type, cosmosErr.Message)
+	// Place delete request only if the resource is volatile
+	if d.Get("volatile").(bool) {
+		_, _, err := client.Cosmos.PackageRepositoryDelete(ctx, &dcos.PackageRepositoryDeleteOpts{
+			CosmosPackageDeleteRepoV1Request: optional.NewInterface(repoDelRequest),
+		})
+		if err != nil {
+			log.Printf("[DEBUG] Encountered error: %s", err)
+			if oaErr, ok := err.(dcos.GenericOpenAPIError); ok {
+				log.Printf("[DEBUG] Encountered GenericOpenAPIError: %s", oaErr)
+				if oaErr.Model() != nil {
+					log.Printf("[DEBUG] Found model: %s", oaErr.Model())
+					if cosmosErr, ok := oaErr.Model().(dcos.CosmosError); ok {
+						return fmt.Errorf("Error deleting repository: %s error: %s", cosmosErr.Type, cosmosErr.Message)
+					}
 				}
 			}
+			return fmt.Errorf("Unable to delete the repository: %s", err.Error())
 		}
-		return fmt.Errorf("Unable to delete the repository: %s", err.Error())
+
 	}
 
 	d.SetId("")

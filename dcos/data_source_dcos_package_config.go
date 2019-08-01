@@ -1,12 +1,9 @@
 package dcos
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/base64"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 
@@ -18,33 +15,38 @@ import (
 type packageConfigSpec struct {
 	Version *packageVersionSpec    `json:"v,omitempty"`
 	Config  map[string]interface{} `json:"c"`
+
+	// The `Checksum` is used to compute a unique ID for this data resource,
+	// that can be later used by the `dcos_package` resource to consider
+	// package re-deployment even if the configuration map has not changed.
+	//
+	// For example, if the package configuration refers to a secret and the value
+	// of that secret has changed (even though it's name is intact), the `Config`
+	// map would be identical, by the `Checksum` will differ.
+	//
+	Checksum string `json:"s"`
 }
 
 func dataSourceDcosPackageConfig() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceDcosPackageConfigRead,
 		Schema: map[string]*schema.Schema{
-			"version_spec": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The package version to install",
-			},
-			"extend": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "The previous package configuration to extend",
-			},
-			"config": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The configuration output (can be chained to other config's `extend`)",
-			},
+			"version_spec": schemaInPackageVersionSpec(false),
+			"extend":       schemaInPackageConfigSpec(false),
+			"config":       schemaOutPackageConfigSpec(),
 			"autotype": {
 				Type:        schema.TypeBool,
 				Default:     true,
 				Optional:    true,
 				Description: "If `true`, the provider will try to convert string JSON values to their respective types",
+			},
+			"checksum": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Arbitrary string segments that can be used to calculate a unique configuration checksum",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"section": {
 				Type:        schema.TypeList,
@@ -83,50 +85,173 @@ func dataSourceDcosPackageConfig() *schema.Resource {
 	}
 }
 
-func serializePackageConfigSpec(model *packageConfigSpec) (string, error) {
-	bSpec, err := json.Marshal(model)
-	if err != nil {
-		return "", err
+/**
+ * schemaOutPackageConfigSpec returns a re-usable schema definition that other
+ * resources can use as a package config output.
+ */
+func schemaOutPackageConfigSpec() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeMap,
+		Computed:    true,
+		Description: "The package configuration specifications",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"package": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"schema": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"config": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"csum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
 	}
-
-	var gzBytesBuf bytes.Buffer
-	gz := gzip.NewWriter(&gzBytesBuf)
-	if _, err := gz.Write(bSpec); err != nil {
-		return "", err
-	}
-	if err := gz.Flush(); err != nil {
-		return "", err
-	}
-	if err := gz.Close(); err != nil {
-		return "", err
-	}
-
-	return base64.StdEncoding.EncodeToString(gzBytesBuf.Bytes()), nil
 }
 
-func deserializePackageConfigSpec(spec string) (*packageConfigSpec, error) {
-	var resp *packageConfigSpec
+/**
+ * schemaInPackageConfigSpec returns a re-usable schema definition that other
+ * resources can use as a package config input.
+ */
+func schemaInPackageConfigSpec(required bool) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeMap,
+		Required:    required,
+		Optional:    !required,
+		Description: "The package configuration specifications",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"package": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "",
+				},
+				"version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "",
+				},
+				"schema": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "",
+				},
+				"config": {
+					Type:     schema.TypeString,
+					Required: true,
+					Default:  "",
+				},
+				"csum": {
+					Type:     schema.TypeString,
+					Required: true,
+					Default:  "",
+				},
+			},
+		},
+	}
+}
 
-	gzBytes, err := base64.StdEncoding.DecodeString(spec)
+func serializePackageConfigSpec(model *packageConfigSpec) (map[string]interface{}, error) {
+	var err error
+
+	// Serialize the package configuration as a JSON
+	bSpec, err := json.Marshal(model.Config)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to decode spec: %s", err.Error())
+		return nil, err
+	}
+	ret := make(map[string]interface{})
+	ret["config"] = string(bSpec)
+
+	// If we have version spec, flat-merge the fields from the serialized
+	// version specifications in the package config spec (terraform does not
+	// support nested maps)
+	if model.Version != nil {
+		ver, err := serializePackageVersionSpec(model.Version)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to serialize version spec: %s", err.Error())
+		}
+
+		err = mergo.MergeWithOverwrite(&ret, &ver)
+		if err != nil {
+			return nil, fmt.Errorf("Could not merge config and version spec")
+		}
 	}
 
-	zReader, err := gzip.NewReader(bytes.NewReader(gzBytes))
-	if err != nil {
-		return nil, fmt.Errorf("Unable to unzip the gzip stream: %s", err.Error())
+	ret["csum"] = model.Checksum
+	return ret, nil
+}
+
+func deserializePackageConfigSpec(spec map[string]interface{}) (*packageConfigSpec, error) {
+	var resp packageConfigSpec
+	var err error
+
+	// Parse the package configuration JSON
+	if v, ok := spec["config"]; ok {
+		if s, ok := v.(string); ok {
+			err = json.Unmarshal([]byte(s), &resp.Config)
+			if err != nil {
+				return nil, fmt.Errorf("Unable to parse configuration spec '%s': %s", s, err.Error())
+			}
+		} else {
+			return nil, fmt.Errorf("Field `config` is not string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `config` is missing")
 	}
 
-	bSpec, err := ioutil.ReadAll(zReader)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to read from gzip stream: %s", err.Error())
+	// All three fields `package`, `version` and `spec` are coming flat from the
+	// version specifications. Since all 3 are normally required, it's enough to
+	// just test if either of them is given.
+	if v, ok := spec["package"]; ok {
+		if s, ok := v.(string); ok && s != "" {
+			resp.Version, err = deserializePackageVersionSpec(spec)
+			if err != nil {
+				return nil, fmt.Errorf("Unable to parse version spec: %s", err.Error())
+			}
+		} else {
+			return nil, fmt.Errorf("Field `package` is not a string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `package` is missing")
 	}
 
-	err = json.Unmarshal(bSpec, &resp)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse configuration spec '%s': %s", spec, err.Error())
+	// Extract the package checksum
+	if v, ok := spec["csum"]; ok {
+		if s, ok := v.(string); ok {
+			resp.Checksum = s
+		} else {
+			return nil, fmt.Errorf("Field `csum` is not string")
+		}
+	} else {
+		return nil, fmt.Errorf("Field `csum` is missing")
 	}
-	return resp, nil
+
+	return &resp, nil
+}
+
+/**
+ * computeCsum calculates a SHA256 checksum out of the given list of strings
+ */
+func computeCsum(previous string, data []interface{}) string {
+	var strList []string
+	strList = append(strList, previous)
+	for _, s := range data {
+		strList = append(strList, s.(string))
+	}
+	sum := sha256.Sum256([]byte(strings.Join(strList, "\n")))
+	return fmt.Sprintf("%x", sum)
 }
 
 func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, error) {
@@ -145,7 +270,6 @@ func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, 
 		}
 
 		log.Printf("[TRACE] Path: %s", pathStr)
-
 		vMap, _ := recMap["map"]
 		vList, _ := recMap["list"]
 		vJson, _ := recMap["json"]
@@ -228,7 +352,7 @@ func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, 
 				return nil, fmt.Errorf("Expecting `json` to be string")
 			}
 		} else if vMap != nil {
-			log.Printf("TRACE] Processing string/string map: %s", vMap)
+			log.Printf("[TRACE] Processing string/string map: %s", vMap)
 
 			if mapValue, ok := vMap.(map[string]interface{}); ok {
 				if autotype {
@@ -240,7 +364,7 @@ func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, 
 				return nil, fmt.Errorf("Expecting `map` to be a map of string/string")
 			}
 		} else if vList != nil {
-			log.Printf("TRACE] Processing string list: %s", vList)
+			log.Printf("[TRACE] Processing string list: %s", vList)
 
 			if listValue, ok := vList.([]interface{}); ok {
 				if autotype {
@@ -277,7 +401,7 @@ func mergeSections(sections []interface{}, autotype bool) (map[string]interface{
 
 		err = mergo.MergeWithOverwrite(&ret, &recMap)
 		if err != nil {
-			return nil, fmt.Errorf("Could not merg section %d: %s", idx, err.Error())
+			return nil, fmt.Errorf("Could not merge section %d: %s", idx, err.Error())
 		}
 
 		log.Printf("[TRACE] Merged to: %d", ret)
@@ -292,25 +416,32 @@ func dataSourceDcosPackageConfigRead(d *schema.ResourceData, meta interface{}) e
 
 	// Start with a previous configuration spec. Either from the one received
 	// from the upstrea, or from a blank slate.
-	fromSpec := d.Get("extend").(string)
-	if fromSpec != "" {
+	fromSpec := d.Get("extend").(map[string]interface{})
+	if len(fromSpec) != 0 {
+		log.Printf("[INFO] Parsing previous config spec: %v", fromSpec)
 		configSpec, err = deserializePackageConfigSpec(fromSpec)
 		if err != nil {
 			return fmt.Errorf("Unable to process `extend` contents: %s", err.Error())
 		}
+		log.Printf("[INFO] Parsed previous config spec to: %v", configSpec)
 	} else {
+		log.Printf("[INFO] Not using previous config spec")
 		configSpec = &packageConfigSpec{
-			nil, make(map[string]interface{}),
+			nil, make(map[string]interface{}), "",
 		}
 	}
 
-	versionSpec := d.Get("version_spec").(string)
-	if versionSpec != "" {
+	versionSpec := d.Get("version_spec").(map[string]interface{})
+	if len(versionSpec) != 0 {
+		log.Printf("[INFO] Parsing version spec: %v", versionSpec)
 		spec, err := deserializePackageVersionSpec(versionSpec)
 		if err != nil {
 			return fmt.Errorf("Unable to process `version_spec` contents: %s", err.Error())
 		}
+		log.Printf("[INFO] Parsed version spec to: %v", spec)
 		configSpec.Version = spec
+	} else {
+		log.Printf("[INFO] Configuration block does not include version spec")
 	}
 
 	autotype := d.Get("autotype").(bool)
@@ -324,16 +455,23 @@ func dataSourceDcosPackageConfigRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Could not merge config with upstream: %s", err.Error())
 	}
+	log.Printf("[TRACE] User config merged to: %s", util.PrintJSON(&configSpec.Config))
 
-	configStr, err := serializePackageConfigSpec(configSpec)
+	// Compute a unique checksum from the checksum string fields
+	configSpec.Checksum = computeCsum(
+		configSpec.Checksum,
+		d.Get("checksum").([]interface{}),
+	)
+	log.Printf("[TRACE] Computing checksum of %v to: %s", d.Get("checksum"), configSpec.Checksum)
+
+	// Serialize config spec into a map
+	configMap, err := serializePackageConfigSpec(configSpec)
 	if err != nil {
 		return fmt.Errorf("Unable to serialize the package config spec: %s", err.Error())
 	}
-
-	d.Set("config", configStr)
+	d.Set("config", configMap)
 
 	// Compute an ID that consists of the version spec and the config spec
-
 	cfgHash, err := util.HashDict(configSpec.Config)
 	if err != nil {
 		return fmt.Errorf("Unable to hash the config: %s", err.Error())
