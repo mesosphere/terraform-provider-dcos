@@ -71,7 +71,7 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if index >= 0 {
-		repoAddRequest.Index = index
+		repoAddRequest.Index = int32(index)
 	}
 
 	_, _, err := client.Cosmos.PackageRepositoryAdd(ctx, &dcos.PackageRepositoryAddOpts{
