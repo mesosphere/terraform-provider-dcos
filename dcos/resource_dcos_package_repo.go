@@ -47,6 +47,12 @@ func resourceDcosPackageRepo() *schema.Resource {
 				ForceNew:    true,
 				Description: "If set to `true`, the repository will be deleted when the resource is un-installed",
 			},
+			"index": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     -1,
+				Description: "Defines the index where this repository will be installed at.",
+			},
 		},
 	}
 }
@@ -56,11 +62,16 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 	ctx := context.TODO()
 	log.Println("[DEBUG] Creating package repository")
 
+	index := d.Get("index").(int)
 	repoName := d.Get("name").(string)
 	repoUrl := d.Get("url").(string)
 	repoAddRequest := dcos.CosmosPackageAddRepoV1Request{
 		Name: repoName,
 		Uri:  repoUrl,
+	}
+
+	if index >= 0 {
+		repoAddRequest.Index = index
 	}
 
 	_, _, err := client.Cosmos.PackageRepositoryAdd(ctx, &dcos.PackageRepositoryAddOpts{
