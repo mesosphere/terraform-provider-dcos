@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMServiceAccount() *schema.Resource {
+func resourceDcosIAMUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMServiceAccountCreate,
-		Read:   resourceDcosIAMServiceAccountRead,
-		Update: resourceDcosIAMServiceAccountUpdate,
-		Delete: resourceDcosIAMServiceAccountDelete,
+		Create: resourceDcosIAMUserCreate,
+		Read:   resourceDcosIAMUserRead,
+		Update: resourceDcosIAMUserUpdate,
+		Delete: resourceDcosIAMUserDelete,
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
@@ -36,39 +36,20 @@ func resourceDcosIAMServiceAccount() *schema.Resource {
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    false,
+				Optional:    true,
 				Description: "Description of the newly created service account",
 			},
-			"public_key": {
+			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
+				Sensitive:   true,
 				Description: "Path to public key to use",
 			},
 		},
 	}
 }
 
-func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, error) {
-	iamUserCreate := dcos.IamUserCreate{}
-
-	if publicKey, pkOK := d.GetOk("public_key"); pkOK {
-		iamUserCreate.PublicKey = publicKey.(string)
-	}
-
-	if description, ok := d.GetOk("description"); ok {
-		iamUserCreate.Description = description.(string)
-	}
-
-	if password, ok := d.GetOk("password"); ok {
-		iamUserCreate.Password = password.(string)
-	}
-
-	return iamUserCreate, nil
-}
-
-func resourceDcosIAMServiceAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -92,7 +73,7 @@ func resourceDcosIAMServiceAccountCreate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -102,7 +83,7 @@ func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[TRACE] IAM.GetUser - %v", resp)
 
-	if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
+	if resp.StatusCode == http.StatusNotFound {
 		log.Printf("[INFO] IAM.GetUser - %s not found", uid)
 		d.SetId("")
 		return nil
@@ -113,18 +94,22 @@ func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("description", user.Description)
-	d.Set("public_key", user.PublicKey)
 	d.SetId(uid)
 
 	return nil
 }
 
-func resourceDcosIAMServiceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	uid := d.Id()
 	iamUserUpdate := dcos.IamUserUpdate{}
+
+	if password, passwordOK := d.GetOk("password"); d.HasChange("password") && passwordOK {
+		iamUserUpdate.Password = password.(string)
+		d.Set("password", password.(string))
+	}
 
 	if description, ok := d.GetOk("description"); ok {
 		iamUserUpdate.Description = description.(string)
@@ -138,16 +123,16 @@ func resourceDcosIAMServiceAccountUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceDcosIAMServiceAccountRead(d, meta)
+	return resourceDcosIAMUserRead(d, meta)
 }
 
-func resourceDcosIAMServiceAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosIAMUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	resp, err := client.IAM.DeleteUser(ctx, d.Id())
 
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
