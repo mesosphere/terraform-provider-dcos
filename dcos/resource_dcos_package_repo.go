@@ -140,6 +140,9 @@ func resourceDcosPackageRepoRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	// We are intentionally not reading the `index` property because
+	// it is only used as hinting during creation.
+
 	// Otherwise such repo was not found
 	d.SetId("")
 	return nil
