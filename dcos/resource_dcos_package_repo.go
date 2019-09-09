@@ -50,6 +50,7 @@ func resourceDcosPackageRepo() *schema.Resource {
 			"index": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				ForceNew:    true,
 				Default:     -1,
 				Description: "Defines the index where this repository will be installed at.",
 			},
