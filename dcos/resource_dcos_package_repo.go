@@ -50,6 +50,7 @@ func resourceDcosPackageRepo() *schema.Resource {
 			"index": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				ForceNew:    true,
 				Default:     -1,
 				Description: "Defines the index where this repository will be installed at.",
 			},
@@ -138,6 +139,9 @@ func resourceDcosPackageRepoRead(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 	}
+
+	// We are intentionally not reading the `index` property because
+	// it is only used as hinting during creation.
 
 	// Otherwise such repo was not found
 	d.SetId("")
