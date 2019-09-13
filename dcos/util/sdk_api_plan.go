@@ -7,7 +7,7 @@ import (
 type PlanStep struct {
 	Id      string `json:"id"`
 	Status  string `json:"status"`
-	Name    string `json:"id"`
+	Name    string `json:"name"`
 	Message string `json:"message"`
 }
 

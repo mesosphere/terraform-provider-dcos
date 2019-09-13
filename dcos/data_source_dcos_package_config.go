@@ -331,16 +331,16 @@ func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, 
 					log.Printf("[TRACE] Matched number: '%f'", tNumber)
 					ptr[targetKey] = tNumber
 				} else if json.Unmarshal(data, &tBool) == nil {
-					log.Printf("[TRACE] Matched bool: '%s'", tBool)
+					log.Printf("[TRACE] Matched bool: '%t'", tBool)
 					ptr[targetKey] = tBool
 				} else if json.Unmarshal(data, &tString) == nil {
 					log.Printf("[TRACE] Matched string: '%s'", tString)
 					ptr[targetKey] = tString
 				} else if json.Unmarshal(data, &tList) == nil {
-					log.Printf("[TRACE] Matched list: '%s'", tList)
+					log.Printf("[TRACE] Matched list: '%v'", tList)
 					ptr[targetKey] = tList
 				} else if json.Unmarshal(data, &tMap) == nil {
-					log.Printf("[TRACE] Matched map: '%s'", tMap)
+					log.Printf("[TRACE] Matched map: '%v'", tMap)
 					ptr[targetKey] = tMap
 				} else {
 					return nil, fmt.Errorf("Invalid JSON contents encountered")
@@ -397,14 +397,14 @@ func mergeSections(sections []interface{}, autotype bool) (map[string]interface{
 			return nil, fmt.Errorf("On section %d: %s", idx, err.Error())
 		}
 
-		log.Printf("[TRACE] Resulted to: %d", recMap)
+		log.Printf("[TRACE] Resulted to: %v", recMap)
 
 		err = mergo.MergeWithOverwrite(&ret, &recMap)
 		if err != nil {
 			return nil, fmt.Errorf("Could not merge section %d: %s", idx, err.Error())
 		}
 
-		log.Printf("[TRACE] Merged to: %d", ret)
+		log.Printf("[TRACE] Merged to: %v", ret)
 	}
 
 	return ret, nil
