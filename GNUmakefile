@@ -3,12 +3,21 @@ GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=dcos
 
-default: build
+PLATFORMS=linux darwin windows
+ARCHITECTURES=amd64
+VERSION=0.0.1
+
+default: fmtcheck build_all
 
 build: fmtcheck
 	go install
 
-test: fmtcheck
+build_all:
+	$(foreach GOOS, $(PLATFORMS),\
+		$(foreach GOARCH, $(ARCHITECTURES),\
+			$(shell export GOOS=$(GOOS); export GOARCH=$(GOARCH); export GO111MODULE=on; go build -v -o terraform.d/plugins/$(GOOS)_$(GOARCH)/terraform-provider-$(PKG_NAME)_v$(VERSION))))
+
+test: fmtcheck vet
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4

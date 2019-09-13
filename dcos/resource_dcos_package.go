@@ -136,8 +136,6 @@ func schemaInPackageConfigSpecWithDiffSup() *schema.Schema {
 			log.Printf("[DEBUG] Equality: %v", eq)
 			return eq
 		}
-
-		return false
 	}
 
 	return baseSchema
@@ -589,7 +587,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Error while querying app status: %s", err.Error())
 			}
 			if desc == nil {
-				return fmt.Errorf("App '%s' was not available. Consider using `wait=true`")
+				return fmt.Errorf("App '%s' was not available. Consider using `wait=true`", appId)
 			}
 
 			// Guard against state discrepancies

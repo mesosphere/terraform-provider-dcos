@@ -72,7 +72,8 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if index >= 0 {
-		repoAddRequest.Index = int32(index)
+		idx := int32(index)
+		repoAddRequest.Index = &idx
 	}
 
 	_, _, err := client.Cosmos.PackageRepositoryAdd(ctx, &dcos.PackageRepositoryAddOpts{
@@ -85,7 +86,7 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 			if oaErr.Model() != nil {
 				if cosmosErr, ok := oaErr.Model().(dcos.CosmosError); ok {
 					if cosmosErr.Type == "RepositoryAlreadyPresent" {
-						log.Println("[DEBUG] A repository with the same name/url is already present: %s", cosmosErr.Message)
+						log.Printf("[DEBUG] A repository with the same name/url is already present: %s\n", cosmosErr.Message)
 						d.SetId(fmt.Sprintf("%s:%s", repoName, repoUrl))
 						return nil
 					} else {
