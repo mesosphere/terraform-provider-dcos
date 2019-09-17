@@ -192,7 +192,7 @@ func dataSourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 
 	jobId := d.Get("name").(string)
 
-	metronome_v1_job, err := getDCOSJobInfo(jobId, client, ctx)
+	metronome_v1_job, _, err := getDCOSJobInfo(jobId, client, ctx)
 	if err != nil {
 		return err
 	}

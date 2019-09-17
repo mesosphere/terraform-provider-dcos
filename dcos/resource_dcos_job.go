@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -64,11 +65,14 @@ func resourceDcosJob() *schema.Resource {
 				ConflictsWith: []string{"args"},
 			},
 			"args": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      false,
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Description:   "An array of strings that represents an alternative mode of specifying the command to run. This was motivated by safe usage of containerizer features like a custom Docker ENTRYPOINT. Either `cmd` or `args` must be supplied. It is invalid to supply both `cmd` and `args` in the same job.",
-				ConflictsWith: []string{"cmd"},
+				ConflictsWith: []string{"cmd"}, // TODO: check if this really conflict withh cmd
 			},
 			"artifacts": {
 				Type:     schema.TypeSet,
@@ -321,12 +325,112 @@ func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 
 	jobId := d.Get("name").(string)
 
-	_, err := getDCOSJobInfo(jobId, client, ctx)
+	job, resp, err := getDCOSJobInfo(jobId, client, ctx)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
+	setSchemaFromJob(d, &job)
+
 	return nil
+}
+
+func setSchemaFromJob(d *schema.ResourceData, j *dcos.MetronomeV1Job) {
+	d.Set("name", j.Id)
+	d.Set("description", j.Description)
+
+	d.Set("user", j.Run.User)
+	// d.Set("labels", j.Run)
+	d.Set("cmd", j.Run.Cmd)
+	d.Set("args", j.Run.Args)
+
+	// maybe this needs to be a loop
+	d.Set("artifacts", j.Run.Artifacts)
+
+	// TODO missing attributes
+	if docker := j.Run.Docker; docker != nil {
+		d.Set("docker.image", docker.Image)
+	}
+
+	// TODO missing attributes
+	if ucr := j.Run.Ucr; ucr != nil {
+		d.Set("ucr.image", ucr.Image)
+	}
+
+	if env, ok := d.GetOk("env"); ok {
+		envRes := make(map[string]interface{})
+		for _, i := range env.(*schema.Set).List() {
+			if e, ok := i.(map[string]string); ok {
+
+				if key, ok := e["key"]; ok {
+					if value, vOK := e["value"]; vOK {
+						envRes[key] = value
+						continue
+					}
+
+					if secret, sOK := e["secret"]; sOK {
+						envRes[key] = map[string]string{
+							"secret": secret,
+						}
+						continue
+					}
+
+					log.Printf("[ERROR] neither value or secret are set.")
+				} else {
+					log.Printf("[ERROR] Key missing %v", e)
+					continue
+				}
+			}
+		}
+		d.Set("env", envRes)
+	}
+
+	d.Set("secret", j.Run.Secrets)
+
+	if constraints := j.Run.Placement.Constraints; constraints != nil {
+		constraintsRes := make([]map[string]interface{}, 0)
+		for _, constraint := range *constraints {
+			c := make(map[string]interface{})
+
+			c["attribute"] = constraint.Attribute
+			c["operator"] = constraint.Operator
+			c["value"] = constraint.Value
+
+			constraintsRes = append(constraintsRes, c)
+		}
+
+		d.Set("placement_constraint", constraintsRes)
+	}
+
+	if restart := j.Run.Restart; restart != nil {
+		d.Set("restart.active_deadline_seconds", restart.ActiveDeadlineSeconds)
+		d.Set("restart.policy", restart.Policy)
+	}
+
+	if len(j.Run.Volumes) > 0 {
+		vols := make([]map[string]interface{}, 0)
+		for _, volume := range j.Run.Volumes {
+			vols = append(vols, map[string]interface{}{
+				"container_path": volume.ContainerPath,
+				"host_path":      volume.HostPath,
+				"mode":           volume.Mode,
+				"secret":         volume.Secret,
+			})
+		}
+		d.Set("volume", vols)
+	}
+
+	d.Set("cpus", j.Run.Cpus)
+
+	d.Set("mem", j.Run.Mem)
+
+	d.Set("disk", j.Run.Disk)
+
+	d.Set("max_launch_delay", j.Run.MaxLaunchDelay)
 }
 
 func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -336,7 +440,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	jobId := d.Get("name").(string)
 
 	// Perform read on "name" to confirm it actually exists...
-	_, err := getDCOSJobInfo(jobId, client, ctx)
+	_, _, err := getDCOSJobInfo(jobId, client, ctx)
 	if err != nil {
 		return err
 	}
@@ -389,22 +493,19 @@ func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (dcos.MetronomeV1Job, error) {
+func getDCOSJobInfo(jobId string, client *dcos.APIClient, ctx context.Context) (dcos.MetronomeV1Job, *http.Response, error) {
 	log.Printf("[INFO] Attempting to read job info (%s)", jobId)
 
 	mv1job, resp, err := client.Metronome.V1GetJob(ctx, jobId, nil)
 	if err != nil {
 		log.Printf("[ERROR] Failed to create DCOS job %s", err)
-		return dcos.MetronomeV1Job{}, err
-	}
-	if resp.StatusCode != 200 {
-		return dcos.MetronomeV1Job{}, fmt.Errorf("[ERROR] Expecting response code of 200 (job found), but received %d", resp.StatusCode)
+		return dcos.MetronomeV1Job{}, resp, err
 	}
 
 	log.Printf("[INFO] DCOS job successfully retrieved (%s)", jobId)
 	log.Printf("[TRACE] Metronome Job Response object: %+v", mv1job)
 
-	return mv1job, nil
+	return mv1job, resp, err
 }
 
 func generateMetronomeJob(d *schema.ResourceData, meta interface{}) (dcos.MetronomeV1Job, error) {
