@@ -361,7 +361,7 @@ func getPackageDesc(client *dcos.APIClient, packageName string, packageVersion s
  * resourceDcosPackageCreate is the default resource `Create` handler
  */
 func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	packageVersion, configCsum, packageConfig, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
@@ -454,7 +454,7 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	var desc *dcos.CosmosServiceDescribeV1Response
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 
 	// If the app_id is missing, this resource is never created. Guard against
 	// this case as early as possible.
@@ -520,7 +520,7 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
  */
 func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 	var desc *dcos.CosmosServiceDescribeV1Response
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	appId := stripRootSlash(d.Get("app_id").(string))
@@ -736,7 +736,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
  * resourceDcosPackageDelete is the default resource `Delete` handler
  */
 func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 	appId := stripRootSlash(d.Get("app_id").(string))
 	log.Printf("[TRACE] DELETE Lifecycle - app %s", appId)

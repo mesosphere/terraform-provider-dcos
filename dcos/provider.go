@@ -7,6 +7,7 @@ import (
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
 
 func Provider() terraform.ResourceProvider {
@@ -157,5 +158,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.SetACSToken(authToken.Token)
 	}
 
-	return client, err
+	cli, err := util.CreateCliWrapper(".terraform/dcos/sandbox", client)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create cli wrapper: %s", err.Error())
+	}
+
+	return &ProviderState{
+		Client:     client,
+		CliWrapper: cli,
+	}, err
 }

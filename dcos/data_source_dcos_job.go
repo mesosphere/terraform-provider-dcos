@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -187,7 +186,7 @@ func dataSourceDcosJob() *schema.Resource {
 }
 
 func dataSourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	jobId := d.Get("name").(string)

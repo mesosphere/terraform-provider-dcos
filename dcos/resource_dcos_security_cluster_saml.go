@@ -91,7 +91,7 @@ func validateProviderID(i interface{}, k string) (s []string, es []error) {
 }
 
 func resourceDcosSecurityClusterSAMLCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	providerId := d.Get("provider_id").(string)
@@ -118,7 +118,7 @@ func resourceDcosSecurityClusterSAMLCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceDcosSecurityClusterSAMLRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	providerId := d.Get("provider_id").(string)
@@ -175,7 +175,7 @@ func resourceDcosSecurityClusterSAMLRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceDcosSecurityClusterSAMLUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	var iamsamlProviderConfig dcos.IamsamlProviderConfig
@@ -203,7 +203,7 @@ func resourceDcosSecurityClusterSAMLUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceDcosSecurityClusterSAMLDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	providerId := d.Get("provider_id").(string)

@@ -84,7 +84,7 @@ func resourceDcosJobSchedule() *schema.Resource {
 }
 
 func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	var metronome_job_schedule dcos.MetronomeV1JobSchedule
@@ -130,7 +130,7 @@ func resourceDcosJobScheduleCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDcosJobScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	scheduleId := d.Get("name").(string)
@@ -151,7 +151,7 @@ func resourceDcosJobScheduleRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	var metronome_job_schedule dcos.MetronomeV1JobSchedule
@@ -189,7 +189,7 @@ func resourceDcosJobScheduleUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDcosJobScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	scheduleId := d.Get("name").(string)

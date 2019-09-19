@@ -59,7 +59,7 @@ func resourceDcosPackageRepo() *schema.Resource {
 }
 
 func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 	log.Println("[DEBUG] Creating package repository")
 
@@ -107,7 +107,7 @@ func resourceDcosPackageRepoCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDcosPackageRepoRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 	log.Printf("[DEBUG] Reading package repository: id='%s'", d.Id())
 
@@ -150,7 +150,7 @@ func resourceDcosPackageRepoRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDcosPackageRepoDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 	log.Println("[DEBUG] Deleting package repository")
 

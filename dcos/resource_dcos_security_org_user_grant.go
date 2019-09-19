@@ -54,7 +54,7 @@ func resourceDcosSecurityOrgUserGrant() *schema.Resource {
 }
 
 func resourceDcosSecurityOrgUserGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	uid := d.Get("uid").(string)
@@ -110,7 +110,7 @@ func inPermissions(permissions dcos.IamUserPermissions, rid string, action strin
 }
 
 func resourceDcosSecurityOrgUserGrantRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	uid := d.Get("uid").(string)
@@ -139,7 +139,7 @@ func resourceDcosSecurityOrgUserGrantRead(d *schema.ResourceData, meta interface
 }
 
 func resourceDcosSecurityOrgUserGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
+	client := meta.(*ProviderState).Client
 	ctx := context.TODO()
 
 	uid := d.Get("uid").(string)
