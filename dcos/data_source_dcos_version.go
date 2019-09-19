@@ -1,6 +1,7 @@
 package dcos
 
 import (
+	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
@@ -18,14 +19,18 @@ func dataSourceDcosVersion() *schema.Resource {
 }
 
 func dataSourceDcosVersionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
-	value, err := util.DCOSGetVersion(client)
+	client := meta.(*dcos.APIClient)
+	ver, err := util.DCOSGetVersion(client)
 	if err != nil {
 		return err
 	}
 
-	d.Set("version", value)
-	d.SetId(value)
+	d.Set("version", ver.Version)
+	d.Set("dcos_variant", ver.DcosVariant)
+	d.Set("dcos_image_commit", ver.DcosImageCommit)
+	d.Set("bootstrap_id", ver.BootstrapId)
+
+	d.SetId(ver.Version)
 
 	return nil
 }

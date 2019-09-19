@@ -10,6 +10,13 @@ import (
 	"github.com/dcos/client-go/dcos"
 )
 
+type DCOSVersionSpec struct {
+	Version         string `json:"version,omitempty"`
+	DcosVariant     string `json:"dcos-variant,omitempty"`
+	DcosImageCommit string `json:"dcos-image-commit,omitempty"`
+	BootstrapId     string `json:"bootstrap-id,omitempty"`
+}
+
 func DCOSHTTPClient(client *dcos.APIClient) *http.Client {
 	return client.HTTPClient()
 }
@@ -27,32 +34,30 @@ func DCOSNewRequest(client *dcos.APIClient, method, url string, body io.Reader) 
 /**
  * Get the DC/OS version from /dcos-metadata/dcos-version.json
  */
-func DCOSGetVersion(client *dcos.APIClient) (string, error) {
+func DCOSGetVersion(client *dcos.APIClient) (DCOSVersionSpec, error) {
+	var ver DCOSVersionSpec
+
 	http := DCOSHTTPClient(client)
 	req, err := DCOSNewRequest(client, "GET", "/dcos-metadata/dcos-version.json", nil)
 	if err != nil {
-		return "", fmt.Errorf("Unable to create request: %s", err.Error())
+		return ver, fmt.Errorf("Unable to create request: %s", err.Error())
 	}
 
 	resp, err := http.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("Unable to place request: %s", err.Error())
+		return ver, fmt.Errorf("Unable to place request: %s", err.Error())
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("Unable to read response: %s", err.Error())
-	}
-
-	var ver struct {
-		Version string
+		return ver, fmt.Errorf("Unable to read response: %s", err.Error())
 	}
 
 	err = json.Unmarshal(body, &ver)
 	if err != nil {
-		return "", fmt.Errorf("Unable to parse response: %s", err.Error())
+		return ver, fmt.Errorf("Unable to parse response: %s", err.Error())
 	}
 
-	return ver.Version, nil
+	return ver, nil
 }
