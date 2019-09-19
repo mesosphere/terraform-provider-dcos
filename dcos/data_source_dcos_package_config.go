@@ -235,7 +235,7 @@ func deserializePackageConfigSpec(spec map[string]interface{}) (*packageConfigSp
 			return nil, fmt.Errorf("Field `csum` is not string")
 		}
 	} else {
-		return nil, fmt.Errorf("Field `csum` is missing")
+		resp.Checksum = ""
 	}
 
 	return &resp, nil
@@ -250,7 +250,15 @@ func computeCsum(previous string, data []interface{}) string {
 	for _, s := range data {
 		strList = append(strList, s.(string))
 	}
-	sum := sha256.Sum256([]byte(strings.Join(strList, "\n")))
+
+	// Keep blank checksums as blanks since this could cause an inconsistency
+	// between the persisted state and the given state when checksum = ""
+	buf := strings.Join(strList, "\n")
+	if buf == "" {
+		return buf
+	}
+
+	sum := sha256.Sum256([]byte(buf))
 	return fmt.Sprintf("%x", sum)
 }
 
