@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -30,14 +32,44 @@ type CliWrapper struct {
 	instances   map[string]*CliWrapperPackage
 }
 
-func CreateCliWrapper(sandbox string, client *dcos.APIClient) (*CliWrapper, error) {
+func CreateCliWrapper(sandbox string, client *dcos.APIClient, cli_version string) (*CliWrapper, error) {
+	absSandbox, err := filepath.Abs(sandbox)
+	if err != nil {
+		return nil, fmt.Errorf("Could not resolve absolute sandbox path: %s", err.Error())
+	}
+
 	return &CliWrapper{
-		sandbox:     sandbox,
+		sandbox:     absSandbox,
 		client:      client,
 		cliBinary:   "",
-		dcosVersion: "",
+		dcosVersion: cli_version,
 		instances:   make(map[string]*CliWrapperPackage),
 	}, nil
+}
+
+type PackageListCommand struct {
+	Name string `json:"name"`
+}
+
+type PackageListResonse struct {
+	PackageName string              `json:"name"`
+	Command     *PackageListCommand `json:"command"`
+}
+
+type CliWrapperConfigParseError struct {
+	Message string
+}
+
+func (e *CliWrapperConfigParseError) Error() string {
+	return e.Message
+}
+
+type CliWrapperCommandNotFound struct {
+	Message string
+}
+
+func (e *CliWrapperCommandNotFound) Error() string {
+	return e.Message
 }
 
 /**
@@ -55,16 +87,22 @@ type CliWrapperPackageWithConfig struct {
 	Config  map[string]interface{}
 }
 
+func (w *CliWrapper) cliExec(args ...string) *exec.Cmd {
+	log.Printf("Executing: %s %s", w.cliBinary, strings.Join(args, " "))
+	cmd := exec.Command(w.cliBinary, args...)
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("DCOS_DIR=%s/dcos", w.sandbox),
+	)
+
+	log.Printf("With env: %s", cmd.Env)
+	return cmd
+}
+
 /**
  * Get a configuration property
  */
 func (w *CliWrapper) GetConfig(name string) (string, error) {
-	cmd := exec.Command(w.cliBinary, "config", "show", name)
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("HOME=%s", w.sandbox),
-	)
-
-	ret, err := cmd.Output()
+	ret, err := w.cliExec("config", "get", name).Output()
 	if err != nil {
 		return "", err
 	}
@@ -76,12 +114,7 @@ func (w *CliWrapper) GetConfig(name string) (string, error) {
  * Update a configuration property
  */
 func (w *CliWrapper) SetConfig(name string, value string) error {
-	cmd := exec.Command(w.cliBinary, "config", "set", name, value)
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("HOME=%s", w.sandbox),
-	)
-
-	_, err := cmd.Output()
+	_, err := w.cliExec("config", "set", name, value).Output()
 	if err != nil {
 		return err
 	}
@@ -93,34 +126,43 @@ func (w *CliWrapper) SetConfig(name string, value string) error {
  * Ensure that the cli for the correct DC/OS version exists in the sandbox
  */
 func (w *CliWrapper) Prepare() error {
+	log.Printf("Checking sandbox: %s", w.sandbox)
 
 	// Ensure sandbox structure
 	os.MkdirAll(fmt.Sprintf("%s/bin", w.sandbox), os.ModePerm)
-	os.MkdirAll(fmt.Sprintf("%s/home", w.sandbox), os.ModePerm)
+	os.MkdirAll(fmt.Sprintf("%s/dcos", w.sandbox), os.ModePerm)
 
 	// If the DC/OS version is not defined, pull the version now
 	if w.dcosVersion == "" {
-		verExpr, err := DCOSGetVersion(w.client)
+		log.Printf("dcos version is not cached, updating now")
+		vers, err := DCOSGetVersion(w.client)
 		if err != nil {
 			return fmt.Errorf("Unable to get the DC/OS version: %s", err.Error())
 		}
 
-		rx := regexp.MustCompile(`dcos-([0-9]+\.[0-9]+)`)
-		verParts := rx.FindStringSubmatch(verExpr)
+		rx := regexp.MustCompile(`([0-9]+\.[0-9]+)`)
+		verParts := rx.FindStringSubmatch(vers.Version)
 		if verParts == nil {
-			return fmt.Errorf("Unable to parse the DC/OS version")
+			return fmt.Errorf("Unable to parse the DC/OS version in: %s", vers.Version)
 		}
 
 		w.dcosVersion = verParts[1]
+		log.Printf("detected=%s", w.dcosVersion)
+	} else {
+		log.Printf("cached version=%s", w.dcosVersion)
 	}
 
 	// If the cli does not exist in the sandbox, download now
 	if w.cliBinary == "" {
 		w.cliBinary = fmt.Sprintf("%s/bin/dcos-%s", w.sandbox, w.dcosVersion)
 		if _, err := os.Stat(w.cliBinary); os.IsNotExist(err) {
-			// Get the data
-			url := fmt.Sprintf("https://downloads.dcos.io/binaries/cli/%s/%s/%s/dcos",
-				runtime.GOOS, runtime.GOARCH, w.dcosVersion)
+			arch := runtime.GOARCH
+			if arch == "amd64" {
+				arch = "x86-64"
+			}
+
+			url := fmt.Sprintf("https://downloads.dcos.io/binaries/cli/%s/%s/dcos-%s/dcos", runtime.GOOS, arch, w.dcosVersion)
+			log.Printf("dcos cli binary not found in sandbox, downloading from %s", url)
 			resp, err := http.Get(url)
 			if err != nil {
 				return fmt.Errorf("Unable to download %s: %s", url, err.Error())
@@ -146,25 +188,30 @@ func (w *CliWrapper) Prepare() error {
 				return fmt.Errorf("Unable to make downloaded cli executable")
 			}
 		}
+		log.Printf("dcos cli binary found in %s", w.cliBinary)
+	} else {
+		log.Printf("cached binary=%s", w.cliBinary)
 	}
 
 	dcosConfig := w.client.CurrentDCOSConfig()
 
 	// If the cluster is not configured, setup the cluster now
-	clusterDir := fmt.Sprintf("%s/home/.dcos/clusters/%s", w.sandbox, dcosConfig.ID())
+	clusterDir := fmt.Sprintf("%s/dcos/clusters/%s", w.sandbox, dcosConfig.ID())
 	if _, err := os.Stat(clusterDir); os.IsNotExist(err) {
-		cmd := exec.Command(w.cliBinary, "cluster", "setup", "--insecure", "--no-check", dcosConfig.URL())
-		cmd.Env = append(os.Environ(),
-			fmt.Sprintf("HOME=%s", w.sandbox),
+		log.Printf("dcos cluster was not configured in cli, configuring now")
+		cmd := w.cliExec("cluster", "setup", "--insecure", "--no-check", dcosConfig.URL())
+		cmd.Env = append(cmd.Env,
 			fmt.Sprintf("DCOS_CLUSTER_SETUP_ACS_TOKEN=%s", dcosConfig.ACSToken()),
 		)
 		_, err := cmd.Output()
 		if err != nil {
 			return fmt.Errorf("Unable to setup cluster: %s", err.Error())
 		}
+		log.Printf("cluster configured")
 	}
 
 	// Always refresh the CLI token
+	log.Printf("updating acs token")
 	err := w.SetConfig("core.dcos_acs_token", dcosConfig.ACSToken())
 	if err != nil {
 		return fmt.Errorf("Unable to refresh cli token: %s", err.Error())
@@ -188,6 +235,7 @@ func (w *CliWrapper) ForPackage(packageName string, id string) (*CliWrapperPacka
 		}
 
 		// Make sure the root package is prepared
+		log.Printf("preparing sandbox")
 		err := w.Prepare()
 		if err != nil {
 			return nil, err
@@ -195,6 +243,7 @@ func (w *CliWrapper) ForPackage(packageName string, id string) (*CliWrapperPacka
 
 		// Prepare the cli-specific package
 		err = pkg.Prepare()
+		log.Printf("preparing package cli")
 		if err != nil {
 			return nil, fmt.Errorf("Unable to prepare cli for package %s: %s", packageName, err.Error())
 		}
@@ -215,7 +264,72 @@ func (w *CliWrapper) ForPackage(packageName string, id string) (*CliWrapperPacka
  * Ensure that the package cli exists
  */
 func (w *CliWrapperPackage) Prepare() error {
-	// TODO: Install package sub-command
+	log.Printf("Preparing package: %s", w.PackageName)
+
+	if w.PackageCommand == "" {
+		log.Printf("package command was not populated, detecting now")
+		err := w.findPackageCliCommand()
+		if err != nil {
+			if _, ok := err.(*CliWrapperCommandNotFound); ok {
+				// Ignore
+			} else {
+				if xerr, ok := err.(*exec.ExitError); ok {
+					return fmt.Errorf("Unable to get package command: %s", string(xerr.Stderr))
+				} else {
+					return fmt.Errorf("Unable to get package command: %s", err.Error())
+				}
+			}
+		}
+
+		log.Printf("cli package was not available, installing now")
+		cmd := w.parent.cliExec("package", "install", "--yes", "--cli", w.PackageName)
+		err = cmd.Start()
+		if err != nil {
+			return fmt.Errorf("Unable to  package: %s", err.Error())
+		}
+		err = cmd.Wait()
+		if err != nil {
+			return fmt.Errorf("Unable to  package: %s", err.Error())
+		}
+
+		log.Printf("checking if package is now installed")
+		err = w.findPackageCliCommand()
+		if err != nil {
+			return fmt.Errorf("Unable to detect the installed package command: %s", err.Error())
+		}
+
+		if w.PackageCommand == "" {
+			return fmt.Errorf("Unable to detect the package command")
+		}
+	}
+
+	return nil
+}
+
+/**
+ * Ensure that the package cli exists
+ */
+func (w *CliWrapperPackage) findPackageCliCommand() error {
+	ret, err := w.parent.cliExec("package", "list", "--json", w.PackageName).Output()
+	if err != nil {
+		return err
+	}
+
+	var resp []PackageListResonse
+	err = json.Unmarshal(ret, &resp)
+	if err != nil {
+		return fmt.Errorf("Unable to parse response: %s", err.Error())
+	}
+
+	if len(resp) == 0 {
+		return &CliWrapperCommandNotFound{"Package was not found"}
+	}
+
+	log.Printf("Parsd list json='%s', to: %d", string(ret), resp)
+	if resp[0].Command != nil {
+		w.PackageCommand = resp[0].Command.Name
+	}
+
 	return nil
 }
 
@@ -230,7 +344,7 @@ func (w *CliWrapperPackage) Prepare() error {
  * - If the expression contains "%CONFIG%", a temporary file will be created
  *   and will replace the macro placeholder.
  */
-func (w *CliWrapperPackageWithConfig) Exec(cmdline string) error {
+func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
 	var stdout io.ReadCloser
 	var stdin io.WriteCloser
 
@@ -265,13 +379,15 @@ func (w *CliWrapperPackageWithConfig) Exec(cmdline string) error {
 		strings.Trim(
 			rxConfigArg.ReplaceAllStringFunc(
 				rxIDArg.ReplaceAllString(
-					cmdline, w.ID,
+					argline, w.ID,
 				),
 				replaceCb),
 			"\t\r\n ",
 		),
 		" ",
 	)
+
+	args = append([]string{w.Package.PackageCommand}, args...)
 
 	if tempFileError != nil {
 		return fmt.Errorf("Could not create temporary file: %s", tempFileError.Error())
@@ -283,10 +399,8 @@ func (w *CliWrapperPackageWithConfig) Exec(cmdline string) error {
 		return fmt.Errorf("Unable to generate JSON config: %s", err.Error())
 	}
 
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("HOME=%s", w.Package.parent.sandbox),
-	)
+	// Prepare cli exec
+	cmd := w.Package.parent.cliExec(args...)
 
 	// Either open STDIN or STDOUT depending on if we are going to read
 	// or write towards the process stream
@@ -346,7 +460,7 @@ func (w *CliWrapperPackageWithConfig) Exec(cmdline string) error {
 	if useFile || useStdout {
 		err = json.Unmarshal(configBytes, &w.Config)
 		if err != nil {
-			return fmt.Errorf("Unable to reload the config: %s", err.Error())
+			return &CliWrapperConfigParseError{fmt.Sprintf("Unable to reload the config: %s", err.Error())}
 		}
 	}
 
