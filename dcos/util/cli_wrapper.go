@@ -18,7 +18,7 @@ import (
 )
 
 var rxConfigArg = regexp.MustCompile(`([><] *)?%CONFIG%`)
-var rxIDArg = regexp.MustCompile(`%ID%`)
+var rxIDArg = regexp.MustCompile(`%NAME%`)
 
 /**
  * The CLI wrapper provides some cached information about the CLI tools
@@ -82,9 +82,10 @@ type CliWrapperPackage struct {
 }
 
 type CliWrapperPackageWithConfig struct {
-	Package *CliWrapperPackage
-	ID      string
-	Config  map[string]interface{}
+	Package    *CliWrapperPackage
+	ID         string
+	Config     map[string]interface{}
+	LastOutput string
 }
 
 func (w *CliWrapper) cliExec(args ...string) *exec.Cmd {
@@ -92,6 +93,19 @@ func (w *CliWrapper) cliExec(args ...string) *exec.Cmd {
 	cmd := exec.Command(w.cliBinary, args...)
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("DCOS_DIR=%s/dcos", w.sandbox),
+	)
+
+	log.Printf("With env: %s", cmd.Env)
+	return cmd
+}
+
+func (w *CliWrapper) shellExec(script string) *exec.Cmd {
+	log.Printf("Executing shell script: %s", script)
+	// TODO: Use OS shell
+	cmd := exec.Command("bash", "-c", script)
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("DCOS_DIR=%s/dcos", w.sandbox),
+		fmt.Sprintf("DCOS_CLI=%s", w.cliBinary),
 	)
 
 	log.Printf("With env: %s", cmd.Env)
@@ -254,9 +268,10 @@ func (w *CliWrapper) ForPackage(packageName string, id string) (*CliWrapperPacka
 	}
 
 	return &CliWrapperPackageWithConfig{
-		Package: pkg,
-		ID:      id,
-		Config:  make(map[string]interface{}),
+		Package:    pkg,
+		ID:         id,
+		Config:     make(map[string]interface{}),
+		LastOutput: "",
 	}, nil
 }
 
@@ -281,21 +296,23 @@ func (w *CliWrapperPackage) Prepare() error {
 			}
 		}
 
-		log.Printf("cli package was not available, installing now")
-		cmd := w.parent.cliExec("package", "install", "--yes", "--cli", w.PackageName)
-		err = cmd.Start()
-		if err != nil {
-			return fmt.Errorf("Unable to  package: %s", err.Error())
-		}
-		err = cmd.Wait()
-		if err != nil {
-			return fmt.Errorf("Unable to  package: %s", err.Error())
-		}
+		if w.PackageCommand == "" {
+			log.Printf("cli package was not available, installing now")
+			cmd := w.parent.cliExec("package", "install", "--yes", "--cli", w.PackageName)
+			err = cmd.Start()
+			if err != nil {
+				return fmt.Errorf("Unable to  package: %s", err.Error())
+			}
+			err = cmd.Wait()
+			if err != nil {
+				return fmt.Errorf("Unable to  package: %s", err.Error())
+			}
 
-		log.Printf("checking if package is now installed")
-		err = w.findPackageCliCommand()
-		if err != nil {
-			return fmt.Errorf("Unable to detect the installed package command: %s", err.Error())
+			log.Printf("checking if package is now installed")
+			err = w.findPackageCliCommand()
+			if err != nil {
+				return fmt.Errorf("Unable to detect the installed package command: %s", err.Error())
+			}
 		}
 
 		if w.PackageCommand == "" {
@@ -344,13 +361,15 @@ func (w *CliWrapperPackage) findPackageCliCommand() error {
  * - If the expression contains "%CONFIG%", a temporary file will be created
  *   and will replace the macro placeholder.
  */
-func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
+func (w *CliWrapperPackageWithConfig) Exec(argline string, shell bool) error {
 	var stdout io.ReadCloser
+	var stderr io.ReadCloser
 	var stdin io.WriteCloser
 
 	var tempFile *os.File
 	var tempFileError error
 
+	var cmd *exec.Cmd
 	var useFile bool = false
 	var useStdin bool = false
 	var useStdout bool = false
@@ -375,22 +394,28 @@ func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
 	}
 
 	// replace %CONIG%, %ID% and break into args
-	args := strings.Split(
-		strings.Trim(
-			rxConfigArg.ReplaceAllStringFunc(
-				rxIDArg.ReplaceAllString(
-					argline, w.ID,
-				),
-				replaceCb),
-			"\t\r\n ",
-		),
-		" ",
+	argline = strings.Trim(
+		rxConfigArg.ReplaceAllStringFunc(
+			rxIDArg.ReplaceAllString(
+				argline, w.ID,
+			),
+			replaceCb),
+		"\t\r\n ",
 	)
-
-	args = append([]string{w.Package.PackageCommand}, args...)
-
 	if tempFileError != nil {
 		return fmt.Errorf("Could not create temporary file: %s", tempFileError.Error())
+	}
+
+	// Pass it down to shell
+	if shell {
+		cmd = w.Package.parent.shellExec(argline)
+	} else {
+		args := strings.Split(
+			argline,
+			" ",
+		)
+		args = append([]string{w.Package.PackageCommand}, args...)
+		cmd = w.Package.parent.cliExec(args...)
 	}
 
 	// Get the configuration contents
@@ -398,9 +423,6 @@ func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
 	if err != nil {
 		return fmt.Errorf("Unable to generate JSON config: %s", err.Error())
 	}
-
-	// Prepare cli exec
-	cmd := w.Package.parent.cliExec(args...)
 
 	// Either open STDIN or STDOUT depending on if we are going to read
 	// or write towards the process stream
@@ -410,11 +432,13 @@ func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
 			return fmt.Errorf("Unable to open stdin pipe: %s", err.Error())
 		}
 	}
-	if useStdout {
-		stdout, err = cmd.StdoutPipe()
-		if err != nil {
-			return fmt.Errorf("Unable to open stdout pipe: %s", err.Error())
-		}
+	stdout, err = cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("Unable to open stdout pipe: %s", err.Error())
+	}
+	stderr, err = cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("Unable to open stderr pipe: %s", err.Error())
 	}
 
 	// If we are using a config file, dump the contents now
@@ -440,7 +464,19 @@ func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
 	if useStdout {
 		configBytes, _ = ioutil.ReadAll(stdout)
 		stdout.Close()
+	} else {
+		outBytes, _ := ioutil.ReadAll(stdout)
+		stdout.Close()
+		w.LastOutput = strings.Trim(string(outBytes), " \t\r\n")
 	}
+
+	// Read stderr
+	errBytes, _ := ioutil.ReadAll(stderr)
+	defer stderr.Close()
+	if w.LastOutput != "" {
+		w.LastOutput += "\n"
+	}
+	w.LastOutput += strings.Trim(string(errBytes), " \t\r\n")
 
 	// Wait for completion
 	err = cmd.Wait()
@@ -458,9 +494,26 @@ func (w *CliWrapperPackageWithConfig) Exec(argline string) error {
 
 	// If the config has been potentially updated, re-load
 	if useFile || useStdout {
+		log.Printf("Collected config=%s", string(configBytes))
+
+		// Check if we can read it as dict
 		err = json.Unmarshal(configBytes, &w.Config)
 		if err != nil {
-			return &CliWrapperConfigParseError{fmt.Sprintf("Unable to reload the config: %s", err.Error())}
+			log.Printf("Parsing as map[string]interface{} failed, trying list")
+			var dictList []map[string]interface{}
+
+			// Check if we can read it as list of dict
+			err = json.Unmarshal(configBytes, &dictList)
+			if err != nil {
+				log.Printf("Parsing as []map[string]interface{} failed: %s", err.Error())
+				return &CliWrapperConfigParseError{fmt.Sprintf("Unable to reload the config: %s", err.Error())}
+			} else {
+				if len(dictList) == 0 {
+					return &CliWrapperConfigParseError{fmt.Sprintf("Got empty config: %s", err.Error())}
+				} else {
+					w.Config = dictList[0]
+				}
+			}
 		}
 	}
 
