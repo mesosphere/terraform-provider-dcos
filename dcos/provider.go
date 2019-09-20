@@ -50,15 +50,15 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"dcos_security_cluster_saml": resourceDcosSAMLProvider(),
+			"dcos_security_cluster_saml": resourceDcosSecurityClusterSAML(),
 
-			"dcos_security_org_user_grant":      resourceDcosIAMGrantUser(),
-			"dcos_security_org_group":           resourceDcosIAMGroup(),
-			"dcos_security_org_group_user":      resourceDcosIAMGroupUser(),
-			"dcos_security_org_service_account": resourceDcosIAMServiceAccount(),
-			"dcos_security_org_user":            resourceDcosIAMUser(),
+			"dcos_security_org_user_grant":      resourceDcosSecurityOrgUserGrant(),
+			"dcos_security_org_group":           resourceDcosSecurityOrgGroup(),
+			"dcos_security_org_group_user":      resourceDcosSecurityOrgGroupUser(),
+			"dcos_security_org_service_account": resourceDcosSecurityOrgServiceAccount(),
+			"dcos_security_org_user":            resourceDcosSecurityOrgUser(),
 
-			"dcos_security_secret": resourceDcosSecret(),
+			"dcos_security_secret": resourceDcosSecuritySecret(),
 
 			"dcos_job":          resourceDcosJob(),
 			"dcos_job_schedule": resourceDcosJobSchedule(),

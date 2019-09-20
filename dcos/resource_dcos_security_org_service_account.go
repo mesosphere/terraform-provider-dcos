@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMServiceAccount() *schema.Resource {
+func resourceDcosSecurityOrgServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMServiceAccountCreate,
-		Read:   resourceDcosIAMServiceAccountRead,
-		Update: resourceDcosIAMServiceAccountUpdate,
-		Delete: resourceDcosIAMServiceAccountDelete,
+		Create: resourceDcosSecurityOrgServiceAccountCreate,
+		Read:   resourceDcosSecurityOrgServiceAccountRead,
+		Update: resourceDcosSecurityOrgServiceAccountUpdate,
+		Delete: resourceDcosSecurityOrgServiceAccountDelete,
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
@@ -68,7 +68,7 @@ func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, 
 	return iamUserCreate, nil
 }
 
-func resourceDcosIAMServiceAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgServiceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -92,7 +92,7 @@ func resourceDcosIAMServiceAccountCreate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -119,7 +119,7 @@ func resourceDcosIAMServiceAccountRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceDcosIAMServiceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgServiceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -138,10 +138,10 @@ func resourceDcosIAMServiceAccountUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceDcosIAMServiceAccountRead(d, meta)
+	return resourceDcosSecurityOrgServiceAccountRead(d, meta)
 }
 
-func resourceDcosIAMServiceAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgServiceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 

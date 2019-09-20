@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMGrantUser() *schema.Resource {
+func resourceDcosSecurityOrgUserGrant() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMGrantUserCreate,
-		Read:   resourceDcosIAMGrantUserRead,
-		Delete: resourceDcosIAMGrantUserDelete,
+		Create: resourceDcosSecurityOrgUserGrantCreate,
+		Read:   resourceDcosSecurityOrgUserGrantRead,
+		Delete: resourceDcosSecurityOrgUserGrantDelete,
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
@@ -53,7 +53,7 @@ func resourceDcosIAMGrantUser() *schema.Resource {
 	}
 }
 
-func resourceDcosIAMGrantUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -109,7 +109,7 @@ func inPermissions(permissions dcos.IamUserPermissions, rid string, action strin
 	return false
 }
 
-func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserGrantRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -138,7 +138,7 @@ func resourceDcosIAMGrantUserRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceDcosIAMGrantUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 

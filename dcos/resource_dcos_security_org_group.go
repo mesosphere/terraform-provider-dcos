@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMGroup() *schema.Resource {
+func resourceDcosSecurityOrgGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMGroupCreate,
-		Read:   resourceDcosIAMGroupRead,
-		Update: resourceDcosIAMGroupUpdate,
-		Delete: resourceDcosIAMGroupDelete,
+		Create: resourceDcosSecurityOrgGroupCreate,
+		Read:   resourceDcosSecurityOrgGroupRead,
+		Update: resourceDcosSecurityOrgGroupUpdate,
+		Delete: resourceDcosSecurityOrgGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceDcosIAMGroup() *schema.Resource {
 	}
 }
 
-func resourceDcosIAMGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -73,7 +73,7 @@ func resourceDcosIAMGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceDcosIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -99,7 +99,7 @@ func resourceDcosIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceDcosIAMGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -112,10 +112,10 @@ func resourceDcosIAMGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	client.IAM.UpdateGroup(ctx, gid, iamGroupUpdate)
 
-	return resourceDcosIAMGroupRead(d, meta)
+	return resourceDcosSecurityOrgGroupRead(d, meta)
 }
 
-func resourceDcosIAMGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 

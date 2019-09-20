@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMGroupUser() *schema.Resource {
+func resourceDcosSecurityOrgGroupUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMGroupUserCreate,
-		Read:   resourceDcosIAMGroupUserRead,
-		// Update: resourceDcosIAMGroupUserUpdate,
-		Delete: resourceDcosIAMGroupUserDelete,
+		Create: resourceDcosSecurityOrgGroupUserCreate,
+		Read:   resourceDcosSecurityOrgGroupUserRead,
+		// Update: resourceDcosSecurityOrgGroupUserUpdate,
+		Delete: resourceDcosSecurityOrgGroupUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,7 +45,7 @@ func resourceDcosIAMGroupUser() *schema.Resource {
 	}
 }
 
-func resourceDcosIAMGroupUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -82,7 +82,7 @@ func dcosIAMGroupUsergenID(d *schema.ResourceData) string {
 	return fmt.Sprintf("%s-%s", gid, uid)
 }
 
-func resourceDcosIAMGroupUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -112,7 +112,7 @@ func resourceDcosIAMGroupUserRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceDcosIAMGroupUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgGroupUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
