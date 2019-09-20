@@ -14,6 +14,18 @@ func dataSourceDcosVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dcos_variant": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dcos_image_commit": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
