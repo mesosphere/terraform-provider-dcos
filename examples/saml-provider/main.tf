@@ -1,6 +1,6 @@
 provider "dcos" {}
 
-resource "dcos_iam_saml_provider" "OneloginTest" {
+resource "dcos_security_cluster_saml" "OneloginTest" {
   provider_id  = "onelogin"
   description  = "OneLogin SAML Provider changed"
   idp_metadata = "${file("~/testcluster-onelogin.xml")}"
