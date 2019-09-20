@@ -22,11 +22,11 @@ func DCOSHTTPClient(client *dcos.APIClient) *http.Client {
 }
 
 func DCOSNewRequest(client *dcos.APIClient, method, url string, body io.Reader) (*http.Request, error) {
-	request, err := http.NewRequest(method, url, body)
+	config := client.CurrentDCOSConfig()
+	request, err := http.NewRequest(method, fmt.Sprintf("%s%s", config.URL(), url), body)
 	if err != nil {
 		return nil, err
 	}
-	config := client.CurrentDCOSConfig()
 	request.Header.Add("Authorization", fmt.Sprintf("token=%s", config.ACSToken()))
 	return request, nil
 }
