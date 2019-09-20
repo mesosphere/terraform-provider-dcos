@@ -8,5 +8,5 @@ require (
 	github.com/dcos/client-go v0.0.0-20190910161559-e3e16c6d1484
 	github.com/hashicorp/terraform v0.12.8
 	github.com/imdario/mergo v0.3.7
-	github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190909144725-3b3d9209ef70
+	github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190919140530-1bfc03a5c181
 )

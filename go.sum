@@ -273,6 +273,8 @@ github.com/mattn/go-shellwords v1.0.4/go.mod h1:3xCvwCdWdlDJUrvuMn7Wuy9eWs4pE8vq
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190909144725-3b3d9209ef70 h1:BzY+wSPZ4AIngIspqSFteO7c+wyrqNKEwy4P+qedV1s=
 github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190909144725-3b3d9209ef70/go.mod h1:+eim7MhJ5g7Psfu1OvX+OO3p5DSS2MdKglQP+fZ/V7g=
+github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190919140530-1bfc03a5c181 h1:e98a9p/R5URhO7Qy4lQrwSKT74yu7Kt7FwlJ6pQJiVc=
+github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190919140530-1bfc03a5c181/go.mod h1:+eim7MhJ5g7Psfu1OvX+OO3p5DSS2MdKglQP+fZ/V7g=
 github.com/microcosm-cc/bluemonday v1.0.1/go.mod h1:hsXNsILzKxV+sX77C5b8FSuKF00vh2OMYv+xgHpAMF4=
 github.com/miekg/dns v1.0.8/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/mitchellh/cli v1.0.0 h1:iGBIsUe3+HZ/AD/Vd7DErOt5sU9fa8Uj7A2s1aggv1Y=
