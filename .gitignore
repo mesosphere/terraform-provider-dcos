@@ -46,3 +46,4 @@ override.tf.json
 examples/terraform.d/**
 examples/*/terraform.d/**
 terraform.d/plugins
+dist/**
