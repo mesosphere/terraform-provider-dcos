@@ -73,6 +73,7 @@ func Provider() terraform.ResourceProvider {
 			"dcos_package_version": dataSourceDcosPackageVersion(),
 			"dcos_service":         dataSourceDcosService(),
 			"dcos_token":           dataSourceDcosToken(),
+			"dcos_version":         dataSourceDcosVersion(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
