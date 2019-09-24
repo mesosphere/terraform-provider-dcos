@@ -268,7 +268,7 @@ func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, 
 
 	log.Printf("[TRACE] Processing section: %s", section)
 	if recMap, ok := section.(map[string]interface{}); ok {
-		path, _ := recMap["path"]
+		path := recMap["path"]
 		if path == nil {
 			return nil, fmt.Errorf("Missing value for key: path")
 		}
@@ -278,9 +278,9 @@ func sectionToJson(section interface{}, autotype bool) (map[string]interface{}, 
 		}
 
 		log.Printf("[TRACE] Path: %s", pathStr)
-		vMap, _ := recMap["map"]
-		vList, _ := recMap["list"]
-		vJson, _ := recMap["json"]
+		vMap := recMap["map"]
+		vList := recMap["list"]
+		vJson := recMap["json"]
 
 		// Require one of `map`, `list`, `json`
 		if vMap == nil && vList == nil && vJson == "" {

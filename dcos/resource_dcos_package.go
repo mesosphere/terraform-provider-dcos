@@ -39,11 +39,7 @@ func resourceDcosPackage() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if filepath.Clean("/"+old) == filepath.Clean("/"+new) {
-						return true
-					}
-
-					return false
+					return filepath.Clean("/"+old) == filepath.Clean("/"+new)
 				},
 				Description: "ID of the account is used by default",
 			},
@@ -441,7 +437,7 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 
 		// Keep track of a configuration ID in the meta-data store of the service
 		sdkClient := util.CreateSDKAPIClient(client, appId)
-		sdkClient.SetMeta("csum", configCsum)
+		_ = sdkClient.SetMeta("csum", configCsum)
 
 		d.SetId(fmt.Sprintf("%s:%s", packageVersion.Name, installedPkg.AppId))
 
@@ -572,6 +568,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			// First of all, make sure that we can jump to the given version,
 			// stating from our current version
 
+			var errQ error
 			// We are going to wait for 5 minutes for the app to appear, just in case we
 			// were very quick on the previous deployment
 			if d.Get("wait").(bool) {
@@ -579,12 +576,13 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("Unable to parse wait duration")
 				}
-				desc, err = waitAndgetServiceDesc(client, appId, waitDuration)
+				desc, errQ = waitAndgetServiceDesc(client, appId, waitDuration)
 			} else {
-				desc, err = getServiceDesc(client, appId)
+				desc, errQ = getServiceDesc(client, appId)
 			}
-			if err != nil {
-				return fmt.Errorf("Error while querying app status: %s", err.Error())
+
+			if errQ != nil {
+				return fmt.Errorf("Error while querying app status: %s", errQ.Error())
 			}
 			if desc == nil {
 				return fmt.Errorf("App '%s' was not available. Consider using `wait=true`", appId)
@@ -724,7 +722,7 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Update the configuration checksum
 		if d.Get("sdk").(bool) {
-			sdkClient.SetMeta("csum", newChecksum)
+			_ = sdkClient.SetMeta("csum", newChecksum)
 		}
 
 		d.SetPartial("config")
@@ -745,7 +743,7 @@ func resourceDcosPackageDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// We are going to get reaped by the SDK uninstall, but just in case
 	sdkClient := util.CreateSDKAPIClient(client, appId)
-	sdkClient.SetMeta("csum", "")
+	_ = sdkClient.SetMeta("csum", "")
 
 	packageVersion, _, _, err := collectPackageConfiguration(d.Get("config").(map[string]interface{}))
 	if err != nil {

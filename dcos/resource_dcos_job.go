@@ -786,7 +786,7 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) (dcos.Metron
 				}
 			}
 
-			if tmp_secret_set == false {
+			if !tmp_secret_set {
 				return dcos.MetronomeV1Job{}, fmt.Errorf("[ERROR] Expecting '%s' to be part of secrets configuration", secret)
 			}
 

@@ -37,8 +37,8 @@ func NewRepoFromURL(url string) (CosmosRepository, error) {
 
 	// Make sure we have the bare minimum headers required by the universe convert
 	// script, in order to be able to read convert URLs
-	request.Header.Add("Accept", "application/json; version=v3")
-	request.Header.Add("User-Agent", "CosmosRepoGo/1.0 (dcos/1.13)")
+	request.Header.Add("Accept", "application/json; version=v5")
+	request.Header.Add("User-Agent", "cosmos/does-not-matter dcos/1.13")
 
 	response, err := client.Do(request)
 	if err != nil {

@@ -7,7 +7,7 @@ PLATFORMS=linux darwin windows
 ARCHITECTURES=amd64
 VERSION=0.0.1
 
-default: fmtcheck build_all
+default: fmtcheck vet lint build_all
 
 build: fmtcheck
 	go install
@@ -24,6 +24,9 @@ test: fmtcheck vet
 
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+
+lint:
+	export GO111MODULE=on; golangci-lint run -e 'Error return value of `d.Set` is not checked' ./...
 
 vet:
 	@echo "go vet ."

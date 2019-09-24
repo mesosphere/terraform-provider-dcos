@@ -31,7 +31,6 @@ func GetVerboseCosmosError(error error, resp *http.Response) string {
 							appId.(string),
 						)
 					}
-					break
 
 				case "PackageAlreadyInstalled":
 					return "A package with the same name is already installed"
