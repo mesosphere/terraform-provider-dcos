@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosSAMLProvider() *schema.Resource {
+func resourceDcosSecurityClusterSAML() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosSAMLProviderCreate,
-		Read:   resourceDcosSAMLProviderRead,
-		Update: resourceDcosSAMLProviderUpdate,
-		Delete: resourceDcosSAMLProviderDelete,
+		Create: resourceDcosSecurityClusterSAMLCreate,
+		Read:   resourceDcosSecurityClusterSAMLRead,
+		Update: resourceDcosSecurityClusterSAMLUpdate,
+		Delete: resourceDcosSecurityClusterSAMLDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -93,7 +93,7 @@ func validateProviderID(i interface{}, k string) (s []string, es []error) {
 	return
 }
 
-func resourceDcosSAMLProviderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityClusterSAMLCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -117,10 +117,10 @@ func resourceDcosSAMLProviderCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceDcosSAMLProviderRead(d, meta)
+	return resourceDcosSecurityClusterSAMLRead(d, meta)
 }
 
-func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityClusterSAMLRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -177,7 +177,7 @@ func resourceDcosSAMLProviderRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceDcosSAMLProviderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityClusterSAMLUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -202,10 +202,10 @@ func resourceDcosSAMLProviderUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceDcosSAMLProviderRead(d, meta)
+	return resourceDcosSecurityClusterSAMLRead(d, meta)
 }
 
-func resourceDcosSAMLProviderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityClusterSAMLDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 

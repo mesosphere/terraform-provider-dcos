@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosSecret() *schema.Resource {
+func resourceDcosSecuritySecret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosSecretCreate,
-		Read:   resourceDcosSecretRead,
-		Update: resourceDcosSecretUpdate,
-		Delete: resourceDcosSecretDelete,
+		Create: resourceDcosSecuritySecretCreate,
+		Read:   resourceDcosSecuritySecretRead,
+		Update: resourceDcosSecuritySecretUpdate,
+		Delete: resourceDcosSecuritySecretDelete,
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
@@ -57,7 +57,7 @@ func encodePath(pathToSecret string) string {
 	return url.PathEscape(pathToSecret)
 }
 
-func resourceDcosSecretCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecuritySecretCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -88,7 +88,7 @@ func resourceDcosSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceDcosSecretRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecuritySecretRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -119,7 +119,7 @@ func generateID(store string, pathToSecret string) string {
 	return path.Join(store, pathToSecret)
 }
 
-func resourceDcosSecretUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecuritySecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -136,10 +136,10 @@ func resourceDcosSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to update secret: %s", err.Error())
 	}
 
-	return resourceDcosSecretRead(d, meta)
+	return resourceDcosSecuritySecretRead(d, meta)
 }
 
-func resourceDcosSecretDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecuritySecretDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 

@@ -9,7 +9,7 @@ resource "tls_private_key" "service_account_key" {
   rsa_bits  = "2048"
 }
 
-resource "dcos_iam_service_account" "service_account" {
+resource "dcos_security_org_service_account" "service_account" {
   uid         = "${var.app_id}-principal"
   description = "Kubernets Service Account"
   public_key  = "${tls_private_key.service_account_key.public_key_pem}"
@@ -23,9 +23,9 @@ locals {
   ]
 }
 
-resource "dcos_iam_grant_user" "principal_create_grants" {
+resource "dcos_security_org_user_grant" "principal_create_grants" {
   count    = "${length(local.principal_create_grants)}"
-  uid      = "${dcos_iam_service_account.service_account.uid}"
+  uid      = "${dcos_security_org_service_account.service_account.uid}"
   resource = "${element(local.principal_create_grants, count.index)}"
   action   = "create"
 }
@@ -34,7 +34,7 @@ resource "dcos_iam_grant_user" "principal_create_grants" {
 locals {
   jenkins_secret = {
     scheme         = "RS256"
-    uid            = "${dcos_iam_service_account.service_account.uid}"
+    uid            = "${dcos_security_org_service_account.service_account.uid}"
     private_key    = "${tls_private_key.service_account_key.private_key_pem}"
     login_endpoint = "https://master.mesos/acs/api/v1/auth/login"
   }
@@ -54,5 +54,5 @@ resource "dcos_package" "package" {
 {"service":{"service_account": "${dcos_iam_service_account.service_account.uid}", "service_account_secret": "${dcos_secret.secret.path}"}}
 EOF
 
-  depends_on = ["dcos_iam_grant_user.principal_create_grants"]
+  depends_on = ["dcos_security_org_user_grant.principal_create_grants"]
 }

@@ -50,19 +50,20 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			// "dcos_services_single_container": resourceDcosServicesSingleContainer(),
-			// "dcos_job":                       resourceDcosJob(),
-			"dcos_iam_grant_user":      resourceDcosIAMGrantUser(),
-			"dcos_iam_group":           resourceDcosIAMGroup(),
-			"dcos_iam_group_user":      resourceDcosIAMGroupUser(),
-			"dcos_iam_saml_provider":   resourceDcosSAMLProvider(),
-			"dcos_iam_service_account": resourceDcosIAMServiceAccount(),
-			"dcos_iam_user":            resourceDcosIAMUser(),
-			"dcos_job":                 resourceDcosJob(),
-			"dcos_job_schedule":        resourceDcosJobSchedule(),
-			"dcos_package":             resourceDcosPackage(),
-			"dcos_package_repo":        resourceDcosPackageRepo(),
-			"dcos_secret":              resourceDcosSecret(),
+			"dcos_security_cluster_saml": resourceDcosSecurityClusterSAML(),
+
+			"dcos_security_org_user_grant":      resourceDcosSecurityOrgUserGrant(),
+			"dcos_security_org_group":           resourceDcosSecurityOrgGroup(),
+			"dcos_security_org_group_user":      resourceDcosSecurityOrgGroupUser(),
+			"dcos_security_org_service_account": resourceDcosSecurityOrgServiceAccount(),
+			"dcos_security_org_user":            resourceDcosSecurityOrgUser(),
+
+			"dcos_security_secret": resourceDcosSecuritySecret(),
+
+			"dcos_job":          resourceDcosJob(),
+			"dcos_job_schedule": resourceDcosJobSchedule(),
+			"dcos_package":      resourceDcosPackage(),
+			"dcos_package_repo": resourceDcosPackageRepo(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_base_url":        dataSourceDcosBaseURL(),

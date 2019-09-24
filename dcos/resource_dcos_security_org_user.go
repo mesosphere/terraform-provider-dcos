@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceDcosIAMUser() *schema.Resource {
+func resourceDcosSecurityOrgUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosIAMUserCreate,
-		Read:   resourceDcosIAMUserRead,
-		Update: resourceDcosIAMUserUpdate,
-		Delete: resourceDcosIAMUserDelete,
+		Create: resourceDcosSecurityOrgUserCreate,
+		Read:   resourceDcosSecurityOrgUserRead,
+		Update: resourceDcosSecurityOrgUserUpdate,
+		Delete: resourceDcosSecurityOrgUserDelete,
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
@@ -49,7 +49,7 @@ func resourceDcosIAMUser() *schema.Resource {
 	}
 }
 
-func resourceDcosIAMUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -73,7 +73,7 @@ func resourceDcosIAMUserCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceDcosIAMUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -99,7 +99,7 @@ func resourceDcosIAMUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceDcosIAMUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -123,10 +123,10 @@ func resourceDcosIAMUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceDcosIAMUserRead(d, meta)
+	return resourceDcosSecurityOrgUserRead(d, meta)
 }
 
-func resourceDcosIAMUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
