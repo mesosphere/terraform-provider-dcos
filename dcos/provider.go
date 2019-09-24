@@ -51,6 +51,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"dcos_security_cluster_saml": resourceDcosSecurityClusterSAML(),
+			"dcos_security_cluster_oidc": resourceDcosSecurityClusterOIDC(),
 
 			"dcos_security_org_user_grant":      resourceDcosSecurityOrgUserGrant(),
 			"dcos_security_org_group":           resourceDcosSecurityOrgGroup(),
@@ -84,10 +85,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	var err error
 
 	// Configure custom cluster URL
-	dcosUrl := d.Get("dcos_url").(string)
-	if dcosUrl != "" {
+	dcosURL := d.Get("dcos_url").(string)
+	if dcosURL != "" {
 		config = dcos.NewConfig(nil)
-		config.SetURL(dcosUrl)
+		config.SetURL(dcosURL)
 
 		// Require a log-in username
 		iamLogin.Uid = d.Get("user").(string)
