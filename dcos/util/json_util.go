@@ -24,7 +24,10 @@ func PrintJSON(anyJson interface{}) string {
 
 	// Pretty-print
 	var out bytes.Buffer
-	json.Indent(&out, bt, "", "  ")
+	err = json.Indent(&out, bt, "", "  ")
+	if err != nil {
+		return "{ <indent error> }"
+	}
 	return out.String()
 }
 
@@ -33,7 +36,10 @@ func PrintJSON(anyJson interface{}) string {
  */
 func NormalizeJSON(inputJson string) (string, error) {
 	var anyJson map[string]interface{}
-	json.Unmarshal([]byte(inputJson), &anyJson)
+	err := json.Unmarshal([]byte(inputJson), &anyJson)
+	if err != nil {
+		return "", err
+	}
 
 	// The unmarshal logic actually sorts the keys, so there is nothing
 	// else required to do.

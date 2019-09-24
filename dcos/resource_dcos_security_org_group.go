@@ -110,7 +110,10 @@ func resourceDcosSecurityOrgGroupUpdate(d *schema.ResourceData, meta interface{}
 		iamGroupUpdate.Description = desc.(string)
 	}
 
-	client.IAM.UpdateGroup(ctx, gid, iamGroupUpdate)
+	_, err := client.IAM.UpdateGroup(ctx, gid, iamGroupUpdate)
+	if err != nil {
+		return err
+	}
 
 	return resourceDcosSecurityOrgGroupRead(d, meta)
 }
