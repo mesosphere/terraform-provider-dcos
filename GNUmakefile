@@ -26,7 +26,7 @@ testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 lint:
-	export GO111MODULE=on; golangci-lint run ./...
+	export GO111MODULE=on; golangci-lint run -e 'Error return value of `d.Set` is not checked' ./...
 
 vet:
 	@echo "go vet ."
