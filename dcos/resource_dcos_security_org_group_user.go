@@ -111,7 +111,7 @@ func resourceDcosSecurityOrgGroupUserRead(d *schema.ResourceData, meta interface
 	}
 
 	if serviceaccountsErr != nil {
-		return fmt.Errorf("Unable to find user %s in group %s: %s", uid, gid, err.Error())
+		return fmt.Errorf("Unable to find user %s in group %s: %s", uid, gid, serviceaccountsErr.Error())
 	}
 
 	d.SetId(dcosIAMGroupUsergenID(d))
