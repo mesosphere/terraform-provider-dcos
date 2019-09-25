@@ -326,11 +326,13 @@ func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
 	jobId := d.Get("name").(string)
 
 	job, resp, err := getDCOSJobInfo(jobId, client, ctx)
+
+	if resp.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if resp.StatusCode == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
@@ -361,31 +363,26 @@ func setSchemaFromJob(d *schema.ResourceData, j *dcos.MetronomeV1Job) {
 		d.Set("ucr.image", ucr.Image)
 	}
 
-	if env, ok := d.GetOk("env"); ok {
-		envRes := make(map[string]interface{})
-		for _, i := range env.(*schema.Set).List() {
-			if e, ok := i.(map[string]string); ok {
+	if len(j.Run.Env) > 0 {
+		envRes := make([]map[string]interface{}, 0, 1)
 
-				if key, ok := e["key"]; ok {
-					if value, vOK := e["value"]; vOK {
-						envRes[key] = value
-						continue
-					}
+		for k, i := range j.Run.Env {
+			entry := make(map[string]interface{})
+			entry["key"] = k
 
-					if secret, sOK := e["secret"]; sOK {
-						envRes[key] = map[string]string{
-							"secret": secret,
-						}
-						continue
-					}
-
-					log.Printf("[ERROR] neither value or secret are set.")
-				} else {
-					log.Printf("[ERROR] Key missing %v", e)
-					continue
-				}
+			switch e := i.(type) {
+			case map[string]string:
+				entry["secret"] = e["secret"]
+			case string:
+				entry["value"] = e
+			default:
+				log.Printf("[WARNING] found key but no secret or value. Ignoring %v", i)
+				continue
 			}
+
+			envRes = append(envRes, entry)
 		}
+
 		d.Set("env", envRes)
 	}
 
