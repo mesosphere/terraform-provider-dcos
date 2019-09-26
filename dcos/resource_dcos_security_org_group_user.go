@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/antihax/optional"
+
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -90,8 +92,9 @@ func resourceDcosSecurityOrgGroupUserRead(d *schema.ResourceData, meta interface
 	uid := d.Get("uid").(string)
 
 	users, resp, err := client.IAM.GetGroupUsers(ctx, gid, &dcos.GetGroupUsersOpts{})
+	serviceaccounts, serviceaccountsResp, serviceaccountsErr := client.IAM.GetGroupUsers(ctx, gid, &dcos.GetGroupUsersOpts{Type_: optional.NewString("service")})
 
-	if !dcosIAMGroupUserinUserArray(uid, users) {
+	if !dcosIAMGroupUserinUserArray(uid, users) && !dcosIAMGroupUserinUserArray(uid, serviceaccounts) {
 		log.Printf("[INFO] IAM.GetGroupUsers - %s not in group %s", uid, gid)
 		d.SetId("")
 		return nil
@@ -99,12 +102,16 @@ func resourceDcosSecurityOrgGroupUserRead(d *schema.ResourceData, meta interface
 
 	log.Printf("[TRACE] IAM.GetGroupUsers - %v", resp)
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound || serviceaccountsResp.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("[INFO] IAM.GetGroupUsers - %s not found", gid)
 	}
 
 	if err != nil {
 		return fmt.Errorf("Unable to find user %s in group %s: %s", uid, gid, err.Error())
+	}
+
+	if serviceaccountsErr != nil {
+		return fmt.Errorf("Unable to find user %s in group %s: %s", uid, gid, serviceaccountsErr.Error())
 	}
 
 	d.SetId(dcosIAMGroupUsergenID(d))
