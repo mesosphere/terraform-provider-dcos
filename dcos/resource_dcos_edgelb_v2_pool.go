@@ -866,6 +866,41 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 									service.Mesos.TaskIDPattern = v.(string)
 								}
 							}
+
+							if endpoint, ok := s["endpoint"]; ok {
+								e := endpoint.(map[string]interface{})
+								service.Endpoint = dcos.EdgelbV2Endpoint{}
+								if v, ok := e["type"]; ok {
+									service.Endpoint.Type = v.(string)
+								}
+								if v, ok := e["misc_str"]; ok {
+									service.Endpoint.MiscStr = v.(string)
+								}
+								if check, ok := e["check"]; ok {
+									c := check.(map[string]interface{})
+									service.Endpoint.Check = dcos.EdgelbV2EndpointCheck{}
+
+									if v, ok := c["enabled"]; ok {
+										service.Endpoint.Check.Enabled = v.(bool)
+									}
+
+									if v, ok := c["custom_str"]; ok {
+										service.Endpoint.Check.CustomStr = v.(string)
+									}
+								}
+								if v, ok := e["address"]; ok {
+									service.Endpoint.Address = v.(string)
+								}
+								if v, ok := e["port"]; ok {
+									service.Endpoint.Port = v.(int32)
+								}
+								if v, ok := e["port_name"]; ok {
+									service.Endpoint.PortName = v.(string)
+								}
+								if v, ok := e["all_ports"]; ok {
+									service.Endpoint.AllPorts = v.(bool)
+								}
+							}
 							backend.Services = append(backend.Services, service)
 						}
 					}
