@@ -17,9 +17,9 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 		Read:   resourceDcosEdgeLBV2PoolRead,
 		Update: resourceDcosEdgeLBV2PoolUpdate,
 		Delete: resourceDcosEdgeLBV2PoolDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		// Importer: &schema.ResourceImporter{
+		// 	State: schema.ImportStatePassthrough,
+		// },
 
 		SchemaVersion: 1,
 		Timeouts: &schema.ResourceTimeout{
@@ -102,7 +102,7 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 				ForceNew:    false,
 				Description: "Disk size (in MB)",
 			},
-			"count": {
+			"pool_count": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    false,
@@ -213,7 +213,9 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 									"certificates": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Elem:     schema.TypeString,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
 									},
 									"redirect_to_https": {
 										Type:     schema.TypeSet,
@@ -242,10 +244,65 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 										},
 									},
 									"misc_strs": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Elem:        schema.TypeString,
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
 										Description: "Additional template lines inserted before use_backend",
+									},
+									"protocol": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Protocol",
+									},
+									"linked_backend": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										ForceNew: false,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"default_backend": {
+													Type:        schema.TypeString,
+													Optional:    true,
+													Description: "This is default backend that is routed to if none of the other filters are matched.",
+												},
+												"map": {
+													Type:        schema.TypeSet,
+													Optional:    true,
+													ForceNew:    false,
+													Description: "This is an optional field that specifies a mapping to various backends. These rules are applied in order.",
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"backend": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"host_eq": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"host_reg": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"path_beg": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"path_end": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"path_reg": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
@@ -402,9 +459,11 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 										},
 									},
 									"misc_strs": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Elem:        schema.TypeString,
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
 										Description: "Additional template lines inserted before servers",
 									},
 									"services": {
@@ -596,7 +655,7 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 	if v, ok := d.GetOk("cpus"); ok {
 		edgelbV2Pool.Cpus = v.(float32)
 	}
-	if v, ok := d.GetOk("count"); ok {
+	if v, ok := d.GetOk("pool_count"); ok {
 		edgelbV2Pool.Count = v.(int32)
 	}
 	if v, ok := d.GetOk("constraints"); ok {
@@ -674,6 +733,45 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 				}
 				if value, ok := val[i]["misc_strs"]; ok {
 					frontend.MiscStrs = value.([]string)
+				}
+
+				if value, ok := val[i]["protocol"]; ok {
+					switch value.(string) {
+					case "TCP":
+						frontend.Protocol = dcos.EdgelbV2ProtocolTCP
+					case "TLS":
+						frontend.Protocol = dcos.EdgelbV2ProtocolTLS
+					case "HTTP":
+						frontend.Protocol = dcos.EdgelbV2ProtocolHTTP
+					case "HTTPS":
+						frontend.Protocol = dcos.EdgelbV2ProtocolHTTPS
+					default:
+						return edgelbV2Pool, fmt.Errorf("Unknown protocol - %s", value.(string))
+					}
+				}
+
+				if value, ok := val[i]["linked_backend"]; ok {
+					lbackend := value.(map[string]interface{})
+					linkedBackend := dcos.EdgelbV2FrontendLinkBackend{}
+					if val, ok := lbackend["default_backend"]; ok {
+						linkedBackend.DefaultBackend = val.(string)
+					}
+					if val, ok := lbackend["map"]; ok {
+						linkedBackend.Map = make([]dcos.EdgelbV2FrontendLinkBackendMap, 0)
+						for _, vals := range val.(*schema.Set).List() {
+							if m, ok := vals.(map[string]interface{}); ok {
+								ma := dcos.EdgelbV2FrontendLinkBackendMap{}
+								ma.Backend = m["backend"].(string)
+								ma.HostEq = m["host_eq"].(string)
+								ma.HostReg = m["host_reg"].(string)
+								ma.PathBeg = m["path_beg"].(string)
+								ma.PathEnd = m["path_end"].(string)
+								ma.PathReg = m["path_reg"].(string)
+
+								linkedBackend.Map = append(linkedBackend.Map, ma)
+							}
+						}
+					}
 				}
 
 				if value, ok := val[i]["redirect_to_https"]; ok {
@@ -931,16 +1029,36 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 	return edgelbV2Pool, nil
 }
 
+func pingEdgeLB(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	p, resp, err := client.Edgelb.Ping(ctx)
+	log.Printf("[TRACE] Edgelb.Ping - p: %s, resp: %v", p, resp)
+
+	return err
+}
+
 func resourceDcosEdgeLBV2PoolCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
+
+	if err := pingEdgeLB(d, meta); err != nil {
+		return err
+	}
 
 	edgelbV2Pool, err := edgelbV2PoolFromSchema(d)
 	if err != nil {
 		return err
 	}
 
-	client.Edgelb.V2CreatePool(ctx, edgelbV2Pool)
+	_, resp, err := client.Edgelb.V2CreatePool(ctx, edgelbV2Pool)
+
+	log.Printf("[TRACE] Edgelb.V2DeletePool - %v", resp)
+
+	if err != nil {
+		return err
+	}
 
 	return resourceDcosEdgeLBV2PoolRead(d, meta)
 }
@@ -975,7 +1093,7 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("cpus", pool.Cpus)
 	d.Set("mem", pool.Mem)
 	d.Set("disk", pool.Disk)
-	d.Set("count", pool.Count)
+	d.Set("pool_count", pool.Count)
 
 	d.Set("constraints", pool.Constraints)
 	d.Set("ports", pool.Ports)
@@ -1040,6 +1158,30 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 
 			if len(frontend.MiscStrs) > 0 {
 				f["misc_strs"] = frontend.MiscStrs
+			}
+
+			f["linked_backend"] = map[string]interface{}{
+				"default_backend": frontend.LinkBackend.DefaultBackend,
+			}
+
+			lmaps := make([]map[string]interface{}, 0)
+			if len(frontend.LinkBackend.Map) > 0 {
+				for _, m := range frontend.LinkBackend.Map {
+					ma := map[string]interface{}{
+						"backend":  m.Backend,
+						"host_eq":  m.HostEq,
+						"host_reg": m.HostReg,
+						"path_beg": m.PathBeg,
+						"path_end": m.PathEnd,
+						"path_reg": m.PathReg,
+					}
+					lmaps = append(lmaps, ma)
+				}
+			}
+
+			f["linked_backend"] = map[string]interface{}{
+				"default_backend": frontend.LinkBackend.DefaultBackend,
+				"map":             lmaps,
 			}
 
 			frontends = append(frontends, f)
