@@ -32,25 +32,29 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 			"pool_healthcheck_grace_period": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				ForceNew:    true,
+				Computed:    true,
+				ForceNew:    false,
 				Description: "Pool tasks healthcheck grace period (in seconds)",
 			},
 			"pool_healthcheck_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				ForceNew:    true,
+				Computed:    true,
+				ForceNew:    false,
 				Description: "Pool tasks healthcheck interval (in seconds)",
 			},
 			"pool_healthcheck_max_fail": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				ForceNew:    true,
+				Computed:    true,
+				ForceNew:    false,
 				Description: "Pool tasks healthcheck maximum number of consecutive failures before declaring as unhealthy",
 			},
 			"pool_healthcheck_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				ForceNew:    true,
+				Computed:    true,
+				ForceNew:    false,
 				Description: "Maximum amount of time that Mesos will wait for the healthcheck container to finish executing",
 			},
 			"name": {
@@ -62,6 +66,7 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 			"namespace": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
 				Description: "The DC/OS space (sometimes also referred to as a \"group\").",
 			},
@@ -99,11 +104,12 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 			"disk": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
 				Description: "Disk size (in MB)",
 			},
 			"pool_count": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Optional:    true,
 				ForceNew:    false,
 				Description: "Number of load balancer instances in the pool",
@@ -111,14 +117,17 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 			"constraints": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
 				Description: "Marathon style constraints for load balancer instance placement",
 			},
 			"ports": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				ForceNew:    false,
-				Elem:        schema.TypeInt,
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Schema{
+					Type: schema.TypeInt,
+				},
 				Description: "Override ports to allocate for each load balancer instance. Defaults to {{haproxy.frontends[].bindPort}} and   {{haproxy.stats.bindPort}}. Use this field to pre-allocate all needed ports with or   without the frontends present. For example: [80, 443, 9090]. If the length of the ports array is not zero, only the   ports specified will be allocated by the pool scheduler",
 			},
 			"secrets": {
@@ -656,7 +665,7 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 		edgelbV2Pool.Cpus = v.(float32)
 	}
 	if v, ok := d.GetOk("pool_count"); ok {
-		edgelbV2Pool.Count = v.(int32)
+		edgelbV2Pool.Count = int32(v.(int))
 	}
 	if v, ok := d.GetOk("constraints"); ok {
 		edgelbV2Pool.Constraints = v.(string)
@@ -1054,10 +1063,18 @@ func resourceDcosEdgeLBV2PoolCreate(d *schema.ResourceData, meta interface{}) er
 
 	_, resp, err := client.Edgelb.V2CreatePool(ctx, edgelbV2Pool)
 
-	log.Printf("[TRACE] Edgelb.V2DeletePool - %v", resp)
+	log.Printf("[TRACE] Edgelb.V2CreatePool - %v", resp)
 
 	if err != nil {
-		return err
+		if apiError, ok := err.(dcos.GenericOpenAPIError); ok {
+
+			log.Printf("[ERROR] Edgelb.V2CreatePool - ==========BODY=======%s==========BODY=======", string(apiError.Body()))
+		}
+
+		if resp != nil && resp.StatusCode != http.StatusInternalServerError {
+			// DCOS-59682 we try read if we face an internal server errror
+			return err
+		}
 	}
 
 	return resourceDcosEdgeLBV2PoolRead(d, meta)
@@ -1079,6 +1096,8 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
+
+	log.Printf("[TRACE] Edgelb.V2DeletePool - %v", pool)
 
 	d.Set("pool_healthcheck_grace_period", pool.PoolHealthcheckGracePeriod)
 	d.Set("pool_healthcheck_interval", pool.PoolHealthcheckInterval)
@@ -1308,6 +1327,11 @@ func resourceDcosEdgeLBV2PoolDelete(d *schema.ResourceData, meta interface{}) er
 	poolName := d.Get("name").(string)
 
 	resp, err := client.Edgelb.V2DeletePool(ctx, poolName)
+
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
 
 	log.Printf("[TRACE] Edgelb.V2DeletePool - %v", resp)
 
