@@ -9,6 +9,7 @@ import (
 
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
 
 func resourceDcosEdgeLBV2Pool() *schema.Resource {
@@ -17,9 +18,9 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 		Read:   resourceDcosEdgeLBV2PoolRead,
 		Update: resourceDcosEdgeLBV2PoolUpdate,
 		Delete: resourceDcosEdgeLBV2PoolDelete,
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		SchemaVersion: 1,
 		Timeouts: &schema.ResourceTimeout{
@@ -185,440 +186,328 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 				},
 			},
 
-			"haproxy": {
+			"haproxy_frontends": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				ForceNew:    false,
 				Description: "Virtual networks to join",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"frontends": {
-							Type:        schema.TypeSet,
+						"name": {
+							Type:        schema.TypeString,
 							Optional:    true,
-							ForceNew:    false,
-							Description: "Virtual networks to join",
+							Description: "Defaults to frontend_{{bindAddress}}_{{bindPort}}",
+						},
+						"bind_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Only use characters that are allowed in the frontend name. Known invalid frontend name characters include \"*\", \"[\", and \"]\"",
+						},
+						"bind_port": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "The port (e.g. 80 for HTTP or 443 for HTTPS) that this frontend will bind to",
+						},
+						"bind_modifier": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Additional text to put in the bind field",
+						},
+						"certificates": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"redirect_to_https_except": {
+							Type:     schema.TypeSet,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									"host": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Defaults to frontend_{{bindAddress}}_{{bindPort}}",
+										Description: "Match on host",
 									},
-									"bind_address": {
+									"path_beg": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Only use characters that are allowed in the frontend name. Known invalid frontend name characters include \"*\", \"[\", and \"]\"",
-									},
-									"bind_port": {
-										Type:        schema.TypeInt,
-										Optional:    true,
-										Description: "The port (e.g. 80 for HTTP or 443 for HTTPS) that this frontend will bind to",
-									},
-									"bind_modifier": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "Additional text to put in the bind field",
-									},
-									"certificates": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"redirect_to_https": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"except": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"host": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Match on host",
-															},
-															"path_beg": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Match on path",
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"misc_strs": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-										Description: "Additional template lines inserted before use_backend",
-									},
-									"protocol": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "Protocol",
-									},
-									"linked_backend": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										ForceNew: false,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"default_backend": {
-													Type:        schema.TypeString,
-													Optional:    true,
-													Description: "This is default backend that is routed to if none of the other filters are matched.",
-												},
-												"map": {
-													Type:        schema.TypeSet,
-													Optional:    true,
-													ForceNew:    false,
-													Description: "This is an optional field that specifies a mapping to various backends. These rules are applied in order.",
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"backend": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"host_eq": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"host_reg": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"path_beg": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"path_end": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"path_reg": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
+										Description: "Match on path",
 									},
 								},
 							},
 						},
-						"backends": {
+						"misc_strs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Description: "Additional template lines inserted before use_backend",
+						},
+						"protocol": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Protocol",
+						},
+
+						"linked_backend_default_backend": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "This is default backend that is routed to if none of the other filters are matched.",
+						},
+						"linked_backend_map": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							ForceNew:    false,
-							Description: "Virtual networks to join",
+							Description: "This is an optional field that specifies a mapping to various backends. These rules are applied in order.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									"backend": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"host_eq": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"host_reg": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"path_beg": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"path_end": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"path_reg": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"haproxy_backends": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Virtual networks to join",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"protocol": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Protocol",
+						},
+						"rewrite_http_host": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"rewrite_http_from_path": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"rewrite_http_to_path": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"rewrite_http_request_forwardfor": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Set X-Forwarded-For",
+						},
+						"rewrite_http_request_x_forwarded_port": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Set X-Forwarded-Port",
+						},
+						"rewrite_http_request_x_forwarded_proto_https_if_tls": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Set X-Forwarded-Port HTTPS if TLS",
+						},
+						"rewrite_http_request_set_host_header": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Set Host header",
+						},
+						"rewrite_http_request_rewrite_path": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Rewrite Path",
+						},
+
+						"rewrite_http_response_rewrite_location": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"rewrite_http_sticky_enabled": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"rewrite_http_sticky_custom_str": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"balance": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Load balancing strategy. e.g. roundrobin, leastconn, etc.",
+						},
+						"custom_check_httpchk": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"custom_check_httpchk_misc_str": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"custom_check_ssl_hello_chk": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"custom_check_misc_str": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the virtual network to join.",
+						},
+						"misc_strs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Description: "Additional template lines inserted before servers",
+						},
+						"services": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"marathon_service_id": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "The name of the virtual network to join.",
+										Description: "Marathon pod or application ID",
 									},
-									"protocol": {
+									"marathon_service_id_pattern": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Description: "The name of the virtual network to join.",
+									},
+									"marathon_container_name": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Protocol",
+										Description: "Marathon pod container name, optional unless using Marathon pods",
 									},
-									"rewrite_http": {
-										Type:     schema.TypeSet,
+									"marathon_container_name_pattern": {
+										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: false,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"host": {
-													Type:        schema.TypeString,
-													Optional:    true,
-													Description: "The name of the virtual network to join.",
-												},
-												"path": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"from_path": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "The name of the virtual network to join.",
-															},
-															"to_path": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "The name of the virtual network to join.",
-															},
-														},
-													},
-												},
-												"request": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"forwardfor": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "Set X-Forwarded-For",
-															},
-															"x_forwarded_port": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "Set X-Forwarded-Port",
-															},
-															"x_forwarded_proto_https_if_tls": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "Set X-Forwarded-Port HTTPS if TLS",
-															},
-															"set_host_header": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "Set Host header",
-															},
-															"rewrite_path": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "Rewrite Path",
-															},
-														},
-													},
-												},
-												"response": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"rewrite_location": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "The name of the virtual network to join.",
-															},
-														},
-													},
-												},
-												"sticky": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"enabled": {
-																Type:        schema.TypeBool,
-																Optional:    true,
-																Description: "The name of the virtual network to join.",
-															},
-															"custom_str": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "The name of the virtual network to join.",
-															},
-														},
-													},
-												},
-											},
-										},
+										// Description: "The name of the virtual network to join.",
 									},
-									"balance": {
+
+									"mesos_framework_name": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Load balancing strategy. e.g. roundrobin, leastconn, etc.",
+										Description: "Mesos framework name",
 									},
-									"custom_check": {
-										Type:     schema.TypeSet,
+									"mesos_framework_name_pattern": {
+										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: false,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"httpchk": {
-													Type:        schema.TypeBool,
-													Optional:    true,
-													Description: "The name of the virtual network to join.",
-												},
-												"httpchk_misc_str": {
-													Type:        schema.TypeString,
-													Optional:    true,
-													Description: "The name of the virtual network to join.",
-												},
-												"ssl_hello_chk": {
-													Type:        schema.TypeBool,
-													Optional:    true,
-													Description: "The name of the virtual network to join.",
-												},
-												"misc_str": {
-													Type:        schema.TypeString,
-													Optional:    true,
-													Description: "The name of the virtual network to join.",
-												},
-											},
-										},
+										// Description: "The name of the virtual network to join.",
 									},
-									"misc_strs": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-										Description: "Additional template lines inserted before servers",
+									"mesos_framework_id": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Mesos framework ID",
 									},
-									"services": {
-										Type:     schema.TypeSet,
+									"mesos_framework_id_pattern": {
+										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: false,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"marathon": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"service_id": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Marathon pod or application ID",
-															},
-															"service_id_pattern": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-															"container_name": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Marathon pod container name, optional unless using Marathon pods",
-															},
-															"container_name_pattern": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-														},
-													},
-												},
-												"mesos": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"framework_name": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Mesos framework name",
-															},
-															"framework_name_pattern": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-															"framework_id": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Mesos framework ID",
-															},
-															"framework_id_pattern": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-															"task_name": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Mesos task name",
-															},
-															"task_name_pattern": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-															"task_id": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Mesos task ID",
-															},
-															"task_id_pattern": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-														},
-													},
-												},
-												"endpoint": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: false,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "Mesos framework name",
-															},
-															"misc_str": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Append arbitrary string to add to the end of the \"server\" directive",
-															},
-															"check": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																ForceNew: false,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"enabled": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																			// Description: "Mesos framework name",
-																		},
-																		"custom_str": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			// Description: "Append arbitrary string to add to the end of the \"server\" directive",
-																		},
-																	},
-																},
-															},
-															"address": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: "Server address override, can be used to specify a cluster internal address such as a VIP",
-															},
-															"port": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																// Description: "Mesos task name",
-															},
-															"port_name": {
-																Type:     schema.TypeString,
-																Optional: true,
-																// Description: "The name of the virtual network to join.",
-															},
-															"all_ports": {
-																Type:     schema.TypeBool,
-																Optional: true,
-																// Description: "Mesos task ID",
-															},
-														},
-													},
-												},
-											},
-										},
+										// Description: "The name of the virtual network to join.",
+									},
+									"mesos_task_name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Mesos task name",
+									},
+									"mesos_task_name_pattern": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Description: "The name of the virtual network to join.",
+									},
+									"mesos_task_id": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Mesos task ID",
+									},
+									"mesos_task_id_pattern": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Description: "The name of the virtual network to join.",
+									},
+
+									"endpoint_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Description: "Mesos framework name",
+									},
+									"endpoint_misc_str": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Append arbitrary string to add to the end of the \"server\" directive",
+									},
+									"endpoint_check_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										// Description: "Mesos framework name",
+									},
+									"endpoint_check_custom_str": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Description: "Append arbitrary string to add to the end of the \"server\" directive",
+									},
+
+									"endpoint_address": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Server address override, can be used to specify a cluster internal address such as a VIP",
+									},
+									"endpoint_port": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										// Description: "Mesos task name",
+									},
+									"endpoint_port_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Description: "The name of the virtual network to join.",
+									},
+									"endpoint_all_ports": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										// Description: "Mesos task ID",
 									},
 								},
 							},
@@ -638,16 +527,16 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 	edgelbV2Pool.Name = poolName
 
 	if v, ok := d.GetOk("pool_healthcheck_grace_period"); ok {
-		edgelbV2Pool.PoolHealthcheckGracePeriod = v.(int32)
+		edgelbV2Pool.PoolHealthcheckGracePeriod = int32(v.(int))
 	}
 	if v, ok := d.GetOk("pool_healthcheck_interval"); ok {
-		edgelbV2Pool.PoolHealthcheckInterval = v.(int32)
+		edgelbV2Pool.PoolHealthcheckInterval = int32(v.(int))
 	}
 	if v, ok := d.GetOk("pool_healthcheck_max_fail"); ok {
-		edgelbV2Pool.PoolHealthcheckMaxFail = v.(int32)
+		edgelbV2Pool.PoolHealthcheckMaxFail = int32(v.(int))
 	}
 	if v, ok := d.GetOk("pool_healthcheck_timeout"); ok {
-		edgelbV2Pool.PoolHealthcheckTimeout = v.(int32)
+		edgelbV2Pool.PoolHealthcheckTimeout = int32(v.(int))
 	}
 	if v, ok := d.GetOk("namespace"); ok {
 		edgelbV2Pool.Namespace = v.(string)
@@ -671,7 +560,7 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 		edgelbV2Pool.Constraints = v.(string)
 	}
 	if v, ok := d.GetOk("ports"); ok {
-		edgelbV2Pool.Ports = v.([]int32)
+		edgelbV2Pool.Ports, _ = util.InterfaceSliceInt32(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("secrets"); ok {
@@ -721,319 +610,280 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 		edgelbV2Pool.VirtualNetworks = networks
 	}
 
-	if _, ok := d.GetOk("haproxy"); ok {
-		if v, ok := d.GetOk("haproxy.frontends"); ok {
-			frontends := make([]dcos.EdgelbV2Frontend, 0)
-			for i := range v.(*schema.Set).List() {
-				val := v.([]map[string]interface{})
-				frontend := dcos.EdgelbV2Frontend{}
+	if v, ok := d.GetOk("haproxy_frontends"); ok {
+		frontends := make([]dcos.EdgelbV2Frontend, 0)
+		for _, va := range v.(*schema.Set).List() {
+			val := va.(map[string]interface{})
+			frontend := dcos.EdgelbV2Frontend{}
 
-				if value, ok := val[i]["name"]; ok {
-					frontend.Name = value.(string)
-				}
-				if value, ok := val[i]["bind_port"]; ok {
-					frontend.BindPort = value.(int32)
-				}
-				if value, ok := val[i]["bind_modifier"]; ok {
-					frontend.BindModifier = value.(string)
-				}
-				if value, ok := val[i]["certificates"]; ok {
-					frontend.Certificates = value.([]string)
-				}
-				if value, ok := val[i]["misc_strs"]; ok {
-					frontend.MiscStrs = value.([]string)
-				}
-
-				if value, ok := val[i]["protocol"]; ok {
-					switch value.(string) {
-					case "TCP":
-						frontend.Protocol = dcos.EdgelbV2ProtocolTCP
-					case "TLS":
-						frontend.Protocol = dcos.EdgelbV2ProtocolTLS
-					case "HTTP":
-						frontend.Protocol = dcos.EdgelbV2ProtocolHTTP
-					case "HTTPS":
-						frontend.Protocol = dcos.EdgelbV2ProtocolHTTPS
-					default:
-						return edgelbV2Pool, fmt.Errorf("Unknown protocol - %s", value.(string))
-					}
-				}
-
-				if value, ok := val[i]["linked_backend"]; ok {
-					lbackend := value.(map[string]interface{})
-					linkedBackend := dcos.EdgelbV2FrontendLinkBackend{}
-					if val, ok := lbackend["default_backend"]; ok {
-						linkedBackend.DefaultBackend = val.(string)
-					}
-					if val, ok := lbackend["map"]; ok {
-						linkedBackend.Map = make([]dcos.EdgelbV2FrontendLinkBackendMap, 0)
-						for _, vals := range val.(*schema.Set).List() {
-							if m, ok := vals.(map[string]interface{}); ok {
-								ma := dcos.EdgelbV2FrontendLinkBackendMap{}
-								ma.Backend = m["backend"].(string)
-								ma.HostEq = m["host_eq"].(string)
-								ma.HostReg = m["host_reg"].(string)
-								ma.PathBeg = m["path_beg"].(string)
-								ma.PathEnd = m["path_end"].(string)
-								ma.PathReg = m["path_reg"].(string)
-
-								linkedBackend.Map = append(linkedBackend.Map, ma)
-							}
-						}
-					}
-				}
-
-				if value, ok := val[i]["redirect_to_https"]; ok {
-					except := value.(map[string]interface{})
-					if val, ok := except["except"]; ok {
-						rth := dcos.EdgelbV2FrontendRedirectToHttps{}
-						rth.Except = make([]dcos.EdgelbV2FrontendRedirectToHttpsExcept, 0)
-						for _, vals := range val.(*schema.Set).List() {
-							if e, ok := vals.(map[string]interface{}); ok {
-								ex := dcos.EdgelbV2FrontendRedirectToHttpsExcept{}
-								ex.Host = e["host"].(string)
-								ex.PathBeg = e["path_beg"].(string)
-
-								rth.Except = append(rth.Except, ex)
-							}
-						}
-
-						if len(rth.Except) > 0 {
-							frontend.RedirectToHttps = &rth
-						}
-					}
-				}
-				frontends = append(frontends, frontend)
+			if value, ok := val["name"]; ok {
+				frontend.Name = value.(string)
+			}
+			if value, ok := val["bind_port"]; ok {
+				frontend.BindPort = int32(value.(int))
+			}
+			if value, ok := val["bind_modifier"]; ok {
+				frontend.BindModifier = value.(string)
+			}
+			if value, ok := val["certificates"]; ok {
+				frontend.Certificates, _ = util.InterfaceSliceString(value.([]interface{}))
+			}
+			if value, ok := val["misc_strs"]; ok {
+				frontend.MiscStrs, _ = util.InterfaceSliceString(value.([]interface{}))
 			}
 
-			edgelbV2Pool.Haproxy.Frontends = frontends
-		}
-
-		if v, ok := d.GetOk("haproxy.backends"); ok {
-			backends := make([]dcos.EdgelbV2Backend, 0)
-			for i := range v.(*schema.Set).List() {
-				val := v.([]map[string]interface{})
-				backend := dcos.EdgelbV2Backend{}
-
-				if value, ok := val[i]["name"]; ok {
-					backend.Name = value.(string)
+			if value, ok := val["protocol"]; ok {
+				switch value.(string) {
+				case "TCP":
+					frontend.Protocol = dcos.EdgelbV2ProtocolTCP
+				case "TLS":
+					frontend.Protocol = dcos.EdgelbV2ProtocolTLS
+				case "HTTP":
+					frontend.Protocol = dcos.EdgelbV2ProtocolHTTP
+				case "HTTPS":
+					frontend.Protocol = dcos.EdgelbV2ProtocolHTTPS
+				default:
+					return edgelbV2Pool, fmt.Errorf("Unknown protocol - %s", value.(string))
 				}
-
-				if value, ok := val[i]["protocol"]; ok {
-					switch value.(string) {
-					case "TCP":
-						backend.Protocol = dcos.EdgelbV2ProtocolTCP
-					case "TLS":
-						backend.Protocol = dcos.EdgelbV2ProtocolTLS
-					case "HTTP":
-						backend.Protocol = dcos.EdgelbV2ProtocolHTTP
-					case "HTTPS":
-						backend.Protocol = dcos.EdgelbV2ProtocolHTTPS
-					default:
-						return edgelbV2Pool, fmt.Errorf("Unknown protocol - %s", value.(string))
-					}
-				}
-
-				if value, ok := val[i]["rewrite_http"]; ok {
-					rhttp := value.(map[string]interface{})
-					backend.RewriteHttp = dcos.EdgelbV2RewriteHttp{}
-
-					if host, ok := rhttp["host"]; ok {
-						backend.RewriteHttp.Host = host.(string)
-					}
-
-					if p, ok := rhttp["path"]; ok {
-						path := p.(map[string]interface{})
-
-						if f, ok := path["from_path"]; ok {
-							backend.RewriteHttp.Path.FromPath = f.(string)
-						}
-
-						if f, ok := path["to_path"]; ok {
-							backend.RewriteHttp.Path.ToPath = f.(string)
-						}
-					}
-
-					if r, ok := rhttp["request"]; ok {
-						request := r.(map[string]interface{})
-						backend.RewriteHttp.Request = dcos.EdgelbV2RewriteHttpRequest{}
-
-						if f, ok := request["forwardedfor"]; ok {
-							backend.RewriteHttp.Request.Forwardfor = f.(bool)
-						}
-						if f, ok := request["x_forwarded_port"]; ok {
-							backend.RewriteHttp.Request.XForwardedPort = f.(bool)
-						}
-						if f, ok := request["x_forwarded_proto_https_if_tls"]; ok {
-							backend.RewriteHttp.Request.XForwardedProtoHttpsIfTls = f.(bool)
-						}
-						if f, ok := request["set_host_header"]; ok {
-							backend.RewriteHttp.Request.SetHostHeader = f.(bool)
-						}
-						if f, ok := request["rewrite_path"]; ok {
-							backend.RewriteHttp.Request.RewritePath = f.(bool)
-						}
-					}
-
-					if r, ok := rhttp["response"]; ok {
-						response := r.(map[string]interface{})
-						backend.RewriteHttp.Response = dcos.EdgelbV2RewriteHttpResponse{}
-
-						if f, ok := response["rewrite_location"]; ok {
-							backend.RewriteHttp.Response.RewriteLocation = f.(bool)
-						}
-					}
-
-					if s, ok := rhttp["sticky"]; ok {
-						sticky := s.(map[string]interface{})
-						backend.RewriteHttp.Sticky = dcos.EdgelbV2RewriteHttpSticky{}
-
-						if f, ok := sticky["enabled"]; ok {
-							backend.RewriteHttp.Sticky.Enabled = f.(bool)
-						}
-						if f, ok := sticky["custom_str"]; ok {
-							backend.RewriteHttp.Sticky.CustomStr = f.(string)
-						}
-					}
-				}
-
-				if value, ok := val[i]["balance"]; ok {
-					backend.Balance = value.(string)
-				}
-
-				if value, ok := val[i]["custom_check"]; ok {
-					customCheck := value.(map[string]interface{})
-					backend.CustomCheck = dcos.EdgelbV2BackendCustomCheck{}
-
-					if val, ok := customCheck["httpchk"]; ok {
-						backend.CustomCheck.Httpchk = val.(bool)
-					}
-					if val, ok := customCheck["httpchk_misc_str"]; ok {
-						backend.CustomCheck.HttpchkMiscStr = val.(string)
-					}
-					if val, ok := customCheck["ssl_hello_chk"]; ok {
-						backend.CustomCheck.SslHelloChk = val.(bool)
-					}
-					if val, ok := customCheck["misc_str"]; ok {
-						backend.CustomCheck.MiscStr = val.(string)
-					}
-				}
-
-				if value, ok := val[i]["misc_strs"]; ok {
-					backend.MiscStrs = value.([]string)
-				}
-
-				if value, ok := val[i]["services"]; ok {
-					backend.Services = make([]dcos.EdgelbV2Service, 0)
-					for _, val := range value.(*schema.Set).List() {
-						if s, ok := val.(map[string]interface{}); ok {
-							service := dcos.EdgelbV2Service{}
-							if marathon, ok := s["marathon"]; ok {
-								m := marathon.(map[string]interface{})
-								service.Marathon = dcos.EdgelbV2ServiceMarathon{}
-								if v, ok := m["service_id"]; ok {
-									service.Marathon.ServiceID = v.(string)
-								}
-								if v, ok := m["service_id_pattern"]; ok {
-									service.Marathon.ServiceIDPattern = v.(string)
-								}
-								if v, ok := m["container_name"]; ok {
-									service.Marathon.ContainerName = v.(string)
-								}
-								if v, ok := m["container_name_pattern"]; ok {
-									service.Marathon.ContainerNamePattern = v.(string)
-								}
-							}
-
-							if mesos, ok := s["mesos"]; ok {
-								m := mesos.(map[string]interface{})
-								service.Mesos = dcos.EdgelbV2ServiceMesos{}
-								if v, ok := m["framework_name"]; ok {
-									service.Mesos.FrameworkName = v.(string)
-								}
-								if v, ok := m["framework_name_pattern"]; ok {
-									service.Mesos.FrameworkNamePattern = v.(string)
-								}
-								if v, ok := m["framework_id"]; ok {
-									service.Mesos.FrameworkID = v.(string)
-								}
-								if v, ok := m["framework_id_pattern"]; ok {
-									service.Mesos.FrameworkIDPattern = v.(string)
-								}
-								if v, ok := m["task_name"]; ok {
-									service.Mesos.TaskName = v.(string)
-								}
-								if v, ok := m["task_name_pattern"]; ok {
-									service.Mesos.TaskNamePattern = v.(string)
-								}
-								if v, ok := m["task_id"]; ok {
-									service.Mesos.TaskID = v.(string)
-								}
-								if v, ok := m["task_id_pattern"]; ok {
-									service.Mesos.TaskIDPattern = v.(string)
-								}
-							}
-
-							if endpoint, ok := s["endpoint"]; ok {
-								e := endpoint.(map[string]interface{})
-								service.Endpoint = dcos.EdgelbV2Endpoint{}
-								if v, ok := e["type"]; ok {
-									service.Endpoint.Type = v.(string)
-								}
-								if v, ok := e["misc_str"]; ok {
-									service.Endpoint.MiscStr = v.(string)
-								}
-								if check, ok := e["check"]; ok {
-									c := check.(map[string]interface{})
-									service.Endpoint.Check = dcos.EdgelbV2EndpointCheck{}
-
-									if v, ok := c["enabled"]; ok {
-										service.Endpoint.Check.Enabled = v.(bool)
-									}
-
-									if v, ok := c["custom_str"]; ok {
-										service.Endpoint.Check.CustomStr = v.(string)
-									}
-								}
-								if v, ok := e["address"]; ok {
-									service.Endpoint.Address = v.(string)
-								}
-								if v, ok := e["port"]; ok {
-									service.Endpoint.Port = v.(int32)
-								}
-								if v, ok := e["port_name"]; ok {
-									service.Endpoint.PortName = v.(string)
-								}
-								if v, ok := e["all_ports"]; ok {
-									service.Endpoint.AllPorts = v.(bool)
-								}
-							}
-							backend.Services = append(backend.Services, service)
-						}
-					}
-
-					// s := value.(map[string]interface{})
-					// backend.Services = make([]dcos.EdgelbV2Service, 0)
-					//
-					// if val, ok := customCheck["httpchk"]; ok {
-					// 	backend.CustomCheck.Httpchk = val.(bool)
-					// }
-					// if val, ok := customCheck["httpchk_misc_str"]; ok {
-					// 	backend.CustomCheck.HttpchkMiscStr = val.(string)
-					// }
-					// if val, ok := customCheck["ssl_hello_chk"]; ok {
-					// 	backend.CustomCheck.SslHelloChk = val.(bool)
-					// }
-					// if val, ok := customCheck["misc_str"]; ok {
-					// 	backend.CustomCheck.MiscStr = val.(string)
-					// }
-				}
-
 			}
-			edgelbV2Pool.Haproxy.Backends = backends
+
+			linkedBackend := dcos.EdgelbV2FrontendLinkBackend{}
+			if value, ok := val["linked_backend_default_backend"]; ok {
+				linkedBackend.DefaultBackend = value.(string)
+			}
+			if value, ok := val["linked_backend_map"]; ok {
+				linkedBackend.Map = make([]dcos.EdgelbV2FrontendLinkBackendMap, 0)
+				for _, vals := range value.(*schema.Set).List() {
+					if m, ok := vals.(map[string]interface{}); ok {
+						ma := dcos.EdgelbV2FrontendLinkBackendMap{}
+						ma.Backend = m["backend"].(string)
+						ma.HostEq = m["host_eq"].(string)
+						ma.HostReg = m["host_reg"].(string)
+						ma.PathBeg = m["path_beg"].(string)
+						ma.PathEnd = m["path_end"].(string)
+						ma.PathReg = m["path_reg"].(string)
+
+						linkedBackend.Map = append(linkedBackend.Map, ma)
+					}
+				}
+			}
+			frontend.LinkBackend = linkedBackend
+
+			if val, ok := val["redirect_to_https_except"]; ok {
+				rth := dcos.EdgelbV2FrontendRedirectToHttps{}
+				rth.Except = make([]dcos.EdgelbV2FrontendRedirectToHttpsExcept, 0)
+				for _, vals := range val.(*schema.Set).List() {
+					if e, ok := vals.(map[string]interface{}); ok {
+						ex := dcos.EdgelbV2FrontendRedirectToHttpsExcept{}
+						ex.Host = e["host"].(string)
+						ex.PathBeg = e["path_beg"].(string)
+
+						rth.Except = append(rth.Except, ex)
+					}
+				}
+
+				if len(rth.Except) > 0 {
+					frontend.RedirectToHttps = &rth
+				}
+			}
+			frontends = append(frontends, frontend)
 		}
 
+		edgelbV2Pool.Haproxy.Frontends = frontends
 	}
+
+	if v, ok := d.GetOk("haproxy_backends"); ok {
+		backends := make([]dcos.EdgelbV2Backend, 0)
+		for _, va := range v.(*schema.Set).List() {
+			val := va.(map[string]interface{})
+			backend := dcos.EdgelbV2Backend{}
+
+			if value, ok := val["name"]; ok {
+				backend.Name = value.(string)
+			}
+
+			if value, ok := val["protocol"]; ok {
+				switch value.(string) {
+				case "TCP":
+					backend.Protocol = dcos.EdgelbV2ProtocolTCP
+				case "TLS":
+					backend.Protocol = dcos.EdgelbV2ProtocolTLS
+				case "HTTP":
+					backend.Protocol = dcos.EdgelbV2ProtocolHTTP
+				case "HTTPS":
+					backend.Protocol = dcos.EdgelbV2ProtocolHTTPS
+				default:
+					return edgelbV2Pool, fmt.Errorf("Unknown protocol - %s", value.(string))
+				}
+			}
+
+			backend.RewriteHttp = dcos.EdgelbV2RewriteHttp{}
+			backend.RewriteHttp.Path = dcos.EdgelbV2RewriteHttpPath{}
+			backend.RewriteHttp.Request = dcos.EdgelbV2RewriteHttpRequest{}
+			backend.RewriteHttp.Response = dcos.EdgelbV2RewriteHttpResponse{}
+			backend.RewriteHttp.Sticky = dcos.EdgelbV2RewriteHttpSticky{}
+
+			if value, ok := val["rewrite_http_host"]; ok {
+				backend.RewriteHttp.Host = value.(string)
+			}
+			if value, ok := val["rewrite_http_from_path"]; ok {
+				backend.RewriteHttp.Path.FromPath = value.(string)
+			}
+
+			if value, ok := val["rewrite_http_to_path"]; ok {
+				backend.RewriteHttp.Path.ToPath = value.(string)
+			}
+
+			if value, ok := val["rewrite_http_requst_forwardedfor"]; ok {
+				backend.RewriteHttp.Request.Forwardfor = value.(bool)
+			}
+			if value, ok := val["rewrite_http_requst_x_forwarded_port"]; ok {
+				backend.RewriteHttp.Request.XForwardedPort = value.(bool)
+			}
+			if value, ok := val["rewrite_http_requst_x_forwarded_proto_https_if_tls"]; ok {
+				backend.RewriteHttp.Request.XForwardedProtoHttpsIfTls = value.(bool)
+			}
+			if value, ok := val["rewrite_http_requst_set_host_header"]; ok {
+				backend.RewriteHttp.Request.SetHostHeader = value.(bool)
+			}
+			if value, ok := val["rewrite_http_requst_rewrite_path"]; ok {
+				backend.RewriteHttp.Request.RewritePath = value.(bool)
+			}
+
+			if value, ok := val["rewrite_http_response_rewrite_location"]; ok {
+				backend.RewriteHttp.Response.RewriteLocation = value.(bool)
+			}
+
+			if value, ok := val["rewrite_http_sticky_enabled"]; ok {
+				backend.RewriteHttp.Sticky.Enabled = value.(bool)
+			}
+
+			if value, ok := val["rewrite_http_sticky_custom_str"]; ok {
+				backend.RewriteHttp.Sticky.CustomStr = value.(string)
+			}
+
+			if value, ok := val["balance"]; ok {
+				backend.Balance = value.(string)
+			}
+
+			backend.CustomCheck = dcos.EdgelbV2BackendCustomCheck{}
+			if value, ok := val["custom_check_httpchk"]; ok {
+				backend.CustomCheck.Httpchk = value.(bool)
+			}
+			if value, ok := val["custom_check_httpchk_misc_str"]; ok {
+				backend.CustomCheck.HttpchkMiscStr = value.(string)
+			}
+			if value, ok := val["custom_check_ssl_hello_chk"]; ok {
+				backend.CustomCheck.SslHelloChk = value.(bool)
+			}
+			if value, ok := val["custom_check_misc_str"]; ok {
+				backend.CustomCheck.MiscStr = value.(string)
+			}
+
+			if value, ok := val["misc_strs"]; ok {
+				backend.MiscStrs, _ = util.InterfaceSliceString(value.([]interface{}))
+			}
+
+			if value, ok := val["services"]; ok {
+				backend.Services = make([]dcos.EdgelbV2Service, 0)
+				for _, val := range value.(*schema.Set).List() {
+					if s, ok := val.(map[string]interface{}); ok {
+						service := dcos.EdgelbV2Service{}
+						service.Marathon = dcos.EdgelbV2ServiceMarathon{}
+						if v, ok := s["marathon_service_id"]; ok {
+							service.Marathon.ServiceID = v.(string)
+						}
+						if v, ok := s["marathon_service_id_pattern"]; ok {
+							service.Marathon.ServiceIDPattern = v.(string)
+						}
+						if v, ok := s["marathon_container_name"]; ok {
+							service.Marathon.ContainerName = v.(string)
+						}
+						if v, ok := s["marathon_container_name_pattern"]; ok {
+							service.Marathon.ContainerNamePattern = v.(string)
+						}
+
+						service.Mesos = dcos.EdgelbV2ServiceMesos{}
+						if v, ok := s["mesos_framework_name"]; ok {
+							service.Mesos.FrameworkName = v.(string)
+						}
+						if v, ok := s["mesos_framework_name_pattern"]; ok {
+							service.Mesos.FrameworkNamePattern = v.(string)
+						}
+						if v, ok := s["mesos_framework_id"]; ok {
+							service.Mesos.FrameworkID = v.(string)
+						}
+						if v, ok := s["mesos_framework_id_pattern"]; ok {
+							service.Mesos.FrameworkIDPattern = v.(string)
+						}
+						if v, ok := s["mesos_task_name"]; ok {
+							service.Mesos.TaskName = v.(string)
+						}
+						if v, ok := s["mesos_task_name_pattern"]; ok {
+							service.Mesos.TaskNamePattern = v.(string)
+						}
+						if v, ok := s["mesos_task_id"]; ok {
+							service.Mesos.TaskID = v.(string)
+						}
+						if v, ok := s["mesos_task_id_pattern"]; ok {
+							service.Mesos.TaskIDPattern = v.(string)
+						}
+
+						service.Endpoint = dcos.EdgelbV2Endpoint{}
+						if v, ok := s["endpoint_type"]; ok {
+							service.Endpoint.Type = v.(string)
+						}
+						if v, ok := s["endpoint_misc_str"]; ok {
+							service.Endpoint.MiscStr = v.(string)
+						}
+						service.Endpoint.Check = dcos.EdgelbV2EndpointCheck{}
+
+						if v, ok := s["endpoint_check_enabled"]; ok {
+							service.Endpoint.Check.Enabled = v.(bool)
+						}
+						if v, ok := s["endpoint_check_custom_str"]; ok {
+							service.Endpoint.Check.CustomStr = v.(string)
+						}
+
+						if v, ok := s["endpoint_address"]; ok {
+							service.Endpoint.Address = v.(string)
+						}
+						if v, ok := s["endpoint_port"]; ok {
+							service.Endpoint.Port = int32(v.(int))
+						}
+						if v, ok := s["endpoint_port_name"]; ok {
+							service.Endpoint.PortName = v.(string)
+						}
+						if v, ok := s["endpoint_all_ports"]; ok {
+							service.Endpoint.AllPorts = v.(bool)
+						}
+
+						backend.Services = append(backend.Services, service)
+					}
+				}
+
+				// s := value.(map[string]interface{})
+				// backend.Services = make([]dcos.EdgelbV2Service, 0)
+				//
+				// if val, ok := customCheck["httpchk"]; ok {
+				// 	backend.CustomCheck.Httpchk = val.(bool)
+				// }
+				// if val, ok := customCheck["httpchk_misc_str"]; ok {
+				// 	backend.CustomCheck.HttpchkMiscStr = val.(string)
+				// }
+				// if val, ok := customCheck["ssl_hello_chk"]; ok {
+				// 	backend.CustomCheck.SslHelloChk = val.(bool)
+				// }
+				// if val, ok := customCheck["misc_str"]; ok {
+				// 	backend.CustomCheck.MiscStr = val.(string)
+				// }
+			}
+
+		}
+		edgelbV2Pool.Haproxy.Backends = backends
+	}
+
+	log.Printf("[TRACE] edgelbV2PoolFromSchema - calculated EdgelbV2Pool %v", edgelbV2Pool)
 
 	return edgelbV2Pool, nil
 }
@@ -1084,7 +934,12 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	poolName := d.Get("name").(string)
+	var poolName string
+	if d.Id() == "" {
+		poolName = d.Get("name").(string)
+	} else {
+		poolName = d.Id()
+	}
 
 	pool, resp, err := client.Edgelb.V2GetPool(ctx, poolName)
 
@@ -1170,18 +1025,14 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 						"path_beg": e.PathBeg,
 					})
 				}
-				f["redirect_to_https"] = map[string]interface{}{
-					"except": except,
-				}
+				f["redirect_to_https_except"] = except
 			}
 
 			if len(frontend.MiscStrs) > 0 {
 				f["misc_strs"] = frontend.MiscStrs
 			}
 
-			f["linked_backend"] = map[string]interface{}{
-				"default_backend": frontend.LinkBackend.DefaultBackend,
-			}
+			f["linked_backend_default_backend"] = frontend.LinkBackend.DefaultBackend
 
 			lmaps := make([]map[string]interface{}, 0)
 			if len(frontend.LinkBackend.Map) > 0 {
@@ -1198,15 +1049,12 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 				}
 			}
 
-			f["linked_backend"] = map[string]interface{}{
-				"default_backend": frontend.LinkBackend.DefaultBackend,
-				"map":             lmaps,
-			}
+			f["linked_backend_map"] = lmaps
 
 			frontends = append(frontends, f)
 		}
 
-		d.Set("haproxy.frontends", frontends)
+		d.Set("haproxy_frontends", frontends)
 	}
 
 	if len(pool.Haproxy.Backends) > 0 {
@@ -1216,67 +1064,47 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 
 			b["name"] = backend.Name
 			b["protocol"] = backend.Protocol
-			b["rewrite_http"] = map[string]interface{}{
-				"host": backend.RewriteHttp.Host,
-				"path": map[string]interface{}{
-					"from_path": backend.RewriteHttp.Path.FromPath,
-					"to_path":   backend.RewriteHttp.Path.ToPath,
-				},
-				"request": map[string]interface{}{
-					"forwardfor":                     backend.RewriteHttp.Request.Forwardfor,
-					"x_forwarded_port":               backend.RewriteHttp.Request.XForwardedPort,
-					"x_forwarded_proto_https_if_tls": backend.RewriteHttp.Request.XForwardedProtoHttpsIfTls,
-					"set_host_header":                backend.RewriteHttp.Request.SetHostHeader,
-					"rewrite_path":                   backend.RewriteHttp.Request.RewritePath,
-				},
-				"response": map[string]interface{}{
-					"rewrite_location": backend.RewriteHttp.Response.RewriteLocation,
-				},
-				"sticky": map[string]interface{}{
-					"enabled":    backend.RewriteHttp.Sticky.Enabled,
-					"custom_str": backend.RewriteHttp.Sticky.CustomStr,
-				},
-			}
+			b["rewrite_http_host"] = backend.RewriteHttp.Host
+			b["rewrite_http_from_path"] = backend.RewriteHttp.Path.FromPath
+			b["rewrite_http_to_path"] = backend.RewriteHttp.Path.ToPath
+			b["rewrite_http_request_forwardfor"] = backend.RewriteHttp.Request.Forwardfor
+			b["rewrite_http_request_x_forwarded_port"] = backend.RewriteHttp.Request.XForwardedPort
+			b["rewrite_http_request_x_forwarded_proto_https_if_tls"] = backend.RewriteHttp.Request.XForwardedProtoHttpsIfTls
+			b["rewrite_http_request_set_host_header"] = backend.RewriteHttp.Request.SetHostHeader
+			b["rewrite_http_request_rewrite_path"] = backend.RewriteHttp.Request.RewritePath
+			b["rewrite_http_response_rewrite_location"] = backend.RewriteHttp.Response.RewriteLocation
+			b["rewrite_http_sticky_enabled"] = backend.RewriteHttp.Sticky.Enabled
+			b["rewrite_http_sticky_custom_str"] = backend.RewriteHttp.Sticky.CustomStr
 			b["balance"] = backend.Balance
-			b["custom_check"] = map[string]interface{}{
-				"httpchk":          backend.CustomCheck.Httpchk,
-				"httpchk_misc_str": backend.CustomCheck.HttpchkMiscStr,
-				"ssl_hello_chk":    backend.CustomCheck.SslHelloChk,
-				"misc_str":         backend.CustomCheck.MiscStr,
-			}
+			b["custom_check_httpchk"] = backend.CustomCheck.Httpchk
+			b["custom_check_httpchk_misc_str"] = backend.CustomCheck.HttpchkMiscStr
+			b["custom_check_ssl_hello_chk"] = backend.CustomCheck.SslHelloChk
+			b["custom_check_misc_str"] = backend.CustomCheck.MiscStr
 			b["misc_strs"] = backend.MiscStrs
 
 			if len(backend.Services) > 0 {
 				services := make([]map[string]interface{}, 0)
 				for _, service := range backend.Services {
 					s := make(map[string]interface{})
-					s["marathon"] = map[string]interface{}{
-						"service_id":             service.Marathon.ServiceID,
-						"service_id_pattern":     service.Marathon.ServiceIDPattern,
-						"container_name":         service.Marathon.ContainerName,
-						"container_name_pattern": service.Marathon.ContainerNamePattern,
-					}
-					s["mesos"] = map[string]interface{}{
-						"framework_name":         service.Mesos.FrameworkName,
-						"framework_name_pattern": service.Mesos.FrameworkNamePattern,
-						"framework_id":           service.Mesos.FrameworkID,
-						"framework_id_pattern":   service.Mesos.FrameworkIDPattern,
-						"task_name":              service.Mesos.TaskName,
-						"task_name_pattern":      service.Mesos.TaskNamePattern,
-						"task_id":                service.Mesos.TaskID,
-						"task_id_pattern":        service.Mesos.TaskIDPattern,
-					}
-					s["endpoint"] = map[string]interface{}{
-						"type": service.Endpoint.Type,
-						"check": map[string]interface{}{
-							"enabled":    service.Endpoint.Check.Enabled,
-							"custom_str": service.Endpoint.Check.CustomStr,
-						},
-						"address":   service.Endpoint.Address,
-						"port":      service.Endpoint.Port,
-						"port_name": service.Endpoint.PortName,
-						"all_ports": service.Endpoint.AllPorts,
-					}
+					s["marathon_service_id"] = service.Marathon.ServiceID
+					s["marathon_service_id_pattern"] = service.Marathon.ServiceIDPattern
+					s["marathon_container_name"] = service.Marathon.ContainerName
+					s["marathon_container_name_pattern"] = service.Marathon.ContainerNamePattern
+					s["mesos_framework_name"] = service.Mesos.FrameworkName
+					s["mesos_framework_name_pattern"] = service.Mesos.FrameworkNamePattern
+					s["mesos_framework_id"] = service.Mesos.FrameworkID
+					s["mesos_framework_id_pattern"] = service.Mesos.FrameworkIDPattern
+					s["mesos_task_name"] = service.Mesos.TaskName
+					s["mesos_task_name_pattern"] = service.Mesos.TaskNamePattern
+					s["mesos_task_id"] = service.Mesos.TaskID
+					s["mesos_task_id_pattern"] = service.Mesos.TaskIDPattern
+					s["endpoint_type"] = service.Endpoint.Type
+					s["endpoint_check_enabled"] = service.Endpoint.Check.Enabled
+					s["endpoint_check_custom_str"] = service.Endpoint.Check.CustomStr
+					s["address"] = service.Endpoint.Address
+					s["port"] = service.Endpoint.Port
+					s["port_name"] = service.Endpoint.PortName
+					s["all_ports"] = service.Endpoint.AllPorts
 					services = append(services, s)
 				}
 
@@ -1284,7 +1112,7 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 			}
 		}
 
-		d.Set("backends", backends)
+		d.Set("haproxy_backends", backends)
 	}
 
 	d.SetId(poolName)
@@ -1293,29 +1121,35 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDcosEdgeLBV2PoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	// client := meta.(*dcos.APIClient)
-	// ctx := context.TODO()
-	//
-	// var iamsamlProviderConfig dcos.IamsamlProviderConfig
-	//
-	// providerId := d.Get("provider_id").(string)
-	// idpMetadata := d.Get("idp_metadata").(string)
-	// spBaseURL := d.Get("base_url").(string)
-	//
-	// if description, ok := d.GetOk("description"); ok {
-	// 	iamsamlProviderConfig.Description = description.(string)
-	// }
-	//
-	// iamsamlProviderConfig.IdpMetadata = idpMetadata
-	// iamsamlProviderConfig.SpBaseUrl = spBaseURL
-	//
-	// resp, err := client.IAM.UpdateSAMLProvider(ctx, providerId, iamsamlProviderConfig)
-	//
-	// log.Printf("[TRACE] IAM.UpdateSAMLProvider - %v", resp)
-	//
-	// if err != nil {
-	// 	return err
-	// }
+	client := meta.(*dcos.APIClient)
+	ctx := context.TODO()
+
+	poolName := d.Get("name").(string)
+
+	if err := pingEdgeLB(d, meta); err != nil {
+		return err
+	}
+
+	edgelbV2Pool, err := edgelbV2PoolFromSchema(d)
+	if err != nil {
+		return err
+	}
+
+	_, resp, err := client.Edgelb.V2UpdatePool(ctx, poolName, edgelbV2Pool)
+
+	log.Printf("[TRACE] Edgelb.V2UpdatePool - %v", resp)
+
+	if err != nil {
+		if apiError, ok := err.(dcos.GenericOpenAPIError); ok {
+
+			log.Printf("[ERROR] Edgelb.V2UpdatePool - ==========BODY=======%s==========BODY=======", string(apiError.Body()))
+		}
+
+		if resp != nil && resp.StatusCode != http.StatusInternalServerError {
+			// DCOS-59682 we try read if we face an internal server errror
+			return err
+		}
+	}
 
 	return resourceDcosEdgeLBV2PoolRead(d, meta)
 }
