@@ -861,29 +861,13 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 						backend.Services = append(backend.Services, service)
 					}
 				}
-
-				// s := value.(map[string]interface{})
-				// backend.Services = make([]dcos.EdgelbV2Service, 0)
-				//
-				// if val, ok := customCheck["httpchk"]; ok {
-				// 	backend.CustomCheck.Httpchk = val.(bool)
-				// }
-				// if val, ok := customCheck["httpchk_misc_str"]; ok {
-				// 	backend.CustomCheck.HttpchkMiscStr = val.(string)
-				// }
-				// if val, ok := customCheck["ssl_hello_chk"]; ok {
-				// 	backend.CustomCheck.SslHelloChk = val.(bool)
-				// }
-				// if val, ok := customCheck["misc_str"]; ok {
-				// 	backend.CustomCheck.MiscStr = val.(string)
-				// }
 			}
-
+			backends = append(backends, backend)
 		}
 		edgelbV2Pool.Haproxy.Backends = backends
 	}
 
-	log.Printf("[TRACE] edgelbV2PoolFromSchema - calculated EdgelbV2Pool %v", edgelbV2Pool)
+	log.Printf("[TRACE] edgelbV2PoolFromSchema - calculated EdgelbV2Pool %+v", edgelbV2Pool)
 
 	return edgelbV2Pool, nil
 }
