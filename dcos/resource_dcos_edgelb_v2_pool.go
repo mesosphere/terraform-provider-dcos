@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dcos/client-go/dcos"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
@@ -882,11 +883,21 @@ func pingEdgeLB(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
+func pingEdgeLBRetryFunc(d *schema.ResourceData, meta interface{}) func() *resource.RetryError {
+	return func() *resource.RetryError {
+		err := pingEdgeLB(d, meta)
+		if err != nil {
+			return resource.RetryableError(err)
+		}
+		return nil
+	}
+}
+
 func resourceDcosEdgeLBV2PoolCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
-	if err := pingEdgeLB(d, meta); err != nil {
+	if err := resource.Retry(d.Timeout(schema.TimeoutCreate), pingEdgeLBRetryFunc(d, meta)); err != nil {
 		return err
 	}
 
@@ -1154,10 +1165,24 @@ func resourceDcosEdgeLBV2PoolDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] Edgelb.V2DeletePool - %v", resp)
 
 	if err != nil {
+		if apiError, ok := err.(dcos.GenericOpenAPIError); ok {
+			log.Printf("[ERROR] Edgelb.V2DeletePool - ==========BODY=======%s==========BODY=======", string(apiError.Body()))
+		}
 		return err
 	}
 
-	d.SetId("")
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, resp, err := client.Edgelb.V2GetPool(ctx, poolName)
 
-	return nil
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+
+		if err != nil {
+			return resource.RetryableError(err)
+		}
+
+		return resource.RetryableError(fmt.Errorf("Pool %s still exists. Deleting... ", poolName))
+	})
 }
