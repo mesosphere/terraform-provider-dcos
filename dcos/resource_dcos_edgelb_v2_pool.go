@@ -13,6 +13,8 @@ import (
 	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
 
+const resourceDcosEdgeLBV2PoolPingError = "EdgeLB API not reachable. Please make sure its installed before using this resource - %s"
+
 func resourceDcosEdgeLBV2Pool() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDcosEdgeLBV2PoolCreate,
@@ -898,7 +900,7 @@ func resourceDcosEdgeLBV2PoolCreate(d *schema.ResourceData, meta interface{}) er
 	ctx := context.TODO()
 
 	if err := resource.Retry(d.Timeout(schema.TimeoutCreate), pingEdgeLBRetryFunc(d, meta)); err != nil {
-		return err
+		return fmt.Errorf(resourceDcosEdgeLBV2PoolPingError, err)
 	}
 
 	edgelbV2Pool, err := edgelbV2PoolFromSchema(d)
@@ -928,6 +930,10 @@ func resourceDcosEdgeLBV2PoolCreate(d *schema.ResourceData, meta interface{}) er
 func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
+
+	if err := resource.Retry(d.Timeout(schema.TimeoutCreate), pingEdgeLBRetryFunc(d, meta)); err != nil {
+		return fmt.Errorf(resourceDcosEdgeLBV2PoolPingError, err)
+	}
 
 	var poolName string
 	if d.Id() == "" {
@@ -1119,6 +1125,10 @@ func resourceDcosEdgeLBV2PoolUpdate(d *schema.ResourceData, meta interface{}) er
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
+	if err := resource.Retry(d.Timeout(schema.TimeoutCreate), pingEdgeLBRetryFunc(d, meta)); err != nil {
+		return fmt.Errorf(resourceDcosEdgeLBV2PoolPingError, err)
+	}
+
 	poolName := d.Get("name").(string)
 
 	if err := pingEdgeLB(d, meta); err != nil {
@@ -1152,6 +1162,10 @@ func resourceDcosEdgeLBV2PoolUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceDcosEdgeLBV2PoolDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
+
+	if err := resource.Retry(d.Timeout(schema.TimeoutCreate), pingEdgeLBRetryFunc(d, meta)); err != nil {
+		return fmt.Errorf(resourceDcosEdgeLBV2PoolPingError, err)
+	}
 
 	poolName := d.Get("name").(string)
 
