@@ -26,6 +26,16 @@ package dcos
 // https://github.com/daniellockard
 // https://github.com/fsniper
 // https://github.com/rjeczalik
+//
+// To improve the user expirience on DC/OS we're integrating the marathon provider
+// into our DC/OS provider. We'll also provide support for DC/OS related marathon
+// features which are not useful for plain marathon.
+//
+// Users who are intrested into plain marathon support should have a look at the
+// above mentioned root projects.
+//
+// Credits to all contributors who made the ground work for this marathon resource
+//
 
 import (
 	"errors"
