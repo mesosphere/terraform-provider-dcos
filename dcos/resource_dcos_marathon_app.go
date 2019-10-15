@@ -46,6 +46,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 
@@ -582,6 +583,48 @@ type deploymentEvent struct {
 	state string
 }
 
+type marathonConf struct {
+	config                   marathon.Config
+	Client                   marathon.Marathon
+	DefaultDeploymentTimeout time.Duration
+}
+
+func genMarathonConf(meta interface{}) (marathonConf, error) {
+	client := meta.(*dcos.APIClient)
+
+	marathonConfig := marathon.NewDefaultConfig()
+	dcosConf := client.CurrentDCOSConfig()
+
+	// FIXME: support mom by providing marathon path
+	marathonConfig.URL = dcosConf.URL() + "/service/marathon"
+
+	marathonConfig.HTTPClient = client.HTTPClient()
+	marathonConfig.HTTPSSEClient = client.HTTPClient()
+
+	marathonConfig.EventsTransport = marathon.EventsTransportSSE
+
+	// FIXME: make this configurable for each app.
+	// DefaultDeploymentTimeout: time.Duration(d.Get("deployment_timeout").(int)) * time.Second
+	conf := marathonConf{
+		config:                   marathonConfig,
+		DefaultDeploymentTimeout: time.Duration(600) * time.Second,
+	}
+
+	log.Printf("[TRACE] - MarathonConfig ")
+
+	if err := conf.loadAndValidate(); err != nil {
+		return conf, err
+	}
+
+	return conf, nil
+}
+
+func (c *marathonConf) loadAndValidate() error {
+	client, err := marathon.NewClient(c.config)
+	c.Client = client
+	return err
+}
+
 func readDeploymentEvents(meta *marathon.Marathon, c chan deploymentEvent, ready chan bool) error {
 	client := *meta
 
@@ -626,7 +669,11 @@ func waitOnSuccessfulDeployment(c chan deploymentEvent, id string, timeout time.
 }
 
 func resourceMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(config)
+	config, err := genMarathonConf(meta)
+	if err != nil {
+		return err
+	}
+
 	client := config.Client
 
 	c := make(chan deploymentEvent, 100)
@@ -640,7 +687,7 @@ func resourceMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
 
 	application := mapResourceToApplication(d)
 
-	application, err := client.CreateApplication(application)
+	application, err = client.CreateApplication(application)
 	if err != nil {
 		log.Println("[ERROR] creating application", err)
 		return err
@@ -663,7 +710,10 @@ func resourceMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMarathonAppRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(config)
+	config, err := genMarathonConf(meta)
+	if err != nil {
+		return err
+	}
 	client := config.Client
 
 	app, err := client.Application(d.Id())
@@ -1113,7 +1163,10 @@ func setSchemaFieldsForApp(app *marathon.Application, d *schema.ResourceData) er
 }
 
 func resourceMarathonAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(config)
+	config, err := genMarathonConf(meta)
+	if err != nil {
+		return err
+	}
 	client := config.Client
 
 	c := make(chan deploymentEvent, 100)
@@ -1141,10 +1194,13 @@ func resourceMarathonAppUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMarathonAppDelete(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(config)
+	config, err := genMarathonConf(meta)
+	if err != nil {
+		return err
+	}
 	client := config.Client
 
-	_, err := client.DeleteApplication(d.Id(), false)
+	_, err = client.DeleteApplication(d.Id(), false)
 	if err != nil {
 		return err
 	}
