@@ -55,12 +55,12 @@ import (
 
 var legacyStringRegexp = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
 
-func resourceMarathonApp() *schema.Resource {
+func resourceDcosMarathonApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMarathonAppCreate,
-		Read:   resourceMarathonAppRead,
-		Update: resourceMarathonAppUpdate,
-		Delete: resourceMarathonAppDelete,
+		Create: resourceDcosMarathonAppCreate,
+		Read:   resourceDcosMarathonAppRead,
+		Update: resourceDcosMarathonAppUpdate,
+		Delete: resourceDcosMarathonAppDelete,
 
 		Schema: map[string]*schema.Schema{
 			"dcos_framework": &schema.Schema{
@@ -668,7 +668,7 @@ func waitOnSuccessfulDeployment(c chan deploymentEvent, id string, timeout time.
 	return nil
 }
 
-func resourceMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
 	config, err := genMarathonConf(meta)
 	if err != nil {
 		return err
@@ -706,10 +706,10 @@ func resourceMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Partial(false)
 
-	return resourceMarathonAppRead(d, meta)
+	return resourceDcosMarathonAppRead(d, meta)
 }
 
-func resourceMarathonAppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosMarathonAppRead(d *schema.ResourceData, meta interface{}) error {
 	config, err := genMarathonConf(meta)
 	if err != nil {
 		return err
@@ -1162,7 +1162,7 @@ func setSchemaFieldsForApp(app *marathon.Application, d *schema.ResourceData) er
 	return nil
 }
 
-func resourceMarathonAppUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosMarathonAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	config, err := genMarathonConf(meta)
 	if err != nil {
 		return err
@@ -1193,7 +1193,7 @@ func resourceMarathonAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceMarathonAppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosMarathonAppDelete(d *schema.ResourceData, meta interface{}) error {
 	config, err := genMarathonConf(meta)
 	if err != nil {
 		return err
