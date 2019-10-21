@@ -1,13 +1,10 @@
 package dcos
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"net/http"
 	"time"
 
-	"github.com/dcos/client-go/dcos"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 
@@ -39,7 +36,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 				Description: "DC/OS secrets",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"artifacts": {
+						"artifact": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							ForceNew:    false,
@@ -199,6 +196,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    false,
+							MaxItems:    1,
 							Description: "DC/OS secrets",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -225,7 +223,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
-						"secrets": {
+						"secret": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							ForceNew:    false,
@@ -265,6 +263,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 									"read_only": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -314,7 +313,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 					},
 				},
 			},
-			"id": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -507,6 +506,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    false,
+							MaxItems:    1,
 							Description: "DC/OS secrets",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -567,7 +567,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 			container := marathon.NewPodContainer()
 			val := c.(map[string]interface{})
 
-			if ar, ok := val["artifacts"]; ok {
+			if ar, ok := val["artifact"]; ok {
 				for _, a := range ar.(*schema.Set).List() {
 					art := a.(map[string]interface{})
 					artifact := marathon.PodArtifact{}
@@ -748,7 +748,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 				container.SetName(n.(string))
 			}
 
-			if ep, ok := val["secrets"]; ok {
+			if ep, ok := val["secret"]; ok {
 				for _, res := range ep.(*schema.Set).List() {
 					h := res.(map[string]interface{})
 
@@ -1008,8 +1008,8 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 }
 
 func resourceDcosMarathonPodCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
-	ctx := context.TODO()
+	// client := meta.(*dcos.APIClient)
+	// ctx := context.TODO()
 	mconf, err := genMarathonConf(meta)
 	if err != nil {
 		return err
@@ -1020,73 +1020,351 @@ func resourceDcosMarathonPodCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	mconf.Client.CreatePod(pod)
-	return nil
+	_, err = mconf.Client.CreatePod(pod)
+	if err != nil {
+		return err
+	}
+
+	return resourceDcosMarathonPodRead(d, meta)
 }
 
 func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
-	ctx := context.TODO()
-
-	store := d.Get("store").(string)
-	pathToSecret := d.Get("path").(string)
-
-	secret, resp, err := client.Secrets.GetSecret(ctx, store, encodePath(pathToSecret), nil)
-
-	log.Printf("[TRACE] Read - %v", resp)
-
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		log.Printf("[INFO] Read - %s not found", pathToSecret)
-		d.SetId("")
-		return nil
-	}
-
+	mconf, err := genMarathonConf(meta)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	d.Set("value", secret.Value)
-	d.SetId(generateID(store, pathToSecret))
+	name := d.Get("name").(string)
+
+	pod, err := mconf.Client.Pod(name)
+	if err != nil {
+		return err
+	}
+
+	if pod == nil {
+		return fmt.Errorf("Couldn't receive Pod")
+	}
+
+	d.SetId(name)
+
+	if len(pod.Containers) > 0 {
+		containers := make([]map[string]interface{}, 0)
+		for _, container := range pod.Containers {
+			c := make(map[string]interface{})
+
+			if len(container.Artifacts) > 0 {
+				a := make([]map[string]interface{}, 0)
+				for _, art := range container.Artifacts {
+					artifact := make(map[string]interface{})
+
+					artifact["uri"] = art.URI
+					artifact["dest_path"] = art.DestPath
+					artifact["cache"] = art.Cache
+					artifact["executable"] = art.Executable
+					artifact["extract"] = art.Extract
+
+					a = append(a, artifact)
+				}
+
+				c["artifact"] = a
+			}
+
+			if h := container.HealthCheck; h != nil {
+				healthchecks := make([]map[string]interface{}, 1)
+
+				healthchecks[0]["grace_period_seconds"] = *h.GracePeriodSeconds
+				healthchecks[0]["interval_seconds"] = *h.IntervalSeconds
+				healthchecks[0]["max_consecutive_failures"] = *h.MaxConsecutiveFailures
+				healthchecks[0]["timeout_seconds"] = *h.TimeoutSeconds
+				healthchecks[0]["delay_seconds"] = *h.DelaySeconds
+				http := make([]map[string]interface{}, 1)
+				http[0]["path"] = h.HTTP.Endpoint
+				http[0]["scheme"] = h.HTTP.Scheme
+				http[0]["endpoint"] = h.HTTP.Endpoint
+
+				healthchecks[0]["http"] = http
+
+				c["health_check"] = healthchecks
+			}
+
+			c["name"] = container.Name
+
+			if container.Resources != nil {
+				resources := make([]map[string]interface{}, 1)
+
+				resources[0]["cpus"] = container.Resources.Cpus
+				resources[0]["mem"] = container.Resources.Mem
+				resources[0]["disk"] = container.Resources.Disk
+				resources[0]["gpus"] = container.Resources.Gpus
+
+				c["resources"] = resources
+			}
+
+			if len(container.Endpoints) > 0 {
+				endpoints := make([]map[string]interface{}, 0)
+
+				for _, e := range container.Endpoints {
+					endpoint := make(map[string]interface{})
+
+					endpoint["name"] = e.Name
+					endpoint["container_port"] = e.ContainerPort
+					endpoint["host_port"] = e.HostPort
+					endpoint["protocol"] = e.Protocol
+					endpoint["labels"] = e.Labels
+
+					endpoints = append(endpoints, endpoint)
+				}
+			}
+
+			if container.Image != nil {
+				image := make([]map[string]interface{}, 1)
+
+				image[0]["kind"] = container.Image.Kind
+				image[0]["id"] = container.Image.ID
+				image[0]["force_pull"] = container.Image.ForcePull
+
+				c["image"] = image
+			}
+
+			c["env"] = container.Env
+			c["labels"] = container.Labels
+
+			if len(container.Secrets) > 0 {
+				secrets := make([]map[string]interface{}, 0)
+				for _, v := range container.Secrets {
+					secret := make(map[string]interface{})
+
+					secret["env_var"] = v.EnvVar
+					secret["source"] = v.Source
+
+					secrets = append(secrets, secret)
+				}
+				c["secret"] = secrets
+			}
+
+			c["user"] = container.User
+
+			if len(container.VolumeMounts) > 0 {
+				volmounts := make([]map[string]interface{}, 0)
+
+				for _, e := range container.VolumeMounts {
+					volmount := make(map[string]interface{})
+
+					volmount["name"] = e.Name
+					volmount["mount_path"] = e.MountPath
+					volmount["read_only"] = e.ReadOnly
+
+					volmounts = append(volmounts, volmount)
+				}
+
+				c["volume_mounts"] = volmounts
+			}
+
+			if container.Lifecycle.KillGracePeriodSeconds != nil {
+				lifecycle := make([]map[string]interface{}, 1)
+				lifecycle[0]["kill_grace_period_seconds"] = *container.Lifecycle.KillGracePeriodSeconds
+
+				c["lifecycle"] = lifecycle
+			}
+
+			containers = append(containers, c)
+		}
+
+		d.Set("containers", containers)
+	}
+
+	if pod.ExecutorResources != nil {
+		d.Set("executor_resources.0.cpus", pod.ExecutorResources.Cpus)
+		d.Set("executor_resources.0.mem", pod.ExecutorResources.Mem)
+		d.Set("executor_resources.0.disk", pod.ExecutorResources.Disk)
+	}
+
+	d.Set("name", pod.ID)
+
+	d.Set("labels", pod.Labels)
+
+	if len(pod.Networks) > 0 {
+		networks := make([]map[string]interface{}, 0)
+
+		for _, n := range pod.Networks {
+			network := make(map[string]interface{})
+
+			network["name"] = n.Name
+			switch n.Mode {
+			case marathon.ContainerNetworkMode:
+				network["mode"] = "CONTAINER"
+			case marathon.BridgeNetworkMode:
+				network["mode"] = "CONTAINER/BRIDGE"
+			case marathon.HostNetworkMode:
+				network["mode"] = "HOST"
+			}
+
+			network["labels"] = n.Labels
+		}
+
+		d.Set("network", networks)
+	}
+
+	if pod.Scaling != nil {
+		d.Set("scaling.0.kind", pod.Scaling.Kind)
+		d.Set("scaling.0.instances", pod.Scaling.Instances)
+		d.Set("scaling.0.max_instances", pod.Scaling.MaxInstances)
+	}
+
+	if pod.Scheduling != nil {
+		if pod.Scheduling.Backoff != nil {
+
+			if pod.Scheduling.Backoff.Backoff != nil {
+				d.Set("scheduling.0.backoff.0.backoff", *pod.Scheduling.Backoff.Backoff)
+			}
+
+			if pod.Scheduling.Backoff.BackoffFactor != nil {
+				d.Set("scheduling.0.backoff.0.backoff_factor", *pod.Scheduling.Backoff.BackoffFactor)
+			}
+
+			if pod.Scheduling.Backoff.MaxLaunchDelay != nil {
+				d.Set("scheduling.0.backoff.0.max_launch_delay", *pod.Scheduling.Backoff.MaxLaunchDelay)
+			}
+		}
+
+		if pod.Scheduling.Upgrade != nil {
+			if pod.Scheduling.Upgrade.MinimumHealthCapacity != nil {
+				d.Set("scheduling.0.upgrade.0.minimum_health_capacity", *pod.Scheduling.Upgrade.MinimumHealthCapacity)
+			}
+			if pod.Scheduling.Upgrade.MaximumOverCapacity != nil {
+				d.Set("scheduling.0.upgrade.0.maximum_over_capacity", *pod.Scheduling.Upgrade.MaximumOverCapacity)
+			}
+		}
+
+		d.Set("scheduling.0.kill_selection", pod.Scheduling.KillSelection)
+
+		if pod.Scheduling.UnreachableStrategy != nil {
+			if pod.Scheduling.UnreachableStrategy.InactiveAfterSeconds != nil {
+				d.Set("scheduling.0.unreachable_strategy.0.inactive_after_seconds", *pod.Scheduling.UnreachableStrategy.InactiveAfterSeconds)
+			}
+
+			if pod.Scheduling.UnreachableStrategy.ExpungeAfterSeconds != nil {
+				d.Set("scheduling.0.unreachable_strategy.0.expunge_after_seconds", *pod.Scheduling.UnreachableStrategy.ExpungeAfterSeconds)
+			}
+		}
+	}
+
+	if len(pod.Secrets) > 0 {
+		secrets := make([]map[string]interface{}, 0)
+		for k, v := range pod.Secrets {
+			secret := make(map[string]interface{})
+			secret["secret_name"] = k
+			secret["env_var"] = v.EnvVar
+			secret["source"] = v.Source
+
+			secrets = append(secrets, secret)
+		}
+
+		d.Set("secrets", secrets)
+	}
+
+	d.Set("user", pod.User)
+
+	if len(pod.Volumes) > 0 {
+		volumes := make([]map[string]interface{}, 0)
+
+		for _, n := range pod.Volumes {
+			volume := make(map[string]interface{})
+
+			volume["name"] = n.Name
+			volume["host"] = n.Host
+
+			if n.Persistent != nil {
+				pers := make([]map[string]interface{}, 1)
+
+				switch n.Persistent.Type {
+				case marathon.PersistentVolumeTypeRoot:
+					pers[0]["type"] = "root"
+				case marathon.PersistentVolumeTypePath:
+					pers[0]["type"] = "path"
+				case marathon.PersistentVolumeTypeMount:
+					pers[0]["type"] = "mount"
+				}
+
+				pers[0]["size"] = n.Persistent.Size
+				pers[0]["max_size"] = n.Persistent.MaxSize
+
+				if n.Persistent.Constraints != nil {
+					constraints := make([]map[string]interface{}, 0)
+
+					for _, c := range *n.Persistent.Constraints {
+						con := make(map[string]interface{})
+						con["attribute"] = c[0]
+						con["operation"] = c[1]
+						if len(c) > 2 {
+							con["parameter"] = c[2]
+						}
+
+						constraints = append(constraints, con)
+					}
+
+					pers[0]["constraints"] = constraints
+				}
+
+				volume["persistent"] = pers
+			}
+			volumes = append(volumes, volume)
+		}
+
+		d.Set("volume", volumes)
+	}
 
 	return nil
 }
 
 func resourceDcosMarathonPodUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
-	ctx := context.TODO()
-
-	secretsV1Secret := dcos.SecretsV1Secret{}
-	secretsV1Secret.Value = d.Get("value").(string)
-
-	pathToSecret := d.Get("path").(string)
-
-	store := d.Get("store").(string)
-
-	_, err := client.Secrets.UpdateSecret(ctx, store, encodePath(pathToSecret), secretsV1Secret)
-
+	// client := meta.(*dcos.APIClient)
+	// ctx := context.TODO()
+	mconf, err := genMarathonConf(meta)
 	if err != nil {
-		return fmt.Errorf("Unable to update secret: %s", err.Error())
+		return err
+	}
+
+	pod, err := schemaToMarathonPod(d)
+	if err != nil {
+		return err
+	}
+
+	_, err = mconf.Client.UpdatePod(pod, true)
+	if err != nil {
+		return err
 	}
 
 	return resourceDcosMarathonPodRead(d, meta)
 }
 
 func resourceDcosMarathonPodDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*dcos.APIClient)
-	ctx := context.TODO()
+	// client := meta.(*dcos.APIClient)
+	// ctx := context.TODO()
+	mconf, err := genMarathonConf(meta)
 
-	pathToSecret := d.Get("path").(string)
-	store := d.Get("store").(string)
+	name := d.Get("name").(string)
 
-	resp, err := client.Secrets.DeleteSecret(ctx, store, pathToSecret)
-
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
+	dpl, err := mconf.Client.DeletePod(name, true)
+	if err != nil {
+		return err
 	}
 
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		ok, err := mconf.Client.HasDeployment(dpl.DeploymentID)
+		if ok {
+			return resource.RetryableError(fmt.Errorf("Delete still in progress"))
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		return fmt.Errorf("Unable to delete secret: %s", err.Error())
+		return err
 	}
 
 	d.SetId("")
