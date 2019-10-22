@@ -192,6 +192,29 @@ func resourceDcosMarathonPod() *schema.Resource {
 								},
 							},
 						},
+						"env": {
+							Type:     schema.TypeMap,
+							Optional: true,
+						},
+						"exec": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							ForceNew:    false,
+							MaxItems:    1,
+							Description: "DC/OS secrets",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"command_shell": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									// "overrideEntrypoint": {
+									// 	Type:     schema.TypeBool,
+									// 	Optional: true,
+									// },
+								},
+							},
+						},
 						"image": {
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -214,10 +237,6 @@ func resourceDcosMarathonPod() *schema.Resource {
 									},
 								},
 							},
-						},
-						"env": {
-							Type:     schema.TypeMap,
-							Optional: true,
 						},
 						"labels": {
 							Type:     schema.TypeMap,
@@ -710,6 +729,22 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 				}
 			}
 
+			if im, ok := val["exec"]; ok {
+				res := im.([]interface{})
+
+				if len(res) > 0 {
+					h := res[0].(map[string]interface{})
+					exec := marathon.PodExec{}
+
+					if hv, ok := h["command_shell"]; ok {
+						exec.Command = marathon.PodCommand{}
+						exec.Command.Shell = hv.(string)
+					}
+
+					container.Exec = &exec
+				}
+			}
+
 			if im, ok := val["image"]; ok {
 				res := im.([]interface{})
 
@@ -1114,6 +1149,14 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 					endpoints = append(endpoints, endpoint)
 				}
+			}
+
+			if container.Exec != nil {
+				exec := make([]map[string]interface{}, 1)
+
+				exec[0]["command_shell"] = container.Exec.Command.Shell
+
+				c["exec"] = exec
 			}
 
 			if container.Image != nil {
