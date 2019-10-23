@@ -638,17 +638,15 @@ func readDeploymentEvents(meta *marathon.Marathon, c chan deploymentEvent, ready
 	defer close(c)
 	ready <- true
 
-	for {
-		select {
-		case event := <-events:
-			switch mEvent := event.Event.(type) {
-			case *marathon.EventDeploymentSuccess:
-				c <- deploymentEvent{mEvent.ID, event.Name}
-			case *marathon.EventDeploymentFailed:
-				c <- deploymentEvent{mEvent.ID, event.Name}
-			}
+	for event := range events {
+		switch mEvent := event.Event.(type) {
+		case *marathon.EventDeploymentSuccess:
+			c <- deploymentEvent{mEvent.ID, event.Name}
+		case *marathon.EventDeploymentFailed:
+			c <- deploymentEvent{mEvent.ID, event.Name}
 		}
 	}
+	return err
 }
 
 func waitOnSuccessfulDeployment(c chan deploymentEvent, id string, timeout time.Duration) error {
@@ -694,7 +692,11 @@ func resourceDcosMarathonAppCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Partial(true)
 	d.SetId(application.ID)
-	setSchemaFieldsForApp(application, d)
+	err = setSchemaFieldsForApp(application, d)
+	if err != nil {
+		log.Println("[ERROR] setSchemaFieldsForApp", err)
+		return err
+	}
 
 	for _, deploymentID := range application.DeploymentIDs() {
 		err = waitOnSuccessfulDeployment(c, deploymentID.DeploymentID, config.DefaultDeploymentTimeout)
@@ -1452,7 +1454,7 @@ func mapResourceToApplication(d *schema.ResourceData) *marathon.Application {
 
 		application.Env = &env
 	} else {
-		env := make(map[string]string, 0)
+		env := make(map[string]string)
 		application.Env = &env
 	}
 
@@ -1705,7 +1707,10 @@ func mapResourceToApplication(d *schema.ResourceData) *marathon.Application {
 		secrets := make(map[string]marathon.Secret, len(secretsMap))
 
 		for k, v := range secretsMap {
-			secrets[k] = marathon.Secret{k, v.(string)}
+			secrets[k] = marathon.Secret{
+				EnvVar: k,
+				Source: v.(string),
+			}
 		}
 
 		application.Secrets = &secrets
