@@ -339,7 +339,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// remove leading slash
-					return strings.TrimLeft(old, "/") == strings.TrimLeft(old, "/")
+					return strings.TrimLeft(old, "/") == strings.TrimLeft(new, "/")
 				},
 			},
 			"labels": {
@@ -1158,6 +1158,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 					endpoints = append(endpoints, endpoint)
 				}
+				c["endpoints"] = endpoints
 			}
 
 			if container.Exec != nil {
@@ -1402,6 +1403,9 @@ func resourceDcosMarathonPodDelete(d *schema.ResourceData, meta interface{}) err
 	// client := meta.(*dcos.APIClient)
 	// ctx := context.TODO()
 	mconf, err := genMarathonConf(meta)
+	if err != nil {
+		return err
+	}
 
 	name := d.Get("name").(string)
 
