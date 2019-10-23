@@ -94,13 +94,13 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 				Description: "Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present",
 			},
 			"cpus": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeFloat,
 				Optional:    true,
 				ForceNew:    false,
 				Description: "CPU requirements",
 			},
 			"mem": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Optional:    true,
 				ForceNew:    false,
 				Description: "Memory requirements (in MB)",
@@ -554,7 +554,10 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 		edgelbV2Pool.SecretName = v.(string)
 	}
 	if v, ok := d.GetOk("cpus"); ok {
-		edgelbV2Pool.Cpus = v.(float32)
+		edgelbV2Pool.Cpus = float32(v.(float64))
+	}
+	if v, ok := d.GetOk("mem"); ok {
+		edgelbV2Pool.Mem = int32(v.(int))
 	}
 	if v, ok := d.GetOk("pool_count"); ok {
 		edgelbV2Pool.Count = int32(v.(int))
