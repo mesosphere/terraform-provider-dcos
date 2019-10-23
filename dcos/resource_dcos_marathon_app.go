@@ -168,6 +168,19 @@ func resourceDcosMarathonApp() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"pull_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: false,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"secret": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
 									"parameters": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -847,6 +860,14 @@ func setSchemaFieldsForApp(app *marathon.Application, d *schema.ResourceData) er
 			log.Println("DOCKERIMAGE: " + docker.Image)
 			dockerMap["force_pull_image"] = *docker.ForcePullImage
 
+			if docker.PullConfig != nil {
+				pullConfig := make(map[string]interface{})
+
+				pullConfig["secret"] = docker.PullConfig.Secret
+
+				dockerMap["pull_config"] = []interface{}{pullConfig}
+			}
+
 			// Marathon 1.5 does not allow both docker.network and app.networks at the same config
 			if app.Networks == nil {
 				dockerMap["network"] = docker.Network
@@ -1292,6 +1313,12 @@ func mapResourceToApplication(d *schema.ResourceData) *marathon.Application {
 			if v, ok := d.GetOk("container.0.docker.0.force_pull_image"); ok {
 				value := v.(bool)
 				docker.ForcePullImage = &value
+			}
+
+			if v, ok := d.GetOk("container.0.docker.0.pull_config.0.secret"); ok {
+				value := v.(string)
+				docker.PullConfig = new(marathon.PullConfig)
+				docker.PullConfig.Secret = value
 			}
 
 			if v, ok := d.GetOk("container.0.docker.0.parameters.#"); ok {
