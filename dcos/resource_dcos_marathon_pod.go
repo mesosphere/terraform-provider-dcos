@@ -2,6 +2,7 @@ package dcos
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -29,7 +30,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"containers": {
+			"container": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				ForceNew:    false,
@@ -336,6 +337,10 @@ func resourceDcosMarathonPod() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// remove leading slash
+					return strings.TrimLeft(old, "/") == strings.TrimLeft(old, "/")
+				},
 			},
 			"labels": {
 				Type:     schema.TypeMap,
@@ -579,7 +584,9 @@ func resourceDcosMarathonPod() *schema.Resource {
 func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 	pod := marathon.NewPod()
 
-	if v, ok := d.GetOk("containers"); ok {
+	pod.Name(d.Get("name").(string))
+
+	if v, ok := d.GetOk("container"); ok {
 		// containers := make([]marathon.PodContainer, v.(*schema.Set).Len())
 
 		for _, c := range v.(*schema.Set).List() {
@@ -863,7 +870,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 				network.SetName(v.(string))
 			}
 
-			if v, ok := n["name"]; ok {
+			if v, ok := n["mode"]; ok {
 				switch v.(string) {
 				case "CONTAINER":
 					network.SetMode(marathon.ContainerNetworkMode)
@@ -884,6 +891,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 	}
 
 	if _, ok := d.GetOk("scaling"); ok {
+		pod.Scaling = &marathon.PodScalingPolicy{}
 
 		if v, ok := d.GetOk("scaling.0.kind"); ok {
 			pod.Scaling.Kind = v.(string)
@@ -1106,13 +1114,14 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			if h := container.HealthCheck; h != nil {
 				healthchecks := make([]map[string]interface{}, 1)
-
+				healthchecks[0] = make(map[string]interface{})
 				healthchecks[0]["grace_period_seconds"] = *h.GracePeriodSeconds
 				healthchecks[0]["interval_seconds"] = *h.IntervalSeconds
 				healthchecks[0]["max_consecutive_failures"] = *h.MaxConsecutiveFailures
 				healthchecks[0]["timeout_seconds"] = *h.TimeoutSeconds
 				healthchecks[0]["delay_seconds"] = *h.DelaySeconds
 				http := make([]map[string]interface{}, 1)
+				http[0] = make(map[string]interface{})
 				http[0]["path"] = h.HTTP.Endpoint
 				http[0]["scheme"] = h.HTTP.Scheme
 				http[0]["endpoint"] = h.HTTP.Endpoint
@@ -1126,7 +1135,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			if container.Resources != nil {
 				resources := make([]map[string]interface{}, 1)
-
+				resources[0] = make(map[string]interface{})
 				resources[0]["cpus"] = container.Resources.Cpus
 				resources[0]["mem"] = container.Resources.Mem
 				resources[0]["disk"] = container.Resources.Disk
@@ -1153,6 +1162,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			if container.Exec != nil {
 				exec := make([]map[string]interface{}, 1)
+				exec[0] = make(map[string]interface{})
 
 				exec[0]["command_shell"] = container.Exec.Command.Shell
 
@@ -1161,7 +1171,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			if container.Image != nil {
 				image := make([]map[string]interface{}, 1)
-
+				image[0] = make(map[string]interface{})
 				image[0]["kind"] = container.Image.Kind
 				image[0]["id"] = container.Image.ID
 				image[0]["force_pull"] = container.Image.ForcePull
@@ -1205,6 +1215,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			if container.Lifecycle.KillGracePeriodSeconds != nil {
 				lifecycle := make([]map[string]interface{}, 1)
+				lifecycle[0] = make(map[string]interface{})
 				lifecycle[0]["kill_grace_period_seconds"] = *container.Lifecycle.KillGracePeriodSeconds
 
 				c["lifecycle"] = lifecycle
@@ -1213,7 +1224,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 			containers = append(containers, c)
 		}
 
-		d.Set("containers", containers)
+		d.Set("container", containers)
 	}
 
 	if pod.ExecutorResources != nil {
@@ -1232,7 +1243,9 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 		for _, n := range pod.Networks {
 			network := make(map[string]interface{})
 
-			network["name"] = n.Name
+			if n.Name != "" {
+				network["name"] = n.Name
+			}
 			switch n.Mode {
 			case marathon.ContainerNetworkMode:
 				network["mode"] = "CONTAINER"
@@ -1242,7 +1255,10 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				network["mode"] = "HOST"
 			}
 
-			network["labels"] = n.Labels
+			if len(n.Labels) > 0 {
+				network["labels"] = n.Labels
+			}
+			networks = append(networks, network)
 		}
 
 		d.Set("network", networks)
@@ -1319,6 +1335,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			if n.Persistent != nil {
 				pers := make([]map[string]interface{}, 1)
+				pers[0] = make(map[string]interface{})
 
 				switch n.Persistent.Type {
 				case marathon.PersistentVolumeTypeRoot:
