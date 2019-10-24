@@ -67,6 +67,9 @@ func Provider() terraform.ResourceProvider {
 			"dcos_package_repo": resourceDcosPackageRepo(),
 
 			"dcos_edgelb_v2_pool": resourceDcosEdgeLBV2Pool(),
+
+			"dcos_marathon_app": resourceDcosMarathonApp(),
+			"dcos_marathon_pod": resourceDcosMarathonPod(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_base_url":        dataSourceDcosBaseURL(),
