@@ -1316,9 +1316,7 @@ func mapResourceToApplication(d *schema.ResourceData) *marathon.Application {
 			}
 
 			if v, ok := d.GetOk("container.0.docker.0.pull_config.0.secret"); ok {
-				value := v.(string)
-				docker.PullConfig = new(marathon.PullConfig)
-				docker.PullConfig.Secret = value
+				docker.PullConfig = marathon.NewPullConfig(v.(string))
 			}
 
 			if v, ok := d.GetOk("container.0.docker.0.parameters.#"); ok {
