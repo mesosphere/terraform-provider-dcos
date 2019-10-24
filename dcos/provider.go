@@ -79,7 +79,7 @@ func Provider() terraform.ResourceProvider {
 
 			"dcos_marathon_app": resourceDcosMarathonApp(),
 			"dcos_marathon_pod": resourceDcosMarathonPod(),
-			"dcos_json_cli":     resourceDcosJsonCLI(),
+			"dcos_cli":          resourceDcosCLI(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_base_url":        dataSourceDcosBaseURL(),
@@ -167,13 +167,5 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.SetACSToken(authToken.Token)
 	}
 
-	cli, err := util.CreateCliWrapper(".terraform/dcos/sandbox", client, d.Get("cli_version").(string))
-	if err != nil {
-		return nil, fmt.Errorf("Unable to create cli wrapper: %s", err.Error())
-	}
-
-	return &ProviderState{
-		Client:     client,
-		CliWrapper: cli,
-	}, err
+	return client, err
 }
