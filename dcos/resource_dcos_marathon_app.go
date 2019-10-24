@@ -63,6 +63,13 @@ func resourceDcosMarathonApp() *schema.Resource {
 		Delete: resourceDcosMarathonAppDelete,
 
 		Schema: map[string]*schema.Schema{
+			"marathon_service_url": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "service/marathon",
+				ForceNew:    true,
+				Description: "By default we use the default DC/OS marathon serivce: service/marathon. But to support marathon on marathon the service url can be schanged.",
+			},
 			"dcos_framework": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
@@ -602,14 +609,16 @@ type marathonConf struct {
 	DefaultDeploymentTimeout time.Duration
 }
 
-func genMarathonConf(meta interface{}) (marathonConf, error) {
+func genMarathonConf(d *schema.ResourceData, meta interface{}) (marathonConf, error) {
 	client := meta.(*dcos.APIClient)
 
 	marathonConfig := marathon.NewDefaultConfig()
 	dcosConf := client.CurrentDCOSConfig()
 
+	serviceURL := d.Get("marathon_service_url").(string)
+
 	// FIXME: support mom by providing marathon path
-	marathonConfig.URL = dcosConf.URL() + "/service/marathon"
+	marathonConfig.URL = dcosConf.URL() + "/" + strings.TrimLeft(serviceURL, "/")
 
 	marathonConfig.HTTPClient = client.HTTPClient()
 	marathonConfig.HTTPSSEClient = client.HTTPClient()
@@ -680,7 +689,7 @@ func waitOnSuccessfulDeployment(c chan deploymentEvent, id string, timeout time.
 }
 
 func resourceDcosMarathonAppCreate(d *schema.ResourceData, meta interface{}) error {
-	config, err := genMarathonConf(meta)
+	config, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
@@ -725,7 +734,7 @@ func resourceDcosMarathonAppCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDcosMarathonAppRead(d *schema.ResourceData, meta interface{}) error {
-	config, err := genMarathonConf(meta)
+	config, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
@@ -1186,7 +1195,7 @@ func setSchemaFieldsForApp(app *marathon.Application, d *schema.ResourceData) er
 }
 
 func resourceDcosMarathonAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	config, err := genMarathonConf(meta)
+	config, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
@@ -1217,7 +1226,7 @@ func resourceDcosMarathonAppUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDcosMarathonAppDelete(d *schema.ResourceData, meta interface{}) error {
-	config, err := genMarathonConf(meta)
+	config, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}

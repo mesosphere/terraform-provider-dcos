@@ -30,6 +30,13 @@ func resourceDcosMarathonPod() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"marathon_service_url": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "service/marathon",
+				ForceNew:    true,
+				Description: "By default we use the default DC/OS marathon serivce: service/marathon. But to support marathon on marathon the service url can be schanged.",
+			},
 			"container": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -1053,7 +1060,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 func resourceDcosMarathonPodCreate(d *schema.ResourceData, meta interface{}) error {
 	// client := meta.(*dcos.APIClient)
 	// ctx := context.TODO()
-	mconf, err := genMarathonConf(meta)
+	mconf, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
@@ -1072,7 +1079,7 @@ func resourceDcosMarathonPodCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error {
-	mconf, err := genMarathonConf(meta)
+	mconf, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
@@ -1381,7 +1388,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 func resourceDcosMarathonPodUpdate(d *schema.ResourceData, meta interface{}) error {
 	// client := meta.(*dcos.APIClient)
 	// ctx := context.TODO()
-	mconf, err := genMarathonConf(meta)
+	mconf, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
@@ -1402,7 +1409,7 @@ func resourceDcosMarathonPodUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceDcosMarathonPodDelete(d *schema.ResourceData, meta interface{}) error {
 	// client := meta.(*dcos.APIClient)
 	// ctx := context.TODO()
-	mconf, err := genMarathonConf(meta)
+	mconf, err := genMarathonConf(d, meta)
 	if err != nil {
 		return err
 	}
