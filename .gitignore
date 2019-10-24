@@ -47,3 +47,6 @@ examples/terraform.d/**
 examples/*/terraform.d/**
 terraform.d/plugins
 dist/**
+
+# Documentation
+docs/**/_gen

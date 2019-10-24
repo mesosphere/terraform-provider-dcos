@@ -1,0 +1,5 @@
+baseURL = "https://mesosphere.github.io/terraform-provider-dcos/"
+languageCode = "en-us"
+title = "DC/OS Terraform Provider"
+theme = "book"
+pygmentsCodeFences = true
