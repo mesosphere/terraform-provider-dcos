@@ -522,6 +522,10 @@ func resourceDcosMarathonApp() *schema.Resource {
 						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return new == "0"
+							},
 						},
 						"name": {
 							Type:         schema.TypeString,
@@ -543,6 +547,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 			"upgrade_strategy": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -562,6 +567,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 			"unreachable_strategy": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
