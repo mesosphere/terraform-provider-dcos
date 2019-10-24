@@ -106,7 +106,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 			"app_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: false,
+				ForceNew: true,
 			},
 			"args": &schema.Schema{
 				Type:     schema.TypeList,
