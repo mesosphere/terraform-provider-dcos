@@ -226,6 +226,10 @@ func resourceDcosMarathonApp() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"secret": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"mode": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -904,6 +908,7 @@ func setSchemaFieldsForApp(app *marathon.Application, d *schema.ResourceData) er
 				volumeMap["container_path"] = volume.ContainerPath
 				volumeMap["host_path"] = volume.HostPath
 				volumeMap["mode"] = volume.Mode
+				volumeMap["secret"] = volume.Secret
 
 				if volume.External != nil {
 					external := make(map[string]interface{})
@@ -1360,6 +1365,9 @@ func mapResourceToApplication(d *schema.ResourceData) *marathon.Application {
 				}
 				if val, ok := volumeMap["mode"]; ok {
 					volumes[i].Mode = val.(string)
+				}
+				if val, ok := volumeMap["secret"]; ok {
+					volumes[i].Secret = val.(string)
 				}
 
 				if volumeMap["external"] != nil {
