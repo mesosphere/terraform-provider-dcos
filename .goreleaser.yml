@@ -5,14 +5,15 @@ before:
 
 builds:
 - binary: terraform-provider-dcos
-  env: []
+  env:
+    - CGO_ENABLED=0
   goos:
   - darwin  # MacOS
   - windows
   - linux
   goarch:
   - amd64
-  ldflags: []
+  ldflags: -s -extldflags "-static"
 
 archives:
   - id: main
