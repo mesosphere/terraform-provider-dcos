@@ -85,6 +85,20 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Description: "DC/OS secrets",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"exec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: false,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"command_shell": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
 									"grace_period_seconds": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -637,6 +651,16 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 					h := hci[0].(map[string]interface{})
 					healthcheck := marathon.NewPodHealthCheck()
 
+					if hv, ok := h["exec"]; ok {
+						hc := hv.(map[string]interface{})
+						execHealthCheck := marathon.NewCommandHealthCheck()
+
+						if v, ok := hc["command_shell"]; ok {
+							execHealthCheck.Command = marathon.PodCommand{}
+							execHealthCheck.Command.Shell = v.(string)
+						}
+					}
+
 					if hv, ok := h["grace_period_seconds"]; ok {
 						healthcheck.SetGracePeriod(hv.(int))
 					}
@@ -1138,6 +1162,9 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				http[0]["path"] = h.HTTP.Endpoint
 				http[0]["scheme"] = h.HTTP.Scheme
 				http[0]["endpoint"] = h.HTTP.Endpoint
+				exec := make([]map[string]interface{}, 1)
+				exec[0] = make(map[string]interface{})
+				exec[0]["command_shell"] = h.Exec.Command
 
 				healthchecks[0]["http"] = http
 
