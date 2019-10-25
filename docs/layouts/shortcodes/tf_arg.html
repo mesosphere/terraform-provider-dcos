@@ -1,0 +1,9 @@
+<li class="tf_arg">
+  <code class="arg">{{ .Get "name" }}</code>
+  {{ if (.Get "required") }}
+  (Required)
+  {{ else }}
+  (Optional{{ if .Get "default" }}, defaults to <code>{{ .Get "default" }}</code>{{ end }})
+  {{ end }}
+  {{ .Get "desc" }}{{ .Inner }}
+</li>

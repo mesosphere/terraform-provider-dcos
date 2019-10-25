@@ -36,6 +36,8 @@ resource "dcos_security_secret" "myapp-password" {
 
 The following arguments are supported
 
-- `path` (Required) path the to secret.
-- `value` (Required) value of the secret.
-- `store` (Optional) The name of the secret store. Defaults to `default`
+{{< tf_arguments >}}
+    {{< tf_arg name="path" required="true" desc="path to the secret." />}}
+    {{< tf_arg name="value" required="true" desc="value of the secret." />}}
+    {{< tf_arg name="store" default="default" desc="The name of the secret store." />}}
+{{</ tf_arguments >}}

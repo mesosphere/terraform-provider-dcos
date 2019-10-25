@@ -42,6 +42,8 @@ resource "dcos_security_group_user" {
 
 The following arguments are supported
 
-- `uid` (Required) User ID.
-- `description` (Optional) A description for the User.
-- `password` (Optional) Specified password for the User. Optional setting could also be maintained outside of Terraform
+{{< tf_arguments >}}
+    {{< tf_arg name="uid" required="true" desc="the user ID." />}}
+    {{< tf_arg name="description" desc="a description for the User." />}}
+    {{< tf_arg name="password" desc="Specified password for the User. Optional setting could also be maintained outside of Terraform." />}}
+{{</ tf_arguments >}}
