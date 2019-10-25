@@ -1162,11 +1162,11 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				http[0]["path"] = h.HTTP.Endpoint
 				http[0]["scheme"] = h.HTTP.Scheme
 				http[0]["endpoint"] = h.HTTP.Endpoint
+				healthchecks[0]["http"] = http
 				exec := make([]map[string]interface{}, 1)
 				exec[0] = make(map[string]interface{})
 				exec[0]["command_shell"] = h.Exec.Command
-
-				healthchecks[0]["http"] = http
+				exec[0]["exec"] = exec
 
 				c["health_check"] = healthchecks
 			}
