@@ -28,7 +28,8 @@ li.tf_arg code.arg {
 
 h2:after
 {
-    content:' ';
-    display:block;
-    border:1px solid #eee;
+  margin-top: 0.5em;
+  content:' ';
+  display:block;
+  border-top: 1px solid #c7ccd1;
 }
