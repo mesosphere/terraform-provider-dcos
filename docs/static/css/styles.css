@@ -33,3 +33,7 @@ h2:after
   display:block;
   border-top: 1px solid #c7ccd1;
 }
+
+:target {
+   background-color: #ffa;
+}

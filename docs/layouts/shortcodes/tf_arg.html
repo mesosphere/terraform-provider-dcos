@@ -1,5 +1,5 @@
-<li class="tf_arg">
-  <code class="arg">{{ .Get "name" }}</code>
+<li class="tf_arg" id="{{ .Get "name" | urlize }}">
+  <a href="#{{ .Get "name" | urlize }}"><code class="arg">{{ .Get "name" }}</code></a>
   {{ if (.Get "required") }}
   (Required)
   {{ else }}
