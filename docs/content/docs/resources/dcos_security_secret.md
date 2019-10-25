@@ -9,9 +9,6 @@ weight: 4
 Provides an secret resource. This allows to maintain secrets in a DC/OS secret store.
 
 ## Example Usage
-
----
-
 ```hcl
 # Create a Secret containing a random password
 provider "dcos" {
@@ -31,9 +28,6 @@ resource "dcos_security_secret" "myapp-password" {
 ```
 
 ## Argument Reference
-
----
-
 The following arguments are supported
 
 - `path` (Required) path the to secret.

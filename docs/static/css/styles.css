@@ -25,3 +25,10 @@ h1 + p {
 .markdown li {
   margin-bottom: 0.8em;
 }
+
+h2:after
+{
+    content:' ';
+    display:block;
+    border:1px solid #eee;
+}
