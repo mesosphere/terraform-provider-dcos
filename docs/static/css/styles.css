@@ -16,3 +16,12 @@ h1 + p {
 
   font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
 }
+
+.markdown li code {
+  background-color: #ebeafc;
+  color: #5C4EE5;
+}
+
+.markdown li {
+  margin-bottom: 0.8em;
+}

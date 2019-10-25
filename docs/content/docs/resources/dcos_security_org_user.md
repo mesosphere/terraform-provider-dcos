@@ -10,6 +10,8 @@ Provide a user resource. Managing users and their credentials.
 
 ## Example Usage
 
+---
+
 ```hcl
 # Create a Admin User with random password.
 provider "dcos" {
@@ -35,6 +37,9 @@ resource "dcos_security_group_user" {
 ```
 
 ## Argument Reference
+
+---
+
 The following arguments are supported
 
 - `uid` (Required) User ID.
