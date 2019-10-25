@@ -17,6 +17,10 @@ h1 + p {
   font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
 }
 
+h1 + p code {
+  background: inherit !important;
+}
+
 li.tf_arg {
   margin-bottom: 0.8em;
 }
@@ -24,6 +28,16 @@ li.tf_arg {
 li.tf_arg code.arg {
   background-color: #ebeafc;
   color: #5C4EE5;
+}
+
+li.tf_arg a code {
+  background-color: inherit;
+  color: #5C4EE5;
+}
+
+li.tf_arg code.output {
+  background-color: #ffdad7;
+  color: #630700;
 }
 
 h2:after
@@ -34,6 +48,6 @@ h2:after
   border-top: 1px solid #c7ccd1;
 }
 
-:target {
+li:target {
    background-color: #ffa;
 }
