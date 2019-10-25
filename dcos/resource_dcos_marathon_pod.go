@@ -710,6 +710,12 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 				}
 			}
 
+			if en, ok := val["env"]; ok {
+				for k, v := range en.(map[string]interface{}) {
+					container.AddEnv(k, v.(string))
+				}
+			}
+
 			if ep, ok := val["endpoints"]; ok {
 				for _, res := range ep.(*schema.Set).List() {
 					h := res.(map[string]interface{})
