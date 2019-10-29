@@ -652,12 +652,17 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 					healthcheck := marathon.NewPodHealthCheck()
 
 					if hv, ok := h["exec"]; ok {
-						hc := hv.(map[string]interface{})
-						execHealthCheck := marathon.NewCommandHealthCheck()
+						hc := hv.([]interface{})
 
-						if v, ok := hc["command_shell"]; ok {
-							execHealthCheck.Command = marathon.PodCommand{}
-							execHealthCheck.Command.Shell = v.(string)
+						if len(hc) > 0 {
+							//h := hc[0].(map[string]interface{})
+							execHealthCheck := marathon.NewCommandHealthCheck()
+
+							if v, ok := h["command_shell"]; ok {
+								execHealthCheck.Command = marathon.PodCommand{}
+								execHealthCheck.Command.Shell = v.(string)
+
+							}
 						}
 					}
 
@@ -682,22 +687,26 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 					}
 
 					if hv, ok := h["http"]; ok {
-						hh := hv.([]map[string]interface{})
-						httpHealthCheck := marathon.NewHTTPHealthCheck()
+						hh := hv.([]interface{})
 
-						if v, ok := hh[0]["path"]; ok {
-							httpHealthCheck.SetPath(v.(string))
+						if len(hh) > 0 {
+							//h := hh[0].(map[string]interface{})
+							httpHealthCheck := marathon.NewHTTPHealthCheck()
+
+							if v, ok := h["path"]; ok {
+								httpHealthCheck.SetPath(v.(string))
+							}
+
+							if v, ok := h["scheme"]; ok {
+								httpHealthCheck.SetScheme(v.(string))
+							}
+
+							if v, ok := h["endpoint"]; ok {
+								httpHealthCheck.SetEndpoint(v.(string))
+							}
+
+							healthcheck.SetHTTPHealthCheck(httpHealthCheck)
 						}
-
-						if v, ok := hh[0]["scheme"]; ok {
-							httpHealthCheck.SetScheme(v.(string))
-						}
-
-						if v, ok := hh[0]["endpoint"]; ok {
-							httpHealthCheck.SetEndpoint(v.(string))
-						}
-
-						healthcheck.SetHTTPHealthCheck(httpHealthCheck)
 					}
 					container.SetHealthCheck(healthcheck)
 				}
