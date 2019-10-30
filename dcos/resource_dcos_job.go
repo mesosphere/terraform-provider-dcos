@@ -150,7 +150,7 @@ func resourceDcosJob() *schema.Resource {
 						},
 						"value": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							ForceNew:    false,
 							Description: "The value of the key/name",
 						},
@@ -371,12 +371,14 @@ func setSchemaFromJob(d *schema.ResourceData, j *dcos.MetronomeV1Job) {
 			entry["key"] = k
 
 			switch e := i.(type) {
-			case map[string]string:
+			case map[string]interface{}:
+				log.Printf("[TRACE] Found map Key %s value %v, type %T", k, i, e)
 				entry["secret"] = e["secret"]
 			case string:
+				log.Printf("[TRACE] Found string Key %s value %v, type %T", k, i, e)
 				entry["value"] = e
 			default:
-				log.Printf("[WARNING] found key but no secret or value. Ignoring %v", i)
+				log.Printf("[WARNING] found key but no secret or value. Ignoring %v type %T", i, e)
 				continue
 			}
 
@@ -586,7 +588,7 @@ func generateMetronomeJob(d *schema.ResourceData, meta interface{}) (dcos.Metron
 			}
 
 			if secret != "" {
-				env_map[secret] = map[string]string{
+				env_map[key] = map[string]string{
 					"secret": secret,
 				}
 			} else {
