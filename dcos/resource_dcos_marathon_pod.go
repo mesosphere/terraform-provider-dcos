@@ -656,6 +656,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 
 						if len(hc) > 0 {
 							execHealthCheck := marathon.NewCommandHealthCheck()
+							h = hc[0].(map[string]interface{})
 
 							if v, ok := h["command_shell"]; ok {
 								execHealthCheck.Command = marathon.PodCommand{}
