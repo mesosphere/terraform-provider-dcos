@@ -662,6 +662,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 								execHealthCheck.Command.Shell = v.(string)
 
 							}
+							healthcheck.Exec = execHealthCheck
 						}
 					}
 
