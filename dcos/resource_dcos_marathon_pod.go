@@ -691,6 +691,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 						hh := hv.([]interface{})
 
 						if len(hh) > 0 {
+							h := hh[0].(map[string]interface{})
 							httpHealthCheck := marathon.NewHTTPHealthCheck()
 
 							if v, ok := h["path"]; ok {
