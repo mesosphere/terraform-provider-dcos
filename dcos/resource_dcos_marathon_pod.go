@@ -85,6 +85,20 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Description: "DC/OS secrets",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"exec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: false,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"command_shell": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
 									"grace_period_seconds": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -637,6 +651,22 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 					h := hci[0].(map[string]interface{})
 					healthcheck := marathon.NewPodHealthCheck()
 
+					if hv, ok := h["exec"]; ok {
+						hc := hv.([]interface{})
+
+						if len(hc) > 0 {
+							execHealthCheck := marathon.NewCommandHealthCheck()
+							h = hc[0].(map[string]interface{})
+
+							if v, ok := h["command_shell"]; ok {
+								execHealthCheck.Command = marathon.PodCommand{}
+								execHealthCheck.Command.Shell = v.(string)
+
+							}
+							healthcheck.Exec = execHealthCheck
+						}
+					}
+
 					if hv, ok := h["grace_period_seconds"]; ok {
 						healthcheck.SetGracePeriod(hv.(int))
 					}
@@ -658,22 +688,26 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 					}
 
 					if hv, ok := h["http"]; ok {
-						hh := hv.([]map[string]interface{})
-						httpHealthCheck := marathon.NewHTTPHealthCheck()
+						hh := hv.([]interface{})
 
-						if v, ok := hh[0]["path"]; ok {
-							httpHealthCheck.SetPath(v.(string))
+						if len(hh) > 0 {
+							h := hh[0].(map[string]interface{})
+							httpHealthCheck := marathon.NewHTTPHealthCheck()
+
+							if v, ok := h["path"]; ok {
+								httpHealthCheck.SetPath(v.(string))
+							}
+
+							if v, ok := h["scheme"]; ok {
+								httpHealthCheck.SetScheme(v.(string))
+							}
+
+							if v, ok := h["endpoint"]; ok {
+								httpHealthCheck.SetEndpoint(v.(string))
+							}
+
+							healthcheck.SetHTTPHealthCheck(httpHealthCheck)
 						}
-
-						if v, ok := hh[0]["scheme"]; ok {
-							httpHealthCheck.SetScheme(v.(string))
-						}
-
-						if v, ok := hh[0]["endpoint"]; ok {
-							httpHealthCheck.SetEndpoint(v.(string))
-						}
-
-						healthcheck.SetHTTPHealthCheck(httpHealthCheck)
 					}
 					container.SetHealthCheck(healthcheck)
 				}
@@ -1138,8 +1172,11 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				http[0]["path"] = h.HTTP.Endpoint
 				http[0]["scheme"] = h.HTTP.Scheme
 				http[0]["endpoint"] = h.HTTP.Endpoint
-
 				healthchecks[0]["http"] = http
+				exec := make([]map[string]interface{}, 1)
+				exec[0] = make(map[string]interface{})
+				exec[0]["command_shell"] = h.Exec.Command
+				exec[0]["exec"] = exec
 
 				c["health_check"] = healthchecks
 			}
