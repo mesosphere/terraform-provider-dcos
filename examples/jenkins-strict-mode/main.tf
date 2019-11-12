@@ -16,20 +16,45 @@ resource "dcos_security_org_service_account" "jenkins_service_account" {
 }
 
 locals {
-  jenkins_principal_grants = [
+  jenkins_principal_grants_create = [
     "dcos:mesos:master:framework:role:*",
     "dcos:mesos:master:task:user:nobody",
   ]
 }
 
-resource "dcos_security_org_user_grant" "testgrant" {
-  count    = "${length(local.jenkins_principal_grants)}"
+resource "dcos_security_org_user_grant" "jenkin_grant_create" {
+  count    = "${length(local.jenkins_principal_grants_create)}"
   uid      = "${dcos_security_org_service_account.jenkins_service_account.uid}"
-  resource = "${element(local.jenkins_principal_grants, count.index)}"
+  resource = "${element(local.jenkins_principal_grants_create, count.index)}"
   action   = "create"
 }
 
-# could be predefined data resource or special "service_account_secret"
+locals {
+  jenkins_principal_grants_read = [
+    "dcos:secrets:list:default:/${var.app_id}",
+  ]
+}
+
+resource "dcos_security_org_user_grant" "jenkin_grant_read" {
+  count    = "${length(local.jenkins_principal_grants_read)}"
+  uid      = "${dcos_security_org_service_account.jenkins_service_account.uid}"
+  resource = "${element(local.jenkins_principal_grants_read, count.index)}"
+  action   = "read"
+}
+
+locals {
+  jenkins_principal_grants_full = [
+    "dcos:secrets:default:/${var.app_id}/*",
+  ]
+}
+
+resource "dcos_security_org_user_grant" "jenkin_grant_full" {
+  count    = "${length(local.jenkins_principal_grants_full)}"
+  uid      = "${dcos_security_org_service_account.jenkins_service_account.uid}"
+  resource = "${element(local.jenkins_principal_grants_full, count.index)}"
+  action   = "full"
+}
+
 locals {
   jenkins_secret = {
     scheme         = "RS256"
@@ -39,17 +64,37 @@ locals {
   }
 }
 
+data "dcos_package_version" "jenkins" {
+  name     = "jenkins"
+  version  = "latest"
+}
 resource "dcos_security_secret" "jenkins-secret" {
-  path = "${var.app_id}/jenkins-secret"
+  path = "${var.app_id}/service-account-secret"
 
   value = "${jsonencode(local.jenkins_secret)}"
 }
 
-resource "dcos_package" "jenkins" {
-  name   = "jenkins"
-  app_id = "${var.app_id}"
+data "dcos_package_config" "jenkins" {
+  version_spec = "${data.dcos_package_version.jenkins.spec}"
+  autotype          = true
 
-  config_json = <<EOF
-{"security":{"secret-name":"${dcos_security_secret.jenkins-secret.path}","strict-mode":true},"service":{"user":"nobody", "mem": 4096}}
-EOF
+  section {
+    path = "service"
+    map = {
+        user = "nobody"
+    }
+  }
+
+  section {
+    path = "security"
+    map = {
+        secret-name = "${dcos_security_secret.jenkins-secret.path}"
+        strict-mode = "true"
+    }
+  }
+}
+
+resource "dcos_package" "jenkins" {
+  app_id = "${var.app_id}"
+  config = "${data.dcos_package_config.jenkins.config}"
 }
