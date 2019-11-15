@@ -23,14 +23,12 @@ resource "dcos_job" "ajob" {
 
   env {
     key    = "my_env_key"
-    value  = "my_env_value"
-#    secret = "secret1"
+    secret = "secret1"
   }
 
   env {
-    key    = "cool_key"
-    value  = "cool_value"
-#    secret = "cool_secret"
+    key   = "cool_key"
+    value = "cool_value"
   }
 
   secrets {
