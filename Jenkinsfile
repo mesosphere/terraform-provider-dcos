@@ -1,7 +1,7 @@
 pipeline {
     agent none
     environment {
-        GITHUB_TOKEN = credentials('mesosphere-ci-2018-11-08')
+        GITHUB_TOKEN = credentials('mergebot-ci-token-2018-11-08')
     }
     options {
       disableConcurrentBuilds()
