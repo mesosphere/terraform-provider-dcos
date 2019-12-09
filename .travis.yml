@@ -3,11 +3,12 @@ go:
 - '1.13'
 jobs:
   include:
-    - stage: "Lint"
+    - stage: "Lint and Test"
+      name: "Lint"
       script:
         - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0
         - make lint
-    - stage: "Test"
+    - name: "Test"
       script:
         - make test
     - stage: "Build"
