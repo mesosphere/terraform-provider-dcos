@@ -1,6 +1,10 @@
 pipeline {
+    agent none
     environment {
         GITHUB_TOKEN = credentials('mesosphere-ci-2018-11-08')
+    }
+    options {
+      disableConcurrentBuilds()
     }
     stages {
         stage('Release') {
