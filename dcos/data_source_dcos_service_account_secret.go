@@ -58,7 +58,10 @@ func getKeyId(pubKey crypto.PublicKey) (string, error) {
 		return "", err
 	}
 	hasher := crypto.SHA256.New()
-	hasher.Write(derBytes)
+	_, err = hasher.Write(derBytes)
+	if err != nil {
+		return "", err
+	}
 
 	b := hasher.Sum(nil)[:30]
 	keyId := strings.TrimRight(base64.StdEncoding.EncodeToString(b), "=")
