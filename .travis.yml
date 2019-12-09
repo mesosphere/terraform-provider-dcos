@@ -14,11 +14,3 @@ jobs:
     - stage: "Build"
       script:
         - make build
-deploy:
-- provider: script
-  cleanup: true
-  script: curl -sL https://git.io/goreleaser | bash
-  on:
-    branch: master
-    tags: true
-    condition: $TRAVIS_OS_NAME = linux
