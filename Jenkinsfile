@@ -15,7 +15,7 @@ pipeline {
             steps {
                 echo 'Starting release on tag.'
                 sh 'wget -O /tmp/goreleaser.tgz https://github.com/goreleaser/goreleaser/releases/download/v0.123.3/goreleaser_Linux_x86_64.tar.gz && tar xzf /tmp/goreleaser.tgz -C /usr/local/bin'
-                sh 'goreleaser'
+                sh 'goreleaser --rm-dist'
             }
         }
     }
