@@ -79,6 +79,8 @@ func Provider() terraform.ResourceProvider {
 			"dcos_service":         dataSourceDcosService(),
 			"dcos_token":           dataSourceDcosToken(),
 			"dcos_version":         dataSourceDcosVersion(),
+
+			"dcos_security_secret_service_account_secret": dataSourceDcosServiceAccountSecret(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
