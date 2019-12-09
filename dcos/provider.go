@@ -72,14 +72,15 @@ func Provider() terraform.ResourceProvider {
 			"dcos_marathon_pod": resourceDcosMarathonPod(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"dcos_base_url":               dataSourceDcosBaseURL(),
-			"dcos_job":                    dataSourceDcosJob(),
-			"dcos_package_config":         dataSourceDcosPackageConfig(),
-			"dcos_package_version":        dataSourceDcosPackageVersion(),
-			"dcos_service":                dataSourceDcosService(),
-			"dcos_token":                  dataSourceDcosToken(),
-			"dcos_version":                dataSourceDcosVersion(),
-			"dcos_service_account_secret": dataSourceDcosServiceAccountSecret(),
+			"dcos_base_url":        dataSourceDcosBaseURL(),
+			"dcos_job":             dataSourceDcosJob(),
+			"dcos_package_config":  dataSourceDcosPackageConfig(),
+			"dcos_package_version": dataSourceDcosPackageVersion(),
+			"dcos_service":         dataSourceDcosService(),
+			"dcos_token":           dataSourceDcosToken(),
+			"dcos_version":         dataSourceDcosVersion(),
+
+			"dcos_security_secret_service_account_secret": dataSourceDcosServiceAccountSecret(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

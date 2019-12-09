@@ -1,10 +1,10 @@
 ---
-title: "dcos_service_account_secret"
+title: "dcos_security_secret_service_account_secret"
 type: docs
 weight: 5
 ---
 
-# Data Resource: dcos_service_account_secret
+# Data Resource: dcos_security_secret_service_account_secret
 Computes the contents for the service account secret
 
 ## Example Usage
@@ -16,7 +16,7 @@ resource "tls_private_key" "service_account_key" {
 }
 
 # Pass the private key and the user account to the resource
-data "dcos_service_account_secret" "service_account" {
+data "dcos_security_secret_service_account_secret" "service_account" {
     uid            = "user-login"
     private_key    = "${tls_private_key.service_account_key.private_key_pem}"
 }
@@ -24,7 +24,7 @@ data "dcos_service_account_secret" "service_account" {
 # Handle the contents (eg. upload to a secret)
 resource "dcos_security_secret" "service_account_secret" {
   path = "my-service/service-account"
-  value = "${data.dcos_service_account_secret.contents}"
+  value = "${data.dcos_security_secret_service_account_secret.contents}"
 }
 ```
 
