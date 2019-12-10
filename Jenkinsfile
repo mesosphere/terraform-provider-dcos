@@ -1,7 +1,7 @@
 pipeline {
     agent none
     environment {
-        GITHUB_TOKEN = credentials('mesosphere-frontend-ci-gh-token')
+        GITHUB_TOKEN = credentials('gh-token-mesosphere-ci-dcos-deploy')
     }
     options {
       disableConcurrentBuilds()
