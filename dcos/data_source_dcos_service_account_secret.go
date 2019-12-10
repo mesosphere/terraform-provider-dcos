@@ -132,7 +132,7 @@ func dataSourceDcosServiceAccountSecretRead(d *schema.ResourceData, meta interfa
 
 	// Compose the key
 	sa.Scheme = "RS256"
-	sa.UID = fmt.Sprintf("")
+	sa.UID = uid
 	sa.LoginEndpoint = loginEndpoint
 	sa.PrivateKey = pemOut.String()
 
