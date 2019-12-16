@@ -18,9 +18,9 @@ func resourceDcosMarathonPod() *schema.Resource {
 		Read:   resourceDcosMarathonPodRead,
 		Update: resourceDcosMarathonPodUpdate,
 		Delete: resourceDcosMarathonPodDelete,
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		SchemaVersion: 1,
 		Timeouts: &schema.ResourceTimeout{
@@ -436,7 +436,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"backoff": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeFloat,
 										Optional: true,
 										// Description: "Secret name",
 									},
@@ -446,7 +446,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 										// Description: "File name. The file \"myfile\" will be found at \"$SECRETS/myfile\"",
 									},
 									"max_launch_delay": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeFloat,
 										Optional: true,
 										// Description: "File name. The file \"myfile\" will be found at \"$SECRETS/myfile\"",
 									},
@@ -961,7 +961,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 			backoff := marathon.PodBackoff{}
 
 			if v, ok := d.GetOk("scheduling.0.backoff.0.backoff"); ok {
-				backoff.SetBackoff(v.(int))
+				backoff.SetBackoff(v.(float64))
 			}
 
 			if v, ok := d.GetOk("scheduling.0.backoff.0.backoff_factor"); ok {
@@ -969,7 +969,7 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 			}
 
 			if v, ok := d.GetOk("scheduling.0.backoff.0.max_launch_delay"); ok {
-				backoff.SetMaxLaunchDelay(v.(int))
+				backoff.SetMaxLaunchDelay(v.(float64))
 			}
 
 			scheduling.SetBackoff(&backoff)
@@ -1043,52 +1043,54 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 			volume := marathon.NewPodVolume(name, path)
 
 			if pers, ok := vol["persistent"]; ok {
-				p := pers.(map[string]interface{})
-				persistent := marathon.PersistentVolume{}
+				if perslist := pers.([]interface{}); len(perslist) == 1 {
+					p := perslist[0].(map[string]interface{})
+					persistent := marathon.PersistentVolume{}
 
-				if v, ok := p["type"]; ok {
-					switch v.(string) {
-					case "root":
-						persistent.SetType(marathon.PersistentVolumeTypeRoot)
-					case "path":
-						persistent.SetType(marathon.PersistentVolumeTypePath)
-					case "mount":
-						persistent.SetType(marathon.PersistentVolumeTypeMount)
+					if v, ok := p["type"]; ok {
+						switch v.(string) {
+						case "root":
+							persistent.SetType(marathon.PersistentVolumeTypeRoot)
+						case "path":
+							persistent.SetType(marathon.PersistentVolumeTypePath)
+						case "mount":
+							persistent.SetType(marathon.PersistentVolumeTypeMount)
+						}
 					}
-				}
 
-				if v, ok := p["size"]; ok {
-					persistent.SetSize(v.(int))
-				}
-
-				if v, ok := p["max_size"]; ok {
-					persistent.SetMaxSize(v.(int))
-				}
-
-				if v, ok := p["max_size"]; ok {
-					persistent.SetMaxSize(v.(int))
-				}
-
-				if c, ok := p["constraints"]; ok {
-					for _, i := range c.(*schema.Set).List() {
-						pers := i.(map[string]interface{})
-						contraint := make([]string, 0)
-						if p, ok := pers["attribute"]; ok {
-							contraint = append(contraint, p.(string))
-						}
-
-						if p, ok := pers["operation"]; ok {
-							contraint = append(contraint, p.(string))
-						}
-
-						if p, ok := pers["parameter"]; ok {
-							contraint = append(contraint, p.(string))
-						}
-
-						persistent.AddConstraint(contraint...)
+					if v, ok := p["size"]; ok {
+						persistent.SetSize(v.(int))
 					}
+
+					if v, ok := p["max_size"]; ok {
+						persistent.SetMaxSize(v.(int))
+					}
+
+					if v, ok := p["max_size"]; ok {
+						persistent.SetMaxSize(v.(int))
+					}
+
+					if c, ok := p["constraints"]; ok {
+						for _, i := range c.(*schema.Set).List() {
+							pers := i.(map[string]interface{})
+							contraint := make([]string, 0)
+							if p, ok := pers["attribute"]; ok {
+								contraint = append(contraint, p.(string))
+							}
+
+							if p, ok := pers["operation"]; ok {
+								contraint = append(contraint, p.(string))
+							}
+
+							if p, ok := pers["parameter"]; ok {
+								contraint = append(contraint, p.(string))
+							}
+
+							persistent.AddConstraint(contraint...)
+						}
+					}
+					volume.SetPersistentVolume(&persistent)
 				}
-				volume.SetPersistentVolume(&persistent)
 			}
 			pod.AddVolume(volume)
 		}
@@ -1167,16 +1169,20 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				healthchecks[0]["max_consecutive_failures"] = *h.MaxConsecutiveFailures
 				healthchecks[0]["timeout_seconds"] = *h.TimeoutSeconds
 				healthchecks[0]["delay_seconds"] = *h.DelaySeconds
-				http := make([]map[string]interface{}, 1)
-				http[0] = make(map[string]interface{})
-				http[0]["path"] = h.HTTP.Endpoint
-				http[0]["scheme"] = h.HTTP.Scheme
-				http[0]["endpoint"] = h.HTTP.Endpoint
-				healthchecks[0]["http"] = http
-				exec := make([]map[string]interface{}, 1)
-				exec[0] = make(map[string]interface{})
-				exec[0]["command_shell"] = h.Exec.Command
-				exec[0]["exec"] = exec
+				if h.HTTP != nil {
+					http := make([]map[string]interface{}, 1)
+					http[0] = make(map[string]interface{})
+					http[0]["path"] = h.HTTP.Endpoint
+					http[0]["scheme"] = h.HTTP.Scheme
+					http[0]["endpoint"] = h.HTTP.Endpoint
+					healthchecks[0]["http"] = http
+				}
+				if h.Exec != nil {
+					exec := make([]map[string]interface{}, 1)
+					exec[0] = make(map[string]interface{})
+					exec[0]["command_shell"] = h.Exec.Command
+					healthchecks[0]["exec"] = exec
+				}
 
 				c["health_check"] = healthchecks
 			}
