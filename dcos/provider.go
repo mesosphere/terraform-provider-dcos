@@ -7,7 +7,6 @@ import (
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
 
 func Provider() terraform.ResourceProvider {

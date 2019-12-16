@@ -1,6 +1,7 @@
 package dcos
 
 import (
+	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -17,7 +18,7 @@ func dataSourceDcosBaseURL() *schema.Resource {
 }
 
 func dataSourceDcosBaseURLRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	//ctx := context.TODO()
 
 	dcosConfig := client.CurrentDCOSConfig()

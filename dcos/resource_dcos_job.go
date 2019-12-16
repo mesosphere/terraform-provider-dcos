@@ -289,7 +289,7 @@ func resourceDcosJob() *schema.Resource {
 }
 
 func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	metronome_job, err := generateMetronomeJob(d, meta)
@@ -320,7 +320,7 @@ func resourceDcosJobCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDcosJobRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	jobId := d.Get("name").(string)
@@ -433,7 +433,7 @@ func setSchemaFromJob(d *schema.ResourceData, j *dcos.MetronomeV1Job) {
 }
 
 func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	jobId := d.Get("name").(string)
@@ -472,7 +472,7 @@ func resourceDcosJobUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDcosJobDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	jobId := d.Get("name").(string)

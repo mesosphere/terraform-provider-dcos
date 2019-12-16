@@ -69,7 +69,7 @@ func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, 
 }
 
 func resourceDcosSecurityOrgServiceAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	uid := d.Get("uid").(string)
@@ -93,7 +93,7 @@ func resourceDcosSecurityOrgServiceAccountCreate(d *schema.ResourceData, meta in
 }
 
 func resourceDcosSecurityOrgServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	uid := d.Id()
@@ -120,7 +120,7 @@ func resourceDcosSecurityOrgServiceAccountRead(d *schema.ResourceData, meta inte
 }
 
 func resourceDcosSecurityOrgServiceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	uid := d.Id()
@@ -142,7 +142,7 @@ func resourceDcosSecurityOrgServiceAccountUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceDcosSecurityOrgServiceAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	resp, err := client.IAM.DeleteUser(ctx, d.Id())

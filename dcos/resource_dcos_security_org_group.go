@@ -51,7 +51,7 @@ func resourceDcosSecurityOrgGroup() *schema.Resource {
 }
 
 func resourceDcosSecurityOrgGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	gid := d.Get("gid").(string)
@@ -74,7 +74,7 @@ func resourceDcosSecurityOrgGroupCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceDcosSecurityOrgGroupRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	gid := d.Id()
@@ -100,7 +100,7 @@ func resourceDcosSecurityOrgGroupRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceDcosSecurityOrgGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	gid := d.Id()
@@ -119,7 +119,7 @@ func resourceDcosSecurityOrgGroupUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceDcosSecurityOrgGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	resp, err := client.IAM.DeleteGroup(ctx, d.Id())

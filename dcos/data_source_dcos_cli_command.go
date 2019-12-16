@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/mesosphere/terraform-provider-dcos/dcos/util"
 )
@@ -392,7 +393,7 @@ func hashConfig(config string) string {
 
 func dataSourceDcosCLICommandRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	client := meta.(*ProviderState).Client
+	client := meta.(*dcos.APIClient)
 	//ctx := context.TODO()
 
 	// Create cli spec
