@@ -2,6 +2,7 @@ package dcos
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -172,10 +173,12 @@ func resourceDcosMarathonPod() *schema.Resource {
 									"disk": {
 										Type:     schema.TypeFloat,
 										Optional: true,
+										Default:  0,
 									},
 									"gpus": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Default:  0,
 									},
 								},
 							},
@@ -246,8 +249,9 @@ func resourceDcosMarathonPod() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										ValidateFunc: validation.StringInSlice([]string{"DOCKER", "APPC"}, false),
+										Optional:     true,
 									},
 									"id": {
 										Type:     schema.TypeString,
@@ -255,6 +259,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 									},
 									"force_pull": {
 										Type:     schema.TypeBool,
+										Default:  false,
 										Optional: true,
 									},
 								},
@@ -638,6 +643,8 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 					if av, ok := art["extract"]; ok {
 						artifact.Extract = av.(bool)
 					}
+
+					log.Printf("[TRACE] Marathon.POD schemaToMarathonPod Artifact %+v", artifact)
 
 					container.AddArtifact(&artifact)
 				}
@@ -1112,6 +1119,8 @@ func resourceDcosMarathonPodCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	log.Printf("[TRACE] Marathon.POD Creating POD %+v", pod)
+
 	_, err = mconf.Client.CreatePod(pod)
 	if err != nil {
 		return err
@@ -1155,6 +1164,8 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 					artifact["executable"] = art.Executable
 					artifact["extract"] = art.Extract
 
+					log.Printf("[TRACE] Marathon.POD Read Artifact %+v", artifact)
+
 					a = append(a, artifact)
 				}
 
@@ -1172,7 +1183,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				if h.HTTP != nil {
 					http := make([]map[string]interface{}, 1)
 					http[0] = make(map[string]interface{})
-					http[0]["path"] = h.HTTP.Endpoint
+					http[0]["path"] = h.HTTP.Path
 					http[0]["scheme"] = h.HTTP.Scheme
 					http[0]["endpoint"] = h.HTTP.Endpoint
 					healthchecks[0]["http"] = http
