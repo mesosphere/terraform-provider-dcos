@@ -71,7 +71,7 @@ github.com/dcos/client-go/dcos
 github.com/donovanhide/eventsource
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
-# github.com/gambol99/go-marathon v0.7.2-0.20191024082834-e17848581931
+# github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37 => github.com/fatz/go-marathon v0.7.2-0.20191220131307-f0f370e5b51a
 github.com/gambol99/go-marathon
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
