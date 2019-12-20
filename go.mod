@@ -11,3 +11,5 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190919140530-1bfc03a5c181
 )
+
+replace github.com/gambol99/go-marathon => github.com/fatz/go-marathon v0.7.2-0.20191220131307-f0f370e5b51a
