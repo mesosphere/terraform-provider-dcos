@@ -92,6 +92,8 @@ github.com/gambol99/go-marathon v0.7.1 h1:/dnwXQ0W0UDScpvmcdjzRz3ssnJ/5ieX/q4Xi/
 github.com/gambol99/go-marathon v0.7.1/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
 github.com/gambol99/go-marathon v0.7.2-0.20191024082834-e17848581931 h1:JJpSjJfmS/PKH37PvHdu+B2DJS0qMfgrws5Cn/C/w+s=
 github.com/gambol99/go-marathon v0.7.2-0.20191024082834-e17848581931/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
+github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37 h1:zEKbiTqjvvrey+2Vum1H98Mah1CPpcIqTnmfbdLsCNs=
+github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
