@@ -262,6 +262,19 @@ func resourceDcosMarathonPod() *schema.Resource {
 										Default:  false,
 										Optional: true,
 									},
+									"pull_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: false,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"secret": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -549,7 +562,12 @@ func resourceDcosMarathonPod() *schema.Resource {
 						},
 						"host": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							// Description: "File name. The file \"myfile\" will be found at \"$SECRETS/myfile\"",
+						},
+						"secret": {
+							Type:     schema.TypeString,
+							Optional: true,
 							// Description: "File name. The file \"myfile\" will be found at \"$SECRETS/myfile\"",
 						},
 						"persistent": {
@@ -830,6 +848,17 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 						image.ForcePull = (hv.(bool))
 					}
 
+					if hv, ok := h["pull_config"]; ok {
+						res := hv.([]interface{})
+						if len(res) > 0 {
+							hs := res[0].(map[string]interface{})
+							if sec, ok := hs["secret"]; ok {
+								pc := marathon.NewPullConfig(sec.(string))
+								image.SetPullConfig(pc)
+							}
+						}
+					}
+
 					container.SetImage(image)
 				}
 			}
@@ -885,7 +914,10 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 				}
 			}
 
-			pod.AddContainer(container)
+			// Empty strings means not adding the container
+			if container.Name != "" {
+				pod.AddContainer(container)
+			}
 		}
 	}
 
@@ -1045,61 +1077,69 @@ func schemaToMarathonPod(d *schema.ResourceData) (*marathon.Pod, error) {
 			vol := i.(map[string]interface{})
 
 			name := vol["name"].(string)
-			path := vol["host"].(string)
 
-			volume := marathon.NewPodVolume(name, path)
+			if secret, ok := vol["secret"].(string); ok && secret != "" {
+				volume := marathon.NewPodVolumeSecret(name, secret)
+				log.Printf("[TRACE] Marathon.POD schemaToMarathonPod Add secret volume %+v", volume)
+				pod.AddVolume(volume)
 
-			if pers, ok := vol["persistent"]; ok {
-				if perslist := pers.([]interface{}); len(perslist) == 1 {
-					p := perslist[0].(map[string]interface{})
-					persistent := marathon.PersistentVolume{}
+				// ignore everything else if filebased secret
+			} else if path, ok := vol["host"].(string); ok {
+				volume := marathon.NewPodVolume(name, path)
 
-					if v, ok := p["type"]; ok {
-						switch v.(string) {
-						case "root":
-							persistent.SetType(marathon.PersistentVolumeTypeRoot)
-						case "path":
-							persistent.SetType(marathon.PersistentVolumeTypePath)
-						case "mount":
-							persistent.SetType(marathon.PersistentVolumeTypeMount)
+				if pers, ok := vol["persistent"]; ok {
+					if perslist := pers.([]interface{}); len(perslist) == 1 {
+						p := perslist[0].(map[string]interface{})
+						persistent := marathon.PersistentVolume{}
+
+						if v, ok := p["type"]; ok {
+							switch v.(string) {
+							case "root":
+								persistent.SetType(marathon.PersistentVolumeTypeRoot)
+							case "path":
+								persistent.SetType(marathon.PersistentVolumeTypePath)
+							case "mount":
+								persistent.SetType(marathon.PersistentVolumeTypeMount)
+							}
 						}
-					}
 
-					if v, ok := p["size"]; ok {
-						persistent.SetSize(v.(int))
-					}
-
-					if v, ok := p["max_size"]; ok {
-						persistent.SetMaxSize(v.(int))
-					}
-
-					if v, ok := p["max_size"]; ok {
-						persistent.SetMaxSize(v.(int))
-					}
-
-					if c, ok := p["constraints"]; ok {
-						for _, i := range c.(*schema.Set).List() {
-							pers := i.(map[string]interface{})
-							contraint := make([]string, 0)
-							if p, ok := pers["attribute"]; ok {
-								contraint = append(contraint, p.(string))
-							}
-
-							if p, ok := pers["operation"]; ok {
-								contraint = append(contraint, p.(string))
-							}
-
-							if p, ok := pers["parameter"]; ok {
-								contraint = append(contraint, p.(string))
-							}
-
-							persistent.AddConstraint(contraint...)
+						if v, ok := p["size"]; ok {
+							persistent.SetSize(v.(int))
 						}
+
+						if v, ok := p["max_size"]; ok {
+							persistent.SetMaxSize(v.(int))
+						}
+
+						if v, ok := p["max_size"]; ok {
+							persistent.SetMaxSize(v.(int))
+						}
+
+						if c, ok := p["constraints"]; ok {
+							for _, i := range c.(*schema.Set).List() {
+								pers := i.(map[string]interface{})
+								contraint := make([]string, 0)
+								if p, ok := pers["attribute"]; ok {
+									contraint = append(contraint, p.(string))
+								}
+
+								if p, ok := pers["operation"]; ok {
+									contraint = append(contraint, p.(string))
+								}
+
+								if p, ok := pers["parameter"]; ok {
+									contraint = append(contraint, p.(string))
+								}
+
+								persistent.AddConstraint(contraint...)
+							}
+						}
+						volume.SetPersistentVolume(&persistent)
 					}
-					volume.SetPersistentVolume(&persistent)
 				}
+				log.Printf("[TRACE] Marathon.POD schemaToMarathonPod Add volume %+v", volume)
+				pod.AddVolume(volume)
 			}
-			pod.AddVolume(volume)
 		}
 	}
 
@@ -1243,6 +1283,12 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 				image[0]["kind"] = container.Image.Kind
 				image[0]["id"] = container.Image.ID
 				image[0]["force_pull"] = container.Image.ForcePull
+				if container.Image.PullConfig != nil {
+					log.Printf("[TRACE] Marathon.POD Read found PullConfig %+v", container.Image.PullConfig)
+					pullConfig := make(map[string]interface{})
+					pullConfig["secret"] = container.Image.PullConfig.Secret
+					image[0]["pull_config"] = pullConfig
+				}
 
 				c["image"] = image
 			}
@@ -1400,6 +1446,7 @@ func resourceDcosMarathonPodRead(d *schema.ResourceData, meta interface{}) error
 
 			volume["name"] = n.Name
 			volume["host"] = n.Host
+			volume["secret"] = n.Secret
 
 			if n.Persistent != nil {
 				pers := make([]map[string]interface{}, 1)
