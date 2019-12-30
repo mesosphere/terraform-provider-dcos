@@ -157,7 +157,6 @@ func resourceDcosMarathonApp() *schema.Resource {
 			"container": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -281,6 +280,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 						"port_mappings": &schema.Schema{
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							ForceNew: false,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -291,6 +291,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 									"host_port": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"service_port": {
 										Type:     schema.TypeInt,
@@ -298,8 +299,8 @@ func resourceDcosMarathonApp() *schema.Resource {
 									},
 									"protocol": {
 										Type:     schema.TypeString,
-										Default:  "tcp",
 										Optional: true,
+										Computed: true,
 									},
 									"labels": {
 										Type:     schema.TypeMap,
@@ -308,6 +309,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 									"network_names": {
 										Type:     schema.TypeList,
@@ -405,9 +407,10 @@ func resourceDcosMarathonApp() *schema.Resource {
 							},
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Default:  "HTTP",
-							Optional: true,
+							Type:         schema.TypeString,
+							Default:      "HTTP",
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS", "TCP", "COMMAND", "MESOS_HTTP", "MESOS_HTTPS", "MESOS_TCP"}, false),
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -486,6 +489,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"mode": {
 							Type:         schema.TypeString,
@@ -504,7 +508,7 @@ func resourceDcosMarathonApp() *schema.Resource {
 			"require_ports": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 				ForceNew: false,
 			},
 			"port_definitions": &schema.Schema{
@@ -1223,7 +1227,7 @@ func resourceDcosMarathonAppUpdate(d *schema.ResourceData, meta interface{}) err
 
 	application := mapResourceToApplication(d)
 
-	deploymentID, err := client.UpdateApplication(application, false)
+	deploymentID, err := client.UpdateApplication(application, true)
 	if err != nil {
 		return err
 	}
@@ -1233,7 +1237,7 @@ func resourceDcosMarathonAppUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	return nil
+	return resourceDcosMarathonAppRead(d, meta)
 }
 
 func resourceDcosMarathonAppDelete(d *schema.ResourceData, meta interface{}) error {
@@ -1243,7 +1247,7 @@ func resourceDcosMarathonAppDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	client := config.Client
 
-	_, err = client.DeleteApplication(d.Id(), false)
+	_, err = client.DeleteApplication(d.Id(), true)
 	if err != nil {
 		return err
 	}

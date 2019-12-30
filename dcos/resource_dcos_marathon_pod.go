@@ -400,6 +400,7 @@ func resourceDcosMarathonPod() *schema.Resource {
 						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default:      "CONTAINER",
 							ValidateFunc: validation.StringInSlice([]string{"CONTAINER", "CONTAINER/BRIDGE", "HOST"}, false),
 							// Description: "File name. The file \"myfile\" will be found at \"$SECRETS/myfile\"",
 						},
