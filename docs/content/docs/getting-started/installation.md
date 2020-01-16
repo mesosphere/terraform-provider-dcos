@@ -8,4 +8,10 @@ weight: 1
 
 There are various ways you can obtain the `terraform-provider-dcs` binary.
 
-And we are going to present them now.
+## Build and Install From Source
+
+Make sure Go, `make` and [GoLangCI-Lint](https://github.com/golangci/golangci-lint#install) are installed.
+
+1. On Linux call `PLATFORMS=linux make`. On macOS call `PLATFORMS=darwin make`
+2. Copy the binary in `terraform.d/plugins` to `~/.terraform.d` with `cp -r terraform.d/plugin ~/.terraform.d`. 
+
