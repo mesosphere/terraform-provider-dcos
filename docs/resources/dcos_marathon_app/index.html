@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_marathon_app" />
+<meta property="og:description" content="Resource: dcos_marathon_app Provides a resource &hellip;
+Example Usage # an example provider &#34;dcos&#34; { cluster = &#34;my-cluster&#34; } Argument Reference The following arguments are supported
+ args (Optional)  cpus (Optional)  fetch (Optional)  extract (Optional)  uri (Optional)  cache (Optional)  executable (Optional)  user (Optional)  executor (Optional)  dcos_framework (Optional)  plan_path (Optional)  timeout (Optional) Timeout in seconds to wait for a framework to complete deployment  is_framework (Optional)  constraints (Optional)  attribute (Optional)  operation (Optional)  parameter (Optional)  disk (Optional)  labels (Optional)  networks (Optional)  name (Optional)  mode (Required)  labels (Optional)  version (Optional)  accepted_resource_roles (Optional)  container (Optional)  volumes (Optional)  host_path (Optional)  secret (Optional)  mode (Optional)  external (Optional)  options (Optional)  name (Optional)  provider (Optional)  persistent (Optional)  type (Optional)  size (Optional)  max_size (Optional)  container_path (Optional)  port_mappings (Optional)  name (Optional)  network_names (Optional)  container_port (Optional)  host_port (Optional)  service_port (Optional)  protocol (Optional)  labels (Optional)  type (Optional)  docker (Optional)  parameters (Optional)  key (Optional)  value (Optional)  privileged (Optional)  force_pull_image (Optional)  image (Required)  pull_config (Optional)  secret (Optional)  gpus (Optional)  backoff_seconds (Optional)  dependencies (Optional)  env (Optional)  secrets (Optional)  unreachable_strategy (Optional)  inactive_after_seconds (Optional)  expunge_after_seconds (Optional)  app_id (Required)  mem (Optional)  backoff_factor (Optional)  health_checks (Optional)  grace_period_seconds (Optional)  interval_seconds (Optional)  port_index (Optional)  port (Optional)  timeout_seconds (Optional)  ignore_http_1xx (Optional)  max_consecutive_failures (Optional)  protocol (Optional)  delay_seconds (Optional)  path (Optional)  command (Optional)  value (Optional)  port_definitions (Optional)  port (Optional)  name (Optional)  labels (Optional)  protocol (Optional)  max_launch_delay_seconds (Optional)  kill_selection (Optional)  marathon_service_url (Optional) By default we use the default DC/OS marathon serivce: service/marathon." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_app/" />
+
+<title>dcos_marathon_app | DC/OS Terraform Provider</title>
+<link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/terraform-provider-dcos/book.min.06f36f77411fb7f10ae468fbe4855cec3709e6d93a4680927b5431c872bf4654.css" integrity="sha256-BvNvd0Eft/EK5Gj75IVc7DcJ5tk6RoCSe1QxyHK/RlQ=">
+
+
+<script defer src="/terraform-provider-dcos/search.min.11b74992db1db8b391257c33ca168caebfc36ac1a22d1b83ae593f08f2876d8c.js" integrity="sha256-EbdJktsduLORJXwzyhaMrr/DasGiLRuDrlk/CPKHbYw="></script>
+
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+    <link rel="stylesheet" href="https://mesosphere.github.io/terraform-provider-dcos//css/styles.css">
+
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="https://mesosphere.github.io/terraform-provider-dcos/"><span>DC/OS Terraform Provider</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        
+
+  <li >
+    
+      <span>Getting Started</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/installation/" >
+      Installation
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/authentication/" >
+      Authentication
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Examples</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/" >
+      dcos_edgelb_v2_pool
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job/" >
+      dcos_job
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
+      dcos_job_schedule
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_app/"  class="active">
+      dcos_marathon_app
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_pod/" >
+      dcos_marathon_pod
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package/" >
+      dcos_package
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/" >
+      dcos_package_repo
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/" >
+      dcos_security_cluster_oidc
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/" >
+      dcos_security_cluster_saml
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
+      dcos_security_org_group
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/" >
+      dcos_security_org_group_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/" >
+      dcos_security_org_service_account
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user/" >
+      dcos_security_org_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/" >
+      dcos_security_org_user_grant
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_secret/" >
+      dcos_security_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Data Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/" >
+      dcos_package_config
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/" >
+      dcos_package_version
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
+      dcos_security_secret_service_account_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+  </ul>
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong>dcos_marathon_app</strong>
+</header>
+
+      
+<article class="markdown"><h1 id="resource-dcos_marathon_app">Resource: dcos_marathon_app</h1>
+<p>Provides a resource &hellip;</p>
+<h2 id="example-usage">Example Usage</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># an example
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
+<span style="color:#000">  cluster</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-cluster&#34;</span>
+}
+
+</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
+<p>The following arguments are supported</p>
+<ul>
+  
+    
+    <li class="tf_arg" id="args">
+  <a href="#args"><code class="arg">args</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="cpus">
+  <a href="#cpus"><code class="arg">cpus</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="fetch">
+  <a href="#fetch"><code class="arg">fetch</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="extract">
+  <a href="#extract"><code class="arg">extract</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="uri">
+  <a href="#uri"><code class="arg">uri</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="cache">
+  <a href="#cache"><code class="arg">cache</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="executable">
+  <a href="#executable"><code class="arg">executable</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="user">
+  <a href="#user"><code class="arg">user</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="executor">
+  <a href="#executor"><code class="arg">executor</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="dcos_framework">
+  <a href="#dcos_framework"><code class="arg">dcos_framework</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="plan_path">
+  <a href="#plan_path"><code class="arg">plan_path</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="timeout">
+  <a href="#timeout"><code class="arg">timeout</code></a>
+  
+    
+      (Optional)
+    
+  
+  Timeout in seconds to wait for a framework to complete deployment
+</li>
+
+    
+    <li class="tf_arg" id="is_framework">
+  <a href="#is_framework"><code class="arg">is_framework</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="constraints">
+  <a href="#constraints"><code class="arg">constraints</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="attribute">
+  <a href="#attribute"><code class="arg">attribute</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="operation">
+  <a href="#operation"><code class="arg">operation</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="parameter">
+  <a href="#parameter"><code class="arg">parameter</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="disk">
+  <a href="#disk"><code class="arg">disk</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="labels">
+  <a href="#labels"><code class="arg">labels</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="networks">
+  <a href="#networks"><code class="arg">networks</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="mode">
+  <a href="#mode"><code class="arg">mode</code></a>
+  
+    
+      (Required)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="labels">
+  <a href="#labels"><code class="arg">labels</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="version">
+  <a href="#version"><code class="arg">version</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="accepted_resource_roles">
+  <a href="#accepted_resource_roles"><code class="arg">accepted_resource_roles</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="container">
+  <a href="#container"><code class="arg">container</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="volumes">
+  <a href="#volumes"><code class="arg">volumes</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="host_path">
+  <a href="#host_path"><code class="arg">host_path</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="secret">
+  <a href="#secret"><code class="arg">secret</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="mode">
+  <a href="#mode"><code class="arg">mode</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="external">
+  <a href="#external"><code class="arg">external</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="options">
+  <a href="#options"><code class="arg">options</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="provider">
+  <a href="#provider"><code class="arg">provider</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="persistent">
+  <a href="#persistent"><code class="arg">persistent</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="type">
+  <a href="#type"><code class="arg">type</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="size">
+  <a href="#size"><code class="arg">size</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="max_size">
+  <a href="#max_size"><code class="arg">max_size</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="container_path">
+  <a href="#container_path"><code class="arg">container_path</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="port_mappings">
+  <a href="#port_mappings"><code class="arg">port_mappings</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="network_names">
+  <a href="#network_names"><code class="arg">network_names</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="container_port">
+  <a href="#container_port"><code class="arg">container_port</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="host_port">
+  <a href="#host_port"><code class="arg">host_port</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="service_port">
+  <a href="#service_port"><code class="arg">service_port</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="protocol">
+  <a href="#protocol"><code class="arg">protocol</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="labels">
+  <a href="#labels"><code class="arg">labels</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="type">
+  <a href="#type"><code class="arg">type</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="docker">
+  <a href="#docker"><code class="arg">docker</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="parameters">
+  <a href="#parameters"><code class="arg">parameters</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="key">
+  <a href="#key"><code class="arg">key</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="value">
+  <a href="#value"><code class="arg">value</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="privileged">
+  <a href="#privileged"><code class="arg">privileged</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="force_pull_image">
+  <a href="#force_pull_image"><code class="arg">force_pull_image</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="image">
+  <a href="#image"><code class="arg">image</code></a>
+  
+    
+      (Required)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="pull_config">
+  <a href="#pull_config"><code class="arg">pull_config</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="secret">
+  <a href="#secret"><code class="arg">secret</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="gpus">
+  <a href="#gpus"><code class="arg">gpus</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="backoff_seconds">
+  <a href="#backoff_seconds"><code class="arg">backoff_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="dependencies">
+  <a href="#dependencies"><code class="arg">dependencies</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="env">
+  <a href="#env"><code class="arg">env</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="secrets">
+  <a href="#secrets"><code class="arg">secrets</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="unreachable_strategy">
+  <a href="#unreachable_strategy"><code class="arg">unreachable_strategy</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="inactive_after_seconds">
+  <a href="#inactive_after_seconds"><code class="arg">inactive_after_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="expunge_after_seconds">
+  <a href="#expunge_after_seconds"><code class="arg">expunge_after_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="app_id">
+  <a href="#app_id"><code class="arg">app_id</code></a>
+  
+    
+      (Required)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="mem">
+  <a href="#mem"><code class="arg">mem</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="backoff_factor">
+  <a href="#backoff_factor"><code class="arg">backoff_factor</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="health_checks">
+  <a href="#health_checks"><code class="arg">health_checks</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="grace_period_seconds">
+  <a href="#grace_period_seconds"><code class="arg">grace_period_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="interval_seconds">
+  <a href="#interval_seconds"><code class="arg">interval_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="port_index">
+  <a href="#port_index"><code class="arg">port_index</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="port">
+  <a href="#port"><code class="arg">port</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="timeout_seconds">
+  <a href="#timeout_seconds"><code class="arg">timeout_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="ignore_http_1xx">
+  <a href="#ignore_http_1xx"><code class="arg">ignore_http_1xx</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="max_consecutive_failures">
+  <a href="#max_consecutive_failures"><code class="arg">max_consecutive_failures</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="protocol">
+  <a href="#protocol"><code class="arg">protocol</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="delay_seconds">
+  <a href="#delay_seconds"><code class="arg">delay_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="path">
+  <a href="#path"><code class="arg">path</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="command">
+  <a href="#command"><code class="arg">command</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="value">
+  <a href="#value"><code class="arg">value</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="port_definitions">
+  <a href="#port_definitions"><code class="arg">port_definitions</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="port">
+  <a href="#port"><code class="arg">port</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="labels">
+  <a href="#labels"><code class="arg">labels</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="protocol">
+  <a href="#protocol"><code class="arg">protocol</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="max_launch_delay_seconds">
+  <a href="#max_launch_delay_seconds"><code class="arg">max_launch_delay_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="kill_selection">
+  <a href="#kill_selection"><code class="arg">kill_selection</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="marathon_service_url">
+  <a href="#marathon_service_url"><code class="arg">marathon_service_url</code></a>
+  
+    
+      (Optional)
+    
+  
+  By default we use the default DC/OS marathon serivce: service/marathon. But to support marathon on marathon the service url can be schanged.
+</li>
+
+    
+    <li class="tf_arg" id="cmd">
+  <a href="#cmd"><code class="arg">cmd</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="instances">
+  <a href="#instances"><code class="arg">instances</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="require_ports">
+  <a href="#require_ports"><code class="arg">require_ports</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="upgrade_strategy">
+  <a href="#upgrade_strategy"><code class="arg">upgrade_strategy</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="minimum_health_capacity">
+  <a href="#minimum_health_capacity"><code class="arg">minimum_health_capacity</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+    <li class="tf_arg" id="maximum_over_capacity">
+  <a href="#maximum_over_capacity"><code class="arg">maximum_over_capacity</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+    
+
+</ul>
+
+<h2 id="attributes-reference">Attributes Reference</h2>
+<p>addition to all arguments above, the following attributes are exported:</p>
+<ul>
+  
+     <li class="tf_arg" id="gid">
+  <a href="#gid"><code class="arg">gid</code></a>
+  
+    
+      (Optional)
+    
+  
+  User ID to apply the grant on.
+</li>
+
+ 
+</ul>
+
+</article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc levels-6 fixed">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#example-usage">Example Usage</a></li>
+    <li><a href="#argument-reference">Argument Reference</a></li>
+    <li><a href="#attributes-reference">Attributes Reference</a></li>
+  </ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+</body>
+
+</html>

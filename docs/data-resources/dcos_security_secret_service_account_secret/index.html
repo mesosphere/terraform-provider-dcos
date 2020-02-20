@@ -3,14 +3,13 @@
 
 <head>
   <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_security_org_group" />
-<meta property="og:description" content="Resource: dcos_security_org_group Provides a resource for creating DC/OS user groups.
-Example Usage # Create a group provider &#34;dcos&#34; { cluster = &#34;my-cluster&#34; } resource &#34;dcos_security_org_group&#34; &#34;testgroup&#34; { gid = &#34;testgroup&#34; description = &#34;This group is for testing only&#34; } Argument Reference The following arguments are supported
- gid (Required) User ID to apply the grant on.  description (Optional) a description for the group.   Attributes Reference addition to all arguments above, the following attributes are exported:" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_security_secret_service_account_secret" />
+<meta property="og:description" content="Data Resource: dcos_security_secret_service_account_secret Computes the contents for the service account secret
+Example Usage # Create a private key using an external provider (eg. tls) resource &#34;tls_private_key&#34; &#34;service_account_key&#34; { algorithm = &#34;RSA&#34; rsa_bits = &#34;2048&#34; }# Pass the private key and the user account to the resource data &#34;dcos_security_secret_service_account_secret&#34; &#34;service_account&#34; { uid = &#34;user-login&#34; private_key = &#34;${tls_private_key.service_account_key.private_key_pem}&#34; }# Handle the contents (eg. upload to a secret) resource &#34;dcos_security_secret&#34; &#34;service_account_secret&#34; { path = &#34;my-service/service-account&#34; value = &#34;${data." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group/" />
+<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" />
 
-<title>dcos_security_org_group | DC/OS Terraform Provider</title>
+<title>dcos_security_secret_service_account_secret | DC/OS Terraform Provider</title>
 <link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
 
 
@@ -250,7 +249,7 @@ https://github.com/alex-shpak/hugo-book
       
         <li>
 
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/"  class="active">
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
       dcos_security_org_group
   </a>
 
@@ -356,7 +355,7 @@ https://github.com/alex-shpak/hugo-book
       
         <li>
 
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/"  class="active">
       dcos_security_secret_service_account_secret
   </a>
 
@@ -410,62 +409,70 @@ https://github.com/alex-shpak/hugo-book
   <label for="menu-control">
     <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
   </label>
-  <strong>dcos_security_org_group</strong>
+  <strong>dcos_security_secret_service_account_secret</strong>
 </header>
 
       
-<article class="markdown"><h1 id="resource-dcos_security_org_group">Resource: dcos_security_org_group</h1>
-<p>Provides a resource for creating DC/OS user groups.</p>
+<article class="markdown"><h1 id="data-resource-dcos_security_secret_service_account_secret">Data Resource: dcos_security_secret_service_account_secret</h1>
+<p>Computes the contents for the service account secret</p>
 <h2 id="example-usage">Example Usage</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># Create a group
-</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
-<span style="color:#000">  cluster</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-cluster&#34;</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># Create a private key using an external provider (eg. tls)
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;tls_private_key&#34; &#34;service_account_key&#34;</span> {
+<span style="color:#000">  algorithm</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;RSA&#34;</span>
+<span style="color:#000">  rsa_bits</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;2048&#34;</span>
+}<span style="color:#8f5902;font-style:italic">
+</span><span style="color:#8f5902;font-style:italic">
+</span><span style="color:#8f5902;font-style:italic"># Pass the private key and the user account to the resource
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_security_secret_service_account_secret&#34; &#34;service_account&#34;</span> {
+<span style="color:#000">    uid</span>            <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;user-login&#34;</span>
+<span style="color:#000">    private_key</span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${tls_private_key.service_account_key.private_key_pem}&#34;</span>
+}<span style="color:#8f5902;font-style:italic">
+</span><span style="color:#8f5902;font-style:italic">
+</span><span style="color:#8f5902;font-style:italic"># Handle the contents (eg. upload to a secret)
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_security_secret&#34; &#34;service_account_secret&#34;</span> {
+<span style="color:#000">  path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-service/service-account&#34;</span>
+<span style="color:#000">  value</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${data.dcos_security_secret_service_account_secret.contents}&#34;</span>
 }
-
-<span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_security_org_group&#34; &#34;testgroup&#34;</span> {
-<span style="color:#000">  gid</span>         <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;testgroup&#34;</span>
-<span style="color:#000">  description</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;This group is for testing only&#34;</span>
-}
-
 </code></pre></div><h2 id="argument-reference">Argument Reference</h2>
 <p>The following arguments are supported</p>
 <ul>
   
-    <li class="tf_arg" id="gid">
-  <a href="#gid"><code class="arg">gid</code></a>
+    <li class="tf_arg" id="private_key">
+  <a href="#private_key"><code class="arg">private_key</code></a>
   
     
       (Required)
     
   
-  User ID to apply the grant on.
+  The PEM-encoded contents of a private key. This can be either a PKCS1 private key or PKCS8 private key without password. Any other type will be rejected.
 </li>
 
-    <li class="tf_arg" id="description">
-  <a href="#description"><code class="arg">description</code></a>
+    <li class="tf_arg" id="uid">
+  <a href="#uid"><code class="arg">uid</code></a>
   
     
-      (Optional)
+      (Required)
     
   
-  a description for the group.
+  The user ID.
 </li>
 
-
-</ul>
-
-<h2 id="attributes-reference">Attributes Reference</h2>
-<p>addition to all arguments above, the following attributes are exported:</p>
-<ul>
-  
-    <li class="tf_arg" id="group_provider">
-  <a href="#group_provider"><code class="arg">group_provider</code></a>
+    <li class="tf_arg" id="login_endpoint">
+  <a href="#login_endpoint"><code class="arg">login_endpoint</code></a>
   
     
-      (Optional)
+      (Required)
     
   
-  Group linked to an external provider.
+  Override the default login endpoint that will be used by the service.
+</li>
+
+    <li class="tf_arg" id="contents">
+  <a href="#contents"><code class="arg output">contents</code></a>
+  
+    <em>(Output Only)</em>
+  
+  This is an output (read-only) variable with the contents of the service account secret. This value can be safely uploaded to a service account secret and later used by the service in DC/OS.
 </li>
 
 
@@ -486,7 +493,6 @@ https://github.com/alex-shpak/hugo-book
   <ul>
     <li><a href="#example-usage">Example Usage</a></li>
     <li><a href="#argument-reference">Argument Reference</a></li>
-    <li><a href="#attributes-reference">Attributes Reference</a></li>
   </ul>
 </nav>
   </aside>

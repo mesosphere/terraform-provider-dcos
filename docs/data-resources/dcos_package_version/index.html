@@ -1,20 +1,500 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content="dcos_package_version"><meta property="og:description" content="Data Resource: dcos_package_version Selects a package version from the given catalog repository.
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_package_version" />
+<meta property="og:description" content="Data Resource: dcos_package_version Selects a package version from the given catalog repository.
 Example Usage resource &#34;dcos_package_repo&#34; &#34;universe&#34; { }# Select a package version out of a repository data &#34;dcos_package_version&#34; &#34;jenkins-latest&#34; { repo_url = &#34;${dcos_package_repo.universe.url}&#34; name = &#34;jenkins&#34; version = &#34;latest&#34; index = -1 } Argument Reference The following arguments are supported
- repo_url (Required) the repository URL where to search for the package. This is typically the .url output variable of a dcos_package_repo resource  name (Required) the name of the package to resolve in the repository specified."><meta property="og:type" content="article"><meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/"><title>dcos_package_version | DC/OS Terraform Provider</title><link rel=icon href=/terraform-provider-dcos/favicon.png type=image/x-icon><link rel=stylesheet href=/terraform-provider-dcos/book.min.6c28d4c7786ace6b760a10f0da9a7fa873292f04f374a4819c43fd684501f609.css integrity="sha256-bCjUx3hqzmt2ChDw2pp/qHMpLwTzdKSBnEP9aEUB9gk="><script defer src=/terraform-provider-dcos/search.min.ef9d3abb032eee6d0643f5563745bcdd625a305584bc505a36b344f3c29cfb3a.js integrity="sha256-7506uwMu7m0GQ/VWN0W83WJaMFWEvFBaNrNE88Kc&#43;zo="></script><link rel=stylesheet href=https://mesosphere.github.io/terraform-provider-dcos//css/styles.css></head><body><input type=checkbox class=hidden id=menu-control><main class="flex container"><aside class="book-menu fixed"><nav><h2 class=book-brand><a href=https://mesosphere.github.io/terraform-provider-dcos/><span>DC/OS Terraform Provider</span></a></h2><div class=book-search><input type=text placeholder=Search id=book-search-input maxlength=64><div class="book-search-spinner spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><span>Getting Started</span><ul><li><a href=/terraform-provider-dcos/docs/getting-started/installation/>Installation</a></li><li><a href=/terraform-provider-dcos/docs/getting-started/authentication/>Authentication</a></li></ul></li><li><span>Examples</span><ul></ul></li><li><span>Resources</span><ul><li><a href=/terraform-provider-dcos/docs/resources/dcos_package/>dcos_package</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_package_repo/>dcos_package_repo</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/>dcos_security_cluster_oidc</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/>dcos_security_cluster_saml</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group/>dcos_security_org_group</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/>dcos_security_org_group_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/>dcos_security_org_service_account</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user/>dcos_security_org_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/>dcos_security_org_user_grant</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_secret/>dcos_security_secret</a></li></ul></li><li><span>Data Resources</span><ul><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_config/>dcos_package_config</a></li><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_version/ class=active>dcos_package_version</a></li></ul></li></ul></nav><script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script></aside><div class=book-page><header class="flex align-center justify-between book-header"><label for=menu-control><img src=/terraform-provider-dcos/svg/menu.svg alt=Menu></label>
-<strong>dcos_package_version</strong></header><article class=markdown><h1 id=data-resource-dcos-package-version>Data Resource: dcos_package_version</h1><p>Selects a package version from the given catalog repository.</p><h2 id=example-usage>Example Usage</h2><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>resource</span> <span style=color:#4e9a06>&#34;dcos_package_repo&#34; &#34;universe&#34;</span> { }<span style=color:#8f5902;font-style:italic>
-</span><span style=color:#8f5902;font-style:italic>
-</span><span style=color:#8f5902;font-style:italic># Select a package version out of a repository
-</span><span style=color:#8f5902;font-style:italic></span><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_version&#34; &#34;jenkins-latest&#34;</span> {
-<span style=color:#000>    repo_url</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;${dcos_package_repo.universe.url}&#34;</span>
-<span style=color:#000>    name</span>     <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;jenkins&#34;</span>
-<span style=color:#000>    version</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;latest&#34;</span>
-<span style=color:#000>    index</span>    <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#a40000>-</span><span style=color:#0000cf;font-weight:700>1</span>
-}</code></pre></div><h2 id=argument-reference>Argument Reference</h2><p>The following arguments are supported</p><ul><li class=tf_arg id=repo_url><a href=#repo_url><code class=arg>repo_url</code></a>
-(Required)
-the repository URL where to search for the package. This is typically the <a href=/terraform-provider-dcos/docs/resources/dcos_package_repo/#url><code>.url</code></a> output variable of a <a href=/terraform-provider-dcos/docs/resources/dcos_package_repo/><code>dcos_package_repo</code></a> resource</li><li class=tf_arg id=name><a href=#name><code class=arg>name</code></a>
-(Required)
-the name of the package to resolve in the repository specified.</li><li class=tf_arg id=version><a href=#version><code class=arg>version</code></a>
-(Required)
-the version of the package to resolve (can be <code>latest</code> to resolve the latest available version).</li><li class=tf_arg id=spec><a href=#spec><code class="arg output">spec</code></a>
-<em>(Output Only)</em>
-The package version specification that can be passed down to the <a href=/terraform-provider-dcos/docs/data-resources/dcos_package_config/#version_spec><code>.version_spec</code></a> argument of a <a href=/terraform-provider-dcos/docs/data-resources/dcos_package_config/><code>dcos_package_config</code></a> data resource.</li></ul></article></div><aside class="book-toc levels-6 fixed"><nav id=TableOfContents><ul><li><a href=#data-resource-dcos-package-version>Data Resource: dcos_package_version</a><ul><li><a href=#example-usage>Example Usage</a></li><li><a href=#argument-reference>Argument Reference</a></li></ul></li></ul></nav></aside></main></body></html>
+ repo_url (Required) the repository URL where to search for the package. This is typically the .url output variable of a dcos_package_repo resource  name (Required) the name of the package to resolve in the repository specified." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/" />
+
+<title>dcos_package_version | DC/OS Terraform Provider</title>
+<link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/terraform-provider-dcos/book.min.06f36f77411fb7f10ae468fbe4855cec3709e6d93a4680927b5431c872bf4654.css" integrity="sha256-BvNvd0Eft/EK5Gj75IVc7DcJ5tk6RoCSe1QxyHK/RlQ=">
+
+
+<script defer src="/terraform-provider-dcos/search.min.11b74992db1db8b391257c33ca168caebfc36ac1a22d1b83ae593f08f2876d8c.js" integrity="sha256-EbdJktsduLORJXwzyhaMrr/DasGiLRuDrlk/CPKHbYw="></script>
+
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+    <link rel="stylesheet" href="https://mesosphere.github.io/terraform-provider-dcos//css/styles.css">
+
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="https://mesosphere.github.io/terraform-provider-dcos/"><span>DC/OS Terraform Provider</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        
+
+  <li >
+    
+      <span>Getting Started</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/installation/" >
+      Installation
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/authentication/" >
+      Authentication
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Examples</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/" >
+      dcos_edgelb_v2_pool
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job/" >
+      dcos_job
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
+      dcos_job_schedule
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_app/" >
+      dcos_marathon_app
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_pod/" >
+      dcos_marathon_pod
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package/" >
+      dcos_package
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/" >
+      dcos_package_repo
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/" >
+      dcos_security_cluster_oidc
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/" >
+      dcos_security_cluster_saml
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
+      dcos_security_org_group
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/" >
+      dcos_security_org_group_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/" >
+      dcos_security_org_service_account
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user/" >
+      dcos_security_org_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/" >
+      dcos_security_org_user_grant
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_secret/" >
+      dcos_security_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Data Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/" >
+      dcos_package_config
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/"  class="active">
+      dcos_package_version
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
+      dcos_security_secret_service_account_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+  </ul>
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong>dcos_package_version</strong>
+</header>
+
+      
+<article class="markdown"><h1 id="data-resource-dcos_package_version">Data Resource: dcos_package_version</h1>
+<p>Selects a package version from the given catalog repository.</p>
+<h2 id="example-usage">Example Usage</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_package_repo&#34; &#34;universe&#34;</span> { }<span style="color:#8f5902;font-style:italic">
+</span><span style="color:#8f5902;font-style:italic">
+</span><span style="color:#8f5902;font-style:italic"># Select a package version out of a repository
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_version&#34; &#34;jenkins-latest&#34;</span> {
+<span style="color:#000">    repo_url</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${dcos_package_repo.universe.url}&#34;</span>
+<span style="color:#000">    name</span>     <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;jenkins&#34;</span>
+<span style="color:#000">    version</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;latest&#34;</span>
+<span style="color:#000">    index</span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#a40000">-</span><span style="color:#0000cf;font-weight:bold">1</span>
+}
+</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
+<p>The following arguments are supported</p>
+<ul>
+  
+    <li class="tf_arg" id="repo_url">
+  <a href="#repo_url"><code class="arg">repo_url</code></a>
+  
+    
+      (Required)
+    
+  
+  the repository URL where to search for the package. This is typically the <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/#url"><code>.url</code></a> output variable of a <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/"><code>dcos_package_repo</code></a> resource
+</li>
+
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
+  
+    
+      (Required)
+    
+  
+  the name of the package to resolve in the repository specified.
+</li>
+
+    <li class="tf_arg" id="version">
+  <a href="#version"><code class="arg">version</code></a>
+  
+    
+      (Required)
+    
+  
+  the version of the package to resolve (can be <code>latest</code> to resolve the latest available version).
+</li>
+
+    <li class="tf_arg" id="spec">
+  <a href="#spec"><code class="arg output">spec</code></a>
+  
+    <em>(Output Only)</em>
+  
+  The package version specification that can be passed down to the <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/#version_spec"><code>.version_spec</code></a> argument of a <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/"><code>dcos_package_config</code></a> data resource.
+</li>
+
+
+</ul>
+
+</article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc levels-6 fixed">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#example-usage">Example Usage</a></li>
+    <li><a href="#argument-reference">Argument Reference</a></li>
+  </ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+</body>
+
+</html>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_job" />
+<meta property="og:description" content="Resource: dcos_job Provides a resource creating metronome jobs on DC/OS.
+Should be used together with dcos_job_schedule.
+Example Usage # an example provider &#34;dcos&#34; { cluster = &#34;my-cluster&#34; } resource &#34;dcos_job&#34; &#34;job&#34; { name = &#34;testjob&#34; cmd = &#34;echo foo&#34; cpus = 1 mem = 64 disk = 0 user = &#34;root&#34; description = &#34;the best description ever&#34; max_launch_delay = 600 docker { image = &#34;ubuntu:latest&#34; } placement_constraint { attribute = &#34;host&#34; operator = &#34;LIKE&#34; } env { key = &#34;my_env_key&#34; secret = &#34;secret1&#34; } env { key = &#34;cool_key&#34; value = &#34;cool_value&#34; } secrets { secret1 = &#34;/something&#34; cool_secret = &#34;something_else&#34; } restart { active_deadline_seconds = 120 policy = &#34;NEVER&#34; } artifacts { uri = &#34;http://downloads." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job/" />
+
+<title>dcos_job | DC/OS Terraform Provider</title>
+<link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/terraform-provider-dcos/book.min.06f36f77411fb7f10ae468fbe4855cec3709e6d93a4680927b5431c872bf4654.css" integrity="sha256-BvNvd0Eft/EK5Gj75IVc7DcJ5tk6RoCSe1QxyHK/RlQ=">
+
+
+<script defer src="/terraform-provider-dcos/search.min.11b74992db1db8b391257c33ca168caebfc36ac1a22d1b83ae593f08f2876d8c.js" integrity="sha256-EbdJktsduLORJXwzyhaMrr/DasGiLRuDrlk/CPKHbYw="></script>
+
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+    <link rel="stylesheet" href="https://mesosphere.github.io/terraform-provider-dcos//css/styles.css">
+
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="https://mesosphere.github.io/terraform-provider-dcos/"><span>DC/OS Terraform Provider</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        
+
+  <li >
+    
+      <span>Getting Started</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/installation/" >
+      Installation
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/authentication/" >
+      Authentication
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Examples</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/" >
+      dcos_edgelb_v2_pool
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job/"  class="active">
+      dcos_job
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
+      dcos_job_schedule
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_app/" >
+      dcos_marathon_app
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_pod/" >
+      dcos_marathon_pod
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package/" >
+      dcos_package
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/" >
+      dcos_package_repo
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/" >
+      dcos_security_cluster_oidc
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/" >
+      dcos_security_cluster_saml
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
+      dcos_security_org_group
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/" >
+      dcos_security_org_group_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/" >
+      dcos_security_org_service_account
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user/" >
+      dcos_security_org_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/" >
+      dcos_security_org_user_grant
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_secret/" >
+      dcos_security_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Data Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/" >
+      dcos_package_config
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/" >
+      dcos_package_version
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
+      dcos_security_secret_service_account_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+  </ul>
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong>dcos_job</strong>
+</header>
+
+      
+<article class="markdown"><h1 id="resource-dcos_job">Resource: dcos_job</h1>
+<p>Provides a resource creating metronome jobs on DC/OS.</p>
+<p>Should be used together with <code>dcos_job_schedule</code>.</p>
+<h2 id="example-usage">Example Usage</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># an example
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
+<span style="color:#000">  cluster</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-cluster&#34;</span>
+}
+
+<span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_job&#34; &#34;job&#34;</span> {
+<span style="color:#000">  name</span>             <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;testjob&#34;</span>
+<span style="color:#000">  cmd</span>              <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;echo foo&#34;</span>
+<span style="color:#000">  cpus</span>             <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">1</span>
+<span style="color:#000">  mem</span>              <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">64</span>
+<span style="color:#000">  disk</span>             <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0</span>
+<span style="color:#000">  user</span>             <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;root&#34;</span>
+<span style="color:#000">  description</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;the best description ever&#34;</span>
+<span style="color:#000">  max_launch_delay</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">600</span>
+
+  <span style="color:#204a87;font-weight:bold">docker</span> {
+<span style="color:#000">    image</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;ubuntu:latest&#34;</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">placement_constraint</span> {
+<span style="color:#000">    attribute</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;host&#34;</span>
+<span style="color:#000">    operator</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;LIKE&#34;</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">env</span> {
+<span style="color:#000">    key</span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my_env_key&#34;</span>
+<span style="color:#000">    secret</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;secret1&#34;</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">env</span> {
+<span style="color:#000">    key</span>   <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;cool_key&#34;</span>
+<span style="color:#000">    value</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;cool_value&#34;</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">secrets</span> {
+<span style="color:#000">    secret1</span>     <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;/something&#34;</span>
+<span style="color:#000">    cool_secret</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;something_else&#34;</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">restart</span> {
+<span style="color:#000">    active_deadline_seconds</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">120</span>
+<span style="color:#000">    policy</span>                  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;NEVER&#34;</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">artifacts</span> {
+<span style="color:#000">    uri</span>        <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;http://downloads.mesosphere.com/robots.txt&#34;</span>
+<span style="color:#000">    extract</span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">false</span>
+<span style="color:#000">    executable</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">true</span>
+<span style="color:#000">    cache</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">false</span>
+  }
+
+  <span style="color:#204a87;font-weight:bold">volume</span> {
+<span style="color:#000">    container_path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;/mnt/test&#34;</span>
+<span style="color:#000">    host_path</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;/dev/null&#34;</span>
+<span style="color:#000">    mode</span>           <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;RW&#34;</span>
+  }
+}
+
+<span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_job_schedule&#34; &#34;jobsched&#34;</span> {
+<span style="color:#000">  dcos_job_id</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${dcos_job.job.name}&#34;</span>
+<span style="color:#000">  name</span>        <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;someschedule&#34;</span>
+<span style="color:#000">  cron</span>        <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;0,30 * * * *&#34;</span>
+}
+
+</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
+<p>The following arguments are supported</p>
+<ul>
+  
+
+    <li class="tf_arg" id="ucr">
+  <a href="#ucr"><code class="arg">ucr</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+
+    <li class="tf_arg" id="image">
+  <a href="#image"><code class="arg">image</code></a>
+  
+    
+      (Required)
+    
+  
+  The ucr repository image name.
+</li>
+
+
+    <li class="tf_arg" id="secrets">
+  <a href="#secrets"><code class="arg">secrets</code></a>
+  
+    
+      (Optional)
+    
+  
+  Any secrets that are necessary for the job
+</li>
+
+
+    <li class="tf_arg" id="placement_constraint">
+  <a href="#placement_constraint"><code class="arg">placement_constraint</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+
+    <li class="tf_arg" id="attribute">
+  <a href="#attribute"><code class="arg">attribute</code></a>
+  
+    
+      (Required)
+    
+  
+  The attribute name for this constraint.
+</li>
+
+
+    <li class="tf_arg" id="operator">
+  <a href="#operator"><code class="arg">operator</code></a>
+  
+    
+      (Required)
+    
+  
+  The operator for this constraint.
+</li>
+
+
+    <li class="tf_arg" id="value">
+  <a href="#value"><code class="arg">value</code></a>
+  
+    
+      (Optional)
+    
+  
+  The value for this constraint.
+</li>
+
+
+    <li class="tf_arg" id="cpus">
+  <a href="#cpus"><code class="arg">cpus</code></a>
+  
+    
+      (Required)
+    
+  
+  The number of CPU shares this job needs per instance. This number does not have to be integer, but can be a fraction.
+</li>
+
+
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
+  
+    
+      (Required)
+    
+  
+  Unique identifier for the job.
+</li>
+
+
+    <li class="tf_arg" id="user">
+  <a href="#user"><code class="arg">user</code></a>
+  
+    
+      (Optional)
+    
+  
+  The user to use to run the tasks on the agent.
+</li>
+
+
+    <li class="tf_arg" id="description">
+  <a href="#description"><code class="arg">description</code></a>
+  
+    
+      (Optional)
+    
+  
+  A description of this job.
+</li>
+
+
+    <li class="tf_arg" id="labels">
+  <a href="#labels"><code class="arg">labels</code></a>
+  
+    
+      (Optional)
+    
+  
+  Attaching metadata to jobs can be useful to expose additional information to other services.
+</li>
+
+
+    <li class="tf_arg" id="args">
+  <a href="#args"><code class="arg">args</code></a>
+  
+    
+      (Optional)
+    
+  
+  An array of strings that represents an alternative mode of specifying the command to run. This was motivated by safe usage of containerizer features like a custom Docker ENTRYPOINT. Either <code>cmd</code> or <code>args</code> must be supplied. It is invalid to supply both <code>cmd</code> and <code>args</code> in the same job.
+</li>
+
+
+    <li class="tf_arg" id="env">
+  <a href="#env"><code class="arg">env</code></a>
+  
+    
+      (Optional)
+    
+  
+  Environment variables
+</li>
+
+
+    <li class="tf_arg" id="key">
+  <a href="#key"><code class="arg">key</code></a>
+  
+    
+      (Required)
+    
+  
+  The key/name of the variable
+</li>
+
+
+    <li class="tf_arg" id="value">
+  <a href="#value"><code class="arg">value</code></a>
+  
+    
+      (Required)
+    
+  
+  The value of the key/name
+</li>
+
+
+    <li class="tf_arg" id="secret">
+  <a href="#secret"><code class="arg">secret</code></a>
+  
+    
+      (Optional)
+    
+  
+  The name of the secret.
+</li>
+
+
+    <li class="tf_arg" id="restart">
+  <a href="#restart"><code class="arg">restart</code></a>
+  
+    
+      (Optional)
+    
+  
+  Defines the behavior if a task fails.
+</li>
+
+
+    <li class="tf_arg" id="active_deadline_seconds">
+  <a href="#active_deadline_seconds"><code class="arg">active_deadline_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  If the job fails, how long should we try to restart the job. If no value is set, this means forever.
+</li>
+
+
+    <li class="tf_arg" id="policy">
+  <a href="#policy"><code class="arg">policy</code></a>
+  
+    
+      (Required)
+    
+  
+  The policy to use if a job fails. NEVER will never try to relaunch a job. ON_FAILURE will try to start a job in case of failure.
+</li>
+
+
+    <li class="tf_arg" id="mem">
+  <a href="#mem"><code class="arg">mem</code></a>
+  
+    
+      (Required)
+    
+  
+  The amount of memory in MB that is needed for the job per instance.
+</li>
+
+
+    <li class="tf_arg" id="cmd">
+  <a href="#cmd"><code class="arg">cmd</code></a>
+  
+    
+      (Optional)
+    
+  
+  The command that is executed. This value is wrapped by Mesos via <code>/bin/sh -c ${job.cmd}</code>. Either <code>cmd</code> or <code>args</code> must be supplied. It is invalid to supply both <code>cmd</code> and <code>args</code> in the same job.
+</li>
+
+
+    <li class="tf_arg" id="artifacts">
+  <a href="#artifacts"><code class="arg">artifacts</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+
+    <li class="tf_arg" id="cache">
+  <a href="#cache"><code class="arg">cache</code></a>
+  
+    
+      (Optional)
+    
+  
+  Cache fetched artifact if supported by Mesos fetcher module.
+</li>
+
+
+    <li class="tf_arg" id="uri">
+  <a href="#uri"><code class="arg">uri</code></a>
+  
+    
+      (Required)
+    
+  
+  URI to be fetched by Mesos fetcher module.
+</li>
+
+
+    <li class="tf_arg" id="executable">
+  <a href="#executable"><code class="arg">executable</code></a>
+  
+    
+      (Optional)
+    
+  
+  Set fetched artifact as executable.
+</li>
+
+
+    <li class="tf_arg" id="extract">
+  <a href="#extract"><code class="arg">extract</code></a>
+  
+    
+      (Optional)
+    
+  
+  Extract fetched artifact if supported by Mesos fetcher module.
+</li>
+
+
+    <li class="tf_arg" id="docker">
+  <a href="#docker"><code class="arg">docker</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+
+    <li class="tf_arg" id="image">
+  <a href="#image"><code class="arg">image</code></a>
+  
+    
+      (Required)
+    
+  
+  The docker repository image name.
+</li>
+
+
+    <li class="tf_arg" id="volume">
+  <a href="#volume"><code class="arg">volume</code></a>
+  
+    
+      (Optional)
+    
+  
+  
+</li>
+
+
+    <li class="tf_arg" id="container_path">
+  <a href="#container_path"><code class="arg">container_path</code></a>
+  
+    
+      (Required)
+    
+  
+  The path of the volume in the container.
+</li>
+
+
+    <li class="tf_arg" id="host_path">
+  <a href="#host_path"><code class="arg">host_path</code></a>
+  
+    
+      (Required)
+    
+  
+  The path of the volume on the host.
+</li>
+
+
+    <li class="tf_arg" id="mode">
+  <a href="#mode"><code class="arg">mode</code></a>
+  
+    
+      (Required)
+    
+  
+  Possible values are RO for ReadOnly and RW for Read/Write.
+</li>
+
+
+    <li class="tf_arg" id="secret">
+  <a href="#secret"><code class="arg">secret</code></a>
+  
+    
+      (Optional)
+    
+  
+  Allow for volume secrets if using UCR.
+</li>
+
+
+    <li class="tf_arg" id="disk">
+  <a href="#disk"><code class="arg">disk</code></a>
+  
+    
+      (Optional)
+    
+  
+  How much disk space is needed for this job. This number does not have to be an integer, but can be a fraction.
+</li>
+
+
+    <li class="tf_arg" id="max_launch_delay">
+  <a href="#max_launch_delay"><code class="arg">max_launch_delay</code></a>
+  
+    
+      (Optional)
+    
+  
+  The number of seconds until the job needs to be running. If the deadline is reached without successfully running the job, the job is aborted.
+</li>
+
+
+
+</ul>
+
+<h2 id="attributes-reference">Attributes Reference</h2>
+<p>addition to all arguments above, the following attributes are exported:</p>
+<ul>
+  
+     <li class="tf_arg" id="gid">
+  <a href="#gid"><code class="arg">gid</code></a>
+  
+    
+      (Optional)
+    
+  
+  User ID to apply the grant on.
+</li>
+
+ 
+</ul>
+
+</article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc levels-6 fixed">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#example-usage">Example Usage</a></li>
+    <li><a href="#argument-reference">Argument Reference</a></li>
+    <li><a href="#attributes-reference">Attributes Reference</a></li>
+  </ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+</body>
+
+</html>

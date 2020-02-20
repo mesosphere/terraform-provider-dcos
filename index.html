@@ -1,41 +1,526 @@
-<!doctype html><html lang=en><head><meta name=generator content="Hugo 0.59.0"><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content><meta property="og:description" content><meta property="og:type" content="website"><meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/"><title>| DC/OS Terraform Provider</title><link rel=icon href=/terraform-provider-dcos/favicon.png type=image/x-icon><link rel=stylesheet href=/terraform-provider-dcos/book.min.6c28d4c7786ace6b760a10f0da9a7fa873292f04f374a4819c43fd684501f609.css integrity="sha256-bCjUx3hqzmt2ChDw2pp/qHMpLwTzdKSBnEP9aEUB9gk="><script defer src=/terraform-provider-dcos/search.min.ef9d3abb032eee6d0643f5563745bcdd625a305584bc505a36b344f3c29cfb3a.js integrity="sha256-7506uwMu7m0GQ/VWN0W83WJaMFWEvFBaNrNE88Kc&#43;zo="></script><link rel=alternate type=application/rss+xml href=https://mesosphere.github.io/terraform-provider-dcos/index.xml title="DC/OS Terraform Provider"><link rel=stylesheet href=https://mesosphere.github.io/terraform-provider-dcos//css/styles.css></head><body><input type=checkbox class=hidden id=menu-control><main class="flex container"><aside class="book-menu fixed"><nav><h2 class=book-brand><a href=https://mesosphere.github.io/terraform-provider-dcos/><span>DC/OS Terraform Provider</span></a></h2><div class=book-search><input type=text placeholder=Search id=book-search-input maxlength=64><div class="book-search-spinner spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><span>Getting Started</span><ul><li><a href=/terraform-provider-dcos/docs/getting-started/installation/>Installation</a></li><li><a href=/terraform-provider-dcos/docs/getting-started/authentication/>Authentication</a></li></ul></li><li><span>Examples</span><ul></ul></li><li><span>Resources</span><ul><li><a href=/terraform-provider-dcos/docs/resources/dcos_package/>dcos_package</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_package_repo/>dcos_package_repo</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/>dcos_security_cluster_oidc</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/>dcos_security_cluster_saml</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group/>dcos_security_org_group</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/>dcos_security_org_group_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/>dcos_security_org_service_account</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user/>dcos_security_org_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/>dcos_security_org_user_grant</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_secret/>dcos_security_secret</a></li></ul></li><li><span>Data Resources</span><ul><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_config/>dcos_package_config</a></li><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_version/>dcos_package_version</a></li></ul></li></ul></nav><script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script></aside><div class=book-page><header class="flex align-center justify-between book-header"><label for=menu-control><img src=/terraform-provider-dcos/svg/menu.svg alt=Menu></label>
-<strong></strong></header><article class=markdown><h1 id=dc-os-provider>DC/OS Provider</h1><p>The DC/OS provider is used to interact with workload on DC/OS(dcos.io). Its configuration is the same as for <a href=github.com/dcos/dcos-cli>dcos-cli</a></p><h2 id=example-usage>Example Usage</h2><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>provider</span> <span style=color:#4e9a06>&#34;dcos&#34;</span> {
-<span style=color:#000>  dcos_url</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;&lt;cluster url&gt;&#34;</span>
-<span style=color:#000>  user</span>      <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;bootstrapuser&#34;</span>
-<span style=color:#000>  password</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;&lt;secret dcos password&gt;&#34;</span>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta name="generator" content="Hugo 0.65.0" />
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/" />
+
+<title> | DC/OS Terraform Provider</title>
+<link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/terraform-provider-dcos/book.min.06f36f77411fb7f10ae468fbe4855cec3709e6d93a4680927b5431c872bf4654.css" integrity="sha256-BvNvd0Eft/EK5Gj75IVc7DcJ5tk6RoCSe1QxyHK/RlQ=">
+
+
+<script defer src="/terraform-provider-dcos/search.min.11b74992db1db8b391257c33ca168caebfc36ac1a22d1b83ae593f08f2876d8c.js" integrity="sha256-EbdJktsduLORJXwzyhaMrr/DasGiLRuDrlk/CPKHbYw="></script>
+
+<link rel="alternate" type="application/rss+xml" href="https://mesosphere.github.io/terraform-provider-dcos/index.xml" title="DC/OS Terraform Provider" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+    <link rel="stylesheet" href="https://mesosphere.github.io/terraform-provider-dcos//css/styles.css">
+
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="https://mesosphere.github.io/terraform-provider-dcos/"><span>DC/OS Terraform Provider</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        
+
+  <li >
+    
+      <span>Getting Started</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/installation/" >
+      Installation
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/getting-started/authentication/" >
+      Authentication
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Examples</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/" >
+      dcos_edgelb_v2_pool
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job/" >
+      dcos_job
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
+      dcos_job_schedule
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_app/" >
+      dcos_marathon_app
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_pod/" >
+      dcos_marathon_pod
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package/" >
+      dcos_package
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/" >
+      dcos_package_repo
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/" >
+      dcos_security_cluster_oidc
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/" >
+      dcos_security_cluster_saml
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
+      dcos_security_org_group
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/" >
+      dcos_security_org_group_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/" >
+      dcos_security_org_service_account
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user/" >
+      dcos_security_org_user
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/" >
+      dcos_security_org_user_grant
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_secret/" >
+      dcos_security_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+      
+        
+
+  <li >
+    
+      <span>Data Resources</span>
+    
+
+    
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/" >
+      dcos_package_config
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/" >
+      dcos_package_version
+  </a>
+
+</li>
+      
+    
+      
+        <li>
+
+  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
+      dcos_security_secret_service_account_secret
+  </a>
+
+</li>
+      
+    
+  </ul>
+  
+
+
+
+  </li>
+
+
+      
+    
+  </ul>
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong></strong>
+</header>
+
+      
+<article class="markdown"><h1 id="dcos-provider">DC/OS Provider</h1>
+<p>The DC/OS provider is used to interact with workload on DC/OS(dcos.io). Its configuration is the same as for <a href="github.com/dcos/dcos-cli">dcos-cli</a></p>
+<h2 id="example-usage">Example Usage</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
+<span style="color:#000">  dcos_url</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;&lt;cluster url&gt;&#34;</span>
+<span style="color:#000">  user</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;bootstrapuser&#34;</span>
+<span style="color:#000">  password</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;&lt;secret dcos password&gt;&#34;</span>
 }
 
-<span style=color:#204a87;font-weight:700>resource</span> <span style=color:#4e9a06>&#34;dcos_marathon_pod&#34; &#34;simplepod&#34;</span> {
-<span style=color:#000>  name</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;simplepod&#34;</span>
+<span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_marathon_pod&#34; &#34;simplepod&#34;</span> {
+<span style="color:#000">  name</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;simplepod&#34;</span>
 
-  <span style=color:#204a87;font-weight:700>scaling</span> {
-<span style=color:#000>    kind</span>      <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;fixed&#34;</span>
-<span style=color:#000>    instances</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#0000cf;font-weight:700>1</span>
+  <span style="color:#204a87;font-weight:bold">scaling</span> {
+<span style="color:#000">    kind</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;fixed&#34;</span>
+<span style="color:#000">    instances</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">1</span>
   }
 
-  <span style=color:#204a87;font-weight:700>container</span> {
-<span style=color:#000>    name</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;sleep1&#34;</span>
+  <span style="color:#204a87;font-weight:bold">container</span> {
+<span style="color:#000">    name</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;sleep1&#34;</span>
 
-    <span style=color:#204a87;font-weight:700>exec</span> {
-<span style=color:#000>      command_shell</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;sleep 1000&#34;</span>
+    <span style="color:#204a87;font-weight:bold">exec</span> {
+<span style="color:#000">      command_shell</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;sleep 1000&#34;</span>
     }
 
-    <span style=color:#204a87;font-weight:700>resources</span> {
-<span style=color:#000>      cpus</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#0000cf;font-weight:700>0</span><span style=color:#000;font-weight:700>.</span><span style=color:#0000cf;font-weight:700>1</span>
-<span style=color:#000>      mem</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#0000cf;font-weight:700>32</span>
+    <span style="color:#204a87;font-weight:bold">resources</span> {
+<span style="color:#000">      cpus</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">1</span>
+<span style="color:#000">      mem</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">32</span>
     }
   }
 
-  <span style=color:#204a87;font-weight:700>network</span> {
-<span style=color:#000>    mode</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;HOST&#34;</span>
+  <span style="color:#204a87;font-weight:bold">network</span> {
+<span style="color:#000">    mode</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;HOST&#34;</span>
   }
-}</code></pre></div><h2 id=authentication-and-configuration>Authentication and Configuration</h2><p>The DC/OS provider is using the same config sources as the DC/OS CLI.</p><ul><li>Attached Cluster</li><li>URL + Token</li><li>URL + Username and Password</li><li>Cluster Name</li></ul><h3 id=attached-cluster>Attached Cluster</h3><p>The easiest solution is using the cluster you&rsquo;re attached to with <code>dcos cluster attach</code></p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>provider</span> <span style=color:#4e9a06>&#34;dcos&#34;</span> {}</code></pre></div><p>The downside with this is that the user has to make sure being connected to the expected cluster.</p><h3 id=cluster-name>Cluster Name</h3><p>If the user has locally setup his <code>dcos</code>-cli with <code>cluster setup &lt;cluster url&gt;</code> The name of a cluster can be used making sure terraform is using the expected cluster. The value is the same as for <code>dcos cluster attach</code></p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>provider</span> <span style=color:#4e9a06>&#34;dcos&#34;</span> {
-<span style=color:#000>  cluster</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;my-dcos-production-cluster&#34;</span>
-}</code></pre></div><h3 id=username-and-password>Username and Password</h3><p><strong>ENTERPRISE ONLY</strong></p><p>This method is using a username and password to authenticate against the DC/OS cluster. Be aware that this will not work with DC/OS Open Source.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>provider</span> <span style=color:#4e9a06>&#34;dcos&#34;</span> {
-<span style=color:#000>  dcos_url</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;&lt;cluster url&gt;&#34;</span>
-<span style=color:#000>  user</span>      <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;bootstrapuser&#34;</span>
-<span style=color:#000>  password</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;&lt;secret dcos password&gt;&#34;</span>
-}</code></pre></div><h3 id=acs-token>ACS Token</h3><p>If you&rsquo;re using open source and don&rsquo;t want to use the attached cluster feature you have to specify the ACS token of a user (<code>dcos config show core.dcos_acs_token</code>). The token in combination with the cluster url give the dcos-provider access to your cluster.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>provider</span> <span style=color:#4e9a06>&#34;dcos&#34;</span> {
-<span style=color:#000>  dcos_url</span>       <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;&lt;cluster url&gt;&#34;</span>
-<span style=color:#000>  dcos_acs_token</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;&lt;dcos_acs_token&gt;&#34;</span>
-}</code></pre></div><h2 id=argument-reference>Argument Reference</h2><ul><li><code>dcos_acs_token</code> The DC/OS access token</li><li><code>ssl_verify</code> Verify SSL connection. Can be set to false to ignore certificate errors. (Default: <code>true</code>)</li><li><code>dcos_url</code> The cluster URL. The same URL you reach the DC/OS UI</li><li><code>cluster</code> The cluster name configured in dcos-cli. <code>dcos cluster list</code></li><li><code>user</code> <em>ENTERPRISE ONLY</em> The username to be used to connect to the DC/OS cluster.</li><li><code>password</code> <em>ENTERPRISE ONLY</em> The password to be used to connect to the DC/OS cluster.</li></ul></article></div><aside class="book-toc levels-6 fixed"><nav id=TableOfContents><ul><li><a href=#dc-os-provider>DC/OS Provider</a><ul><li><a href=#example-usage>Example Usage</a></li><li><a href=#authentication-and-configuration>Authentication and Configuration</a><ul><li><a href=#attached-cluster>Attached Cluster</a></li><li><a href=#cluster-name>Cluster Name</a></li><li><a href=#username-and-password>Username and Password</a></li><li><a href=#acs-token>ACS Token</a></li></ul></li><li><a href=#argument-reference>Argument Reference</a></li></ul></li></ul></nav></aside></main></body></html>
+}
+
+</code></pre></div><h2 id="authentication-and-configuration">Authentication and Configuration</h2>
+<p>The DC/OS provider is using the same config sources as the DC/OS CLI.</p>
+<ul>
+<li>Attached Cluster</li>
+<li>URL + Token</li>
+<li>URL + Username and Password</li>
+<li>Cluster Name</li>
+</ul>
+<h3 id="attached-cluster">Attached Cluster</h3>
+<p>The easiest solution is using the cluster you&rsquo;re attached to with <code>dcos cluster attach</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {}
+</code></pre></div><p>The downside with this is that the user has to make sure being connected to the expected cluster.</p>
+<h3 id="cluster-name">Cluster Name</h3>
+<p>If the user has locally setup his <code>dcos</code>-cli with <code>cluster setup &lt;cluster url&gt;</code> The name of a cluster can be used making sure terraform is using the expected cluster. The value is the same as for <code>dcos cluster attach</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
+<span style="color:#000">  cluster</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-dcos-production-cluster&#34;</span>
+}
+</code></pre></div><h3 id="username-and-password">Username and Password</h3>
+<p><strong>ENTERPRISE ONLY</strong></p>
+<p>This method is using a username and password to authenticate against the DC/OS cluster. Be aware that this will not work with DC/OS Open Source.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
+<span style="color:#000">  dcos_url</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;&lt;cluster url&gt;&#34;</span>
+<span style="color:#000">  user</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;bootstrapuser&#34;</span>
+<span style="color:#000">  password</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;&lt;secret dcos password&gt;&#34;</span>
+}
+</code></pre></div><h3 id="acs-token">ACS Token</h3>
+<p>If you&rsquo;re using open source and don&rsquo;t want to use the attached cluster feature you have to specify the ACS token of a user (<code>dcos config show core.dcos_acs_token</code>). The token in combination with the cluster url give the dcos-provider access to your cluster.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
+<span style="color:#000">  dcos_url</span>       <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;&lt;cluster url&gt;&#34;</span>
+<span style="color:#000">  dcos_acs_token</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;&lt;dcos_acs_token&gt;&#34;</span>
+}
+</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
+<ul>
+<li><code>dcos_acs_token</code> The DC/OS access token</li>
+<li><code>ssl_verify</code> Verify SSL connection. Can be set to false to ignore certificate errors. (Default: <code>true</code>)</li>
+<li><code>dcos_url</code> The cluster URL. The same URL you reach the DC/OS UI</li>
+<li><code>cluster</code> The cluster name configured in dcos-cli. <code>dcos cluster list</code></li>
+<li><code>user</code> <em>ENTERPRISE ONLY</em> The username to be used to connect to the DC/OS cluster.</li>
+<li><code>password</code> <em>ENTERPRISE ONLY</em> The password to be used to connect to the DC/OS cluster.</li>
+</ul>
+</article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc levels-6 fixed">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#example-usage">Example Usage</a></li>
+    <li><a href="#authentication-and-configuration">Authentication and Configuration</a>
+      <ul>
+        <li><a href="#attached-cluster">Attached Cluster</a></li>
+        <li><a href="#cluster-name">Cluster Name</a></li>
+        <li><a href="#username-and-password">Username and Password</a></li>
+        <li><a href="#acs-token">ACS Token</a></li>
+      </ul>
+    </li>
+    <li><a href="#argument-reference">Argument Reference</a></li>
+  </ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+</body>
+
+</html>

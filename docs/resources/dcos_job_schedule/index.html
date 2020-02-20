@@ -3,14 +3,14 @@
 
 <head>
   <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_security_org_group" />
-<meta property="og:description" content="Resource: dcos_security_org_group Provides a resource for creating DC/OS user groups.
-Example Usage # Create a group provider &#34;dcos&#34; { cluster = &#34;my-cluster&#34; } resource &#34;dcos_security_org_group&#34; &#34;testgroup&#34; { gid = &#34;testgroup&#34; description = &#34;This group is for testing only&#34; } Argument Reference The following arguments are supported
- gid (Required) User ID to apply the grant on.  description (Optional) a description for the group.   Attributes Reference addition to all arguments above, the following attributes are exported:" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_job_schedule" />
+<meta property="og:description" content="Resource: dcos_job_schedule provides a resource adding schedules to Metronome jobs.
+Example Usage # an example provider &#34;dcos&#34; { cluster = &#34;my-cluster&#34; } data &#34;dcos_job&#34; &#34;job&#34; { name = &#34;somejob&#34; } resource &#34;dcos_job_schedule&#34; &#34;jobsched&#34; { dcos_job_id = &#34;${data.dcos_job.job.name}&#34; name = &#34;someschedule&#34; cron = &#34;0,30 * * * *&#34; } Argument Reference The following arguments are supported
+ name (Required) Unique identifier for the schedule.  cron (Required) Cron based schedule string  concurrency_policy (Optional) Defines the behavior if a job is started, before the current job has finished." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group/" />
+<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job_schedule/" />
 
-<title>dcos_security_org_group | DC/OS Terraform Provider</title>
+<title>dcos_job_schedule | DC/OS Terraform Provider</title>
 <link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
 
 
@@ -180,7 +180,7 @@ https://github.com/alex-shpak/hugo-book
       
         <li>
 
-  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
+  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/"  class="active">
       dcos_job_schedule
   </a>
 
@@ -250,7 +250,7 @@ https://github.com/alex-shpak/hugo-book
       
         <li>
 
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/"  class="active">
+  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
       dcos_security_org_group
   </a>
 
@@ -410,63 +410,109 @@ https://github.com/alex-shpak/hugo-book
   <label for="menu-control">
     <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
   </label>
-  <strong>dcos_security_org_group</strong>
+  <strong>dcos_job_schedule</strong>
 </header>
 
       
-<article class="markdown"><h1 id="resource-dcos_security_org_group">Resource: dcos_security_org_group</h1>
-<p>Provides a resource for creating DC/OS user groups.</p>
+<article class="markdown"><h1 id="resource-dcos_job_schedule">Resource: dcos_job_schedule</h1>
+<p>provides a resource adding schedules to Metronome jobs.</p>
 <h2 id="example-usage">Example Usage</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># Create a group
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># an example
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
 <span style="color:#000">  cluster</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-cluster&#34;</span>
 }
 
-<span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_security_org_group&#34; &#34;testgroup&#34;</span> {
-<span style="color:#000">  gid</span>         <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;testgroup&#34;</span>
-<span style="color:#000">  description</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;This group is for testing only&#34;</span>
+<span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_job&#34; &#34;job&#34;</span> {
+<span style="color:#000">  name</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;somejob&#34;</span>
+}
+
+<span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_job_schedule&#34; &#34;jobsched&#34;</span> {
+<span style="color:#000">  dcos_job_id</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${data.dcos_job.job.name}&#34;</span>
+<span style="color:#000">  name</span>        <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;someschedule&#34;</span>
+<span style="color:#000">  cron</span>        <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;0,30 * * * *&#34;</span>
 }
 
 </code></pre></div><h2 id="argument-reference">Argument Reference</h2>
 <p>The following arguments are supported</p>
 <ul>
   
-    <li class="tf_arg" id="gid">
-  <a href="#gid"><code class="arg">gid</code></a>
+
+    <li class="tf_arg" id="name">
+  <a href="#name"><code class="arg">name</code></a>
   
     
       (Required)
     
   
-  User ID to apply the grant on.
+  Unique identifier for the schedule.
 </li>
 
-    <li class="tf_arg" id="description">
-  <a href="#description"><code class="arg">description</code></a>
+
+    <li class="tf_arg" id="cron">
+  <a href="#cron"><code class="arg">cron</code></a>
+  
+    
+      (Required)
+    
+  
+  Cron based schedule string
+</li>
+
+
+    <li class="tf_arg" id="concurrency_policy">
+  <a href="#concurrency_policy"><code class="arg">concurrency_policy</code></a>
   
     
       (Optional)
     
   
-  a description for the group.
+  Defines the behavior if a job is started, before the current job has finished. ALLOW will launch a new job, even if there is an existing run.
 </li>
 
 
-</ul>
-
-<h2 id="attributes-reference">Attributes Reference</h2>
-<p>addition to all arguments above, the following attributes are exported:</p>
-<ul>
-  
-    <li class="tf_arg" id="group_provider">
-  <a href="#group_provider"><code class="arg">group_provider</code></a>
+    <li class="tf_arg" id="enabled">
+  <a href="#enabled"><code class="arg">enabled</code></a>
   
     
       (Optional)
     
   
-  Group linked to an external provider.
+  Defines if the schedule is enabled or not.
 </li>
+
+
+    <li class="tf_arg" id="starting_deadline_seconds">
+  <a href="#starting_deadline_seconds"><code class="arg">starting_deadline_seconds</code></a>
+  
+    
+      (Optional)
+    
+  
+  The number of seconds until the job is still considered valid to start.
+</li>
+
+
+    <li class="tf_arg" id="timezone">
+  <a href="#timezone"><code class="arg">timezone</code></a>
+  
+    
+      (Optional)
+    
+  
+  IANA based time zone string. See <a href="http://www.iana.org/time-zones">http://www.iana.org/time-zones</a> for a list of available time zones.
+</li>
+
+
+    <li class="tf_arg" id="dcos_job_id">
+  <a href="#dcos_job_id"><code class="arg">dcos_job_id</code></a>
+  
+    
+      (Required)
+    
+  
+  Unique identifier for the job.
+</li>
+
 
 
 </ul>
@@ -486,7 +532,6 @@ https://github.com/alex-shpak/hugo-book
   <ul>
     <li><a href="#example-usage">Example Usage</a></li>
     <li><a href="#argument-reference">Argument Reference</a></li>
-    <li><a href="#attributes-reference">Attributes Reference</a></li>
   </ul>
 </nav>
   </aside>
