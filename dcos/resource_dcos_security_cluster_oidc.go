@@ -67,6 +67,7 @@ func resourceDcosSecurityClusterOIDC() *schema.Resource {
 			"ca_certs": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Provided entity ID",
 			},
 			"verify_server_certificate": {

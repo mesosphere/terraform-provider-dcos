@@ -58,6 +58,7 @@ func Provider() terraform.ResourceProvider {
 			"dcos_security_org_group_user":      resourceDcosSecurityOrgGroupUser(),
 			"dcos_security_org_service_account": resourceDcosSecurityOrgServiceAccount(),
 			"dcos_security_org_user":            resourceDcosSecurityOrgUser(),
+			"dcos_security_org_external_user":   resourceDcosSecurityOrgExternalUser(),
 
 			"dcos_security_secret": resourceDcosSecuritySecret(),
 
