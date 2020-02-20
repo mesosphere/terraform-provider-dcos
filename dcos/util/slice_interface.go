@@ -5,10 +5,10 @@ func InterfaceSliceInt32(s []interface{}) (r []int32, ok bool) {
 	ok = false
 	r = make([]int32, 0)
 	for _, v := range s {
-		if val, k := v.(int32); k {
+		if val, k := v.(int); k {
 			// we found at least one value
 			ok = true
-			r = append(r, val)
+			r = append(r, int32(val))
 		}
 	}
 

@@ -8,14 +8,15 @@ import (
 
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceDcosSecurityOrgServiceAccount() *schema.Resource {
+func resourceDcosSecurityOrgExternalUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDcosSecurityOrgServiceAccountCreate,
-		Read:   resourceDcosSecurityOrgServiceAccountRead,
-		Update: resourceDcosSecurityOrgServiceAccountUpdate,
-		Delete: resourceDcosSecurityOrgServiceAccountDelete,
+		Create: resourceDcosSecurityOrgExternalUserCreate,
+		Read:   resourceDcosSecurityOrgExternalUserRead,
+		Update: resourceDcosSecurityOrgExternalUserUpdate,
+		Delete: resourceDcosSecurityOrgExternalUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -34,49 +35,27 @@ func resourceDcosSecurityOrgServiceAccount() *schema.Resource {
 				ForceNew:    true,
 				Description: "ID of the account is used by default",
 			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    false,
-				Description: "Description of the newly created service account",
-			},
-			"public_key": {
+			"provider_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
-				Description: "Path to public key to use",
+				Description: "Provider ID for this external user e.g. OneLogin",
+			},
+			"provider_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Type of external provider",
+				ValidateFunc: validation.StringInSlice([]string{"ldap", "oidc", "saml"}, false),
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the newly created external user",
 			},
 		},
 	}
 }
 
-func iamUserCreateFromResourceData(d *schema.ResourceData) (dcos.IamUserCreate, error) {
-	iamUserCreate := dcos.IamUserCreate{}
-
-	if publicKey, pkOK := d.GetOk("public_key"); pkOK {
-		iamUserCreate.PublicKey = publicKey.(string)
-	}
-
-	if description, ok := d.GetOk("description"); ok {
-		iamUserCreate.Description = description.(string)
-	}
-
-	if password, ok := d.GetOk("password"); ok {
-		iamUserCreate.Password = password.(string)
-	}
-
-	if providerID, ok := d.GetOk("provider_id"); ok {
-		iamUserCreate.ProviderId = providerID.(string)
-	}
-
-	if providerType, ok := d.GetOk("provider_type"); ok {
-		iamUserCreate.ProviderType = providerType.(string)
-	}
-
-	return iamUserCreate, nil
-}
-
-func resourceDcosSecurityOrgServiceAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgExternalUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -100,7 +79,7 @@ func resourceDcosSecurityOrgServiceAccountCreate(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceDcosSecurityOrgServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgExternalUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
@@ -110,7 +89,7 @@ func resourceDcosSecurityOrgServiceAccountRead(d *schema.ResourceData, meta inte
 
 	log.Printf("[TRACE] IAM.GetUser - %v", resp)
 
-	if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
+	if resp.StatusCode == http.StatusNotFound {
 		log.Printf("[INFO] IAM.GetUser - %s not found", uid)
 		d.SetId("")
 		return nil
@@ -121,18 +100,22 @@ func resourceDcosSecurityOrgServiceAccountRead(d *schema.ResourceData, meta inte
 	}
 
 	d.Set("description", user.Description)
-	d.Set("public_key", user.PublicKey)
 	d.SetId(uid)
 
 	return nil
 }
 
-func resourceDcosSecurityOrgServiceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgExternalUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	uid := d.Id()
 	iamUserUpdate := dcos.IamUserUpdate{}
+
+	if password, passwordOK := d.GetOk("password"); d.HasChange("password") && passwordOK {
+		iamUserUpdate.Password = password.(string)
+		d.Set("password", password.(string))
+	}
 
 	if description, ok := d.GetOk("description"); ok {
 		iamUserUpdate.Description = description.(string)
@@ -146,16 +129,16 @@ func resourceDcosSecurityOrgServiceAccountUpdate(d *schema.ResourceData, meta in
 		return err
 	}
 
-	return resourceDcosSecurityOrgServiceAccountRead(d, meta)
+	return resourceDcosSecurityOrgExternalUserRead(d, meta)
 }
 
-func resourceDcosSecurityOrgServiceAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDcosSecurityOrgExternalUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*dcos.APIClient)
 	ctx := context.TODO()
 
 	resp, err := client.IAM.DeleteUser(ctx, d.Id())
 
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
