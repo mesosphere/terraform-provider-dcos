@@ -128,6 +128,7 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 			"ports": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: false,
 				Elem: &schema.Schema{
 					Type: schema.TypeInt,
@@ -192,18 +193,20 @@ func resourceDcosEdgeLBV2Pool() *schema.Resource {
 			"haproxy_frontends": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				ForceNew:    false,
+				Computed:    true,
 				Description: "Virtual networks to join",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 							Description: "Defaults to frontend_{{bindAddress}}_{{bindPort}}",
 						},
 						"bind_address": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 							Description: "Only use characters that are allowed in the frontend name. Known invalid frontend name characters include \"*\", \"[\", and \"]\"",
 						},
 						"bind_port": {
@@ -628,6 +631,9 @@ func edgelbV2PoolFromSchema(d *schema.ResourceData) (dcos.EdgelbV2Pool, error) {
 			if value, ok := val["bind_port"]; ok {
 				frontend.BindPort = int32(value.(int))
 			}
+			if value, ok := val["bind_address"]; ok {
+				frontend.BindAddress = value.(string)
+			}
 			if value, ok := val["bind_modifier"]; ok {
 				frontend.BindModifier = value.(string)
 			}
@@ -956,7 +962,7 @@ func resourceDcosEdgeLBV2PoolRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	log.Printf("[TRACE] Edgelb.V2DeletePool - %v", pool)
+	log.Printf("[TRACE] Edgelb.V2GetPool - %+v", pool)
 
 	d.Set("pool_healthcheck_grace_period", pool.PoolHealthcheckGracePeriod)
 	d.Set("pool_healthcheck_interval", pool.PoolHealthcheckInterval)
