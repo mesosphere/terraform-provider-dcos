@@ -51,3 +51,9 @@ h2:after
 li:target {
    background-color: #ffa;
 }
+
+.badge-ee {
+  background: #2f046c !important;
+  color: #FFF !important;
+  cursor: help;
+}

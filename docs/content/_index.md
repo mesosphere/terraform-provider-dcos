@@ -95,9 +95,13 @@ provider "dcos" {
 
 ## Argument Reference
 
-- `dcos_acs_token` The DC/OS access token
-- `ssl_verify` Verify SSL connection. Can be set to false to ignore certificate errors. (Default: `true`)
-- `dcos_url` The cluster URL. The same URL you reach the DC/OS UI
-- `cluster` The cluster name configured in dcos-cli. `dcos cluster list`
-- `user` *ENTERPRISE ONLY* The username to be used to connect to the DC/OS cluster.
-- `password` *ENTERPRISE ONLY* The password to be used to connect to the DC/OS cluster.
+{{< tf_arguments >}}
+    {{< tf_arg name="dcos_acs_token"  desc="The DC/OS access token" />}}
+    {{< tf_arg name="ssl_verify" default="true"  desc="Verify SSL connection. Can be set to false to ignore certificate errors" />}}
+    {{< tf_arg name="dcos_url"  desc="The cluster URL. The same URL you reach the DC/OS UI" />}}
+    {{< tf_arg name="cluster" >}}
+        The cluster name configured in dcos-cli. You can obtain it using "dcos cluster list".
+    {{</ tf_arg >}}
+    {{< tf_arg name="user" ee="true" desc="The username to be used to connect to the DC/OS cluster" />}}
+    {{< tf_arg name="password" ee="true" desc="The password to be used to connect to the DC/OS cluster" />}}
+{{</ tf_arguments >}}
