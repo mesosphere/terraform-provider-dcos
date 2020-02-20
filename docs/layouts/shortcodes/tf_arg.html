@@ -1,5 +1,8 @@
 <li class="tf_arg" id="{{ .Parent.Get "prefix" }}{{ .Get "name" | urlize }}">
   <a href="#{{ .Parent.Get "prefix" }}{{ .Get "name" | urlize }}"><code class="arg{{ if (.Get "output") }} output{{ end }}">{{ .Get "name" }}</code></a>
+  {{ if (.Get "ee" ) }}
+    <code class="badge-ee" title="This feature is only available on DC/OS Enterprise">EE</code>
+  {{ end }}
   {{ if (.Get "output") }}
     <em>(Output Only)</em>
   {{ else }}
