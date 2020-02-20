@@ -91,7 +91,7 @@ pipeline {
                         export PATH=$PATH:${WORKSPACE}/usr/local/go/bin:${WORKSPACE}/usr/local/bin
                         export AC_USERNAME="${APPLE_DEVACC_USR}"
                         export AC_PASSWORD="${APPLE_DEVACC_PSW}"
-                        export GITHUB_TOKEN="${GITHUB_SRE_ROBOT_PSW}"
+                        export GITHUB_TOKEN="${GITHUB_TOKEN}"
                         goreleaser --rm-dist
                       '''
                   }
