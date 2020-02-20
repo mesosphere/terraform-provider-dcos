@@ -9,7 +9,9 @@ require (
 	github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37
 	github.com/hashicorp/terraform v0.12.9
 	github.com/imdario/mergo v0.3.7
+	github.com/mesos/mesos-go v0.0.10 // indirect
 	github.com/mesosphere-incubator/cosmos-repo-go v0.0.0-20190919140530-1bfc03a5c181
+	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 )
 
 replace github.com/gambol99/go-marathon => github.com/fatz/go-marathon v0.7.2-0.20191224115431-b677ec57fc07

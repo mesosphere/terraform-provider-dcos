@@ -1,7 +1,11 @@
 pipeline {
     agent none
     environment {
-        GITHUB_TOKEN = credentials('gh-token-mesosphere-ci-dcos-deploy')
+      GITHUB_TOKEN = credentials('gh-token-mesosphere-ci-dcos-deploy')
+      APPLE_DEVACC = credentials('APPLE_DEVELOPER_ACCOUNT')
+      GOLANG_VER = "1.13.7"
+      GORELEASER_VER = "0.126.0"
+      GON_VER = "0.2.2"
     }
     options {
       disableConcurrentBuilds()
@@ -57,13 +61,41 @@ pipeline {
         }
         stage('Release') {
             agent {
-              label "golang112"
+              label "mac"
             }
-            when { tag "v*" }
+            when { tag "*" }
             steps {
-                echo 'Starting release on tag.'
-                sh 'wget -O /tmp/goreleaser.tgz https://github.com/goreleaser/goreleaser/releases/download/v0.123.3/goreleaser_Linux_x86_64.tar.gz && tar xzf /tmp/goreleaser.tgz -C /usr/local/bin'
-                sh 'goreleaser --rm-dist'
+              withCredentials(bindings: [certificate(credentialsId: 'APPLE_DEVELOPER_ID_APPLICATION_CERTIFICATE', \
+                                             keystoreVariable: 'SIGNING_CERTIFICATE', \
+                                             passwordVariable: 'SIGNING_CERTIFICATE_PASSWORD')]) {
+                  ansiColor('xterm') {
+                      sh '''
+                        security delete-keychain jenkins-${JOB_NAME} || :
+                        security create-keychain -p test jenkins-${JOB_NAME}
+                        security unlock-keychain -p test jenkins-${JOB_NAME}
+                        security list-keychains -d user -s jenkins-${JOB_NAME}
+                        security default-keychain -s jenkins-${JOB_NAME}
+                        cat ${SIGNING_CERTIFICATE} > cert.p12
+                        security import cert.p12 -k jenkins-${JOB_NAME} -P ${SIGNING_CERTIFICATE_PASSWORD} -T /usr/bin/codesign
+                        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k test jenkins-${JOB_NAME}
+                        xcrun altool --notarization-history 0 -u "${APPLE_DEVACC_USR}" -p "${APPLE_DEVACC_PSW}"
+                      '''
+                      sh 'security find-identity -v | grep -q 204250D9ADA4A6CDB12C5E8BA168E48F5043CFDE'
+                      echo 'Starting release on tag.'
+                      sh 'mkdir -p ${WORKSPACE}/usr/local/bin'
+                      sh 'wget -O /tmp/golang.tgz https://dl.google.com/go/go\${GOLANG_VER}.darwin-amd64.tar.gz && tar xzf /tmp/golang.tgz -C ${WORKSPACE}/usr/local'
+                      sh 'wget -O /tmp/goreleaser.tgz https://github.com/goreleaser/goreleaser/releases/download/v\${GORELEASER_VER}/goreleaser_Darwin_x86_64.tar.gz && tar xzf /tmp/goreleaser.tgz -C ${WORKSPACE}/usr/local/bin'
+                      sh 'wget -O /tmp/gon.zip https://github.com/mitchellh/gon/releases/download/v\${GON_VER}/gon_\${GON_VER}_macos.zip && unzip /tmp/gon.zip -d ${WORKSPACE}/usr/local/bin'
+                      sh '''
+                        set +xe
+                        export PATH=$PATH:${WORKSPACE}/usr/local/go/bin:${WORKSPACE}/usr/local/bin
+                        export AC_USERNAME="${APPLE_DEVACC_USR}"
+                        export AC_PASSWORD="${APPLE_DEVACC_PSW}"
+                        export GITHUB_TOKEN="${GITHUB_SRE_ROBOT_PSW}"
+                        goreleaser --rm-dist
+                      '''
+                  }
+              }
             }
         }
     }
