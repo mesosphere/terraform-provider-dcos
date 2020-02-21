@@ -65,6 +65,8 @@ release:
   draft: true
   prerelease: auto
   ids:
-    - main
+    - linux
+    - windows
+    - macos
   extra_files:
     - glob: ./dist/terraform-provider-dcos-darwin-amd64.zip
