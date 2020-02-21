@@ -4,7 +4,7 @@ before:
   hooks: []
 
 builds:
-- id: nonosx
+- id: terraform-provider-dcos
   binary: terraform-provider-dcos
   env:
     - CGO_ENABLED=0
@@ -23,8 +23,6 @@ builds:
   goarch:
     - amd64
   ldflags: -s -extldflags "-static"
-checksum:
-  name_template: '{{ .ProjectName }}_checksums.txt'
 archives:
   - id: main
     builds:
@@ -52,3 +50,7 @@ release:
   github:
   draft: true
   prerelease: auto
+  ids:
+    - main
+  extra_files:
+    - glob: ./dist/terraform-provider-dcos-darwin-amd64.zip
