@@ -4,20 +4,31 @@ before:
   hooks: []
 
 builds:
-- binary: terraform-provider-dcos
+- id: lin-win
+  binary: terraform-provider-dcos
   env:
     - CGO_ENABLED=0
   goos:
-  - darwin  # MacOS
-  - windows
-  - linux
+    - windows
+    - linux
   goarch:
-  - amd64
+    - amd64
+  ldflags: -s -extldflags "-static"
+- id: macos
+  binary: terraform-provider-dcos
+  env:
+    - CGO_ENABLED=0
+  goos:
+    - darwin
+  goarch:
+    - amd64
   ldflags: -s -extldflags "-static"
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
 archives:
   - id: main
+    builds:
+      - linux-win
     name_template: "{{.ProjectName}}-{{.Os}}-{{.Arch}}"
     format_overrides:
     - goos: windows
@@ -28,13 +39,13 @@ archives:
 signs:
   - signature: "${artifact}"
     ids:
-    - macos # here we filter the macos only build id
+      - macos # here we filter the macos only build id
     # you'll need to have gon on PATH
     cmd: gon
     # you can follow the gon docs to properly create the gon.hcl config file:
     # https://github.com/mitchellh/gon
     args:
-    - gon.hcl
+      - gon.hcl
     artifacts: all
 
 release:
