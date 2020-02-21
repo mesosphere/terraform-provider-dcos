@@ -1,4 +1,4 @@
-source = ["./dist/terraform-provider-dcos_darwin_amd64/terraform-provider-dcos"]
+source = ["./dist/macos_darwin_amd64/terraform-provider-dcos"]
 bundle_id = "com.mesosphere.terraform-provider-dcos"
 
 # AC_USERNAME and AC_PASSWORD must be set
