@@ -14,7 +14,8 @@ builds:
   goarch:
   - amd64
   ldflags: -s -extldflags "-static"
-
+checksum:
+  name_template: '{{ .ProjectName }}_checksums.txt'
 archives:
   - id: main
     name_template: "{{.ProjectName}}-{{.Os}}-{{.Arch}}"
@@ -23,9 +24,6 @@ archives:
       format: zip
     files:
       - none*  # only package the binary - not defaults: readme, license, changelog
-
-checksum:
-  name_template: 'SHA256SUMS.txt'
 
 signs:
   - signature: "${artifact}"
