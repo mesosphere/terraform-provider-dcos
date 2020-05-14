@@ -855,6 +855,7 @@ func setSchemaFieldsForApp(app *marathon.Application, d *schema.ResourceData) er
 			if network.Name != "" {
 				nMap["name"] = network.Name
 			}
+			nMap["labels"] = network.Labels
 			networks[idx] = nMap
 		}
 		err := d.Set("networks", networks)
@@ -1651,6 +1652,14 @@ func mapResourceToApplication(d *schema.ResourceData) *marathon.Application {
 		}
 
 		application.SetNetwork(name, networkMode)
+
+		labelsMap := d.Get("networks.0.labels").(map[string]interface{})
+		labels := make(map[string]string, len(labelsMap))
+		for key, value := range labelsMap {
+			labels[key] = value.(string)
+		}
+
+		(*application.Networks)[0].Labels = labels
 	}
 
 	if v, ok := d.GetOk("require_ports"); ok {
