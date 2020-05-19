@@ -1,8 +1,6 @@
 package dcos
 
 import (
-	// "github.com/dcos/client-go/dcos"
-
 	"github.com/dcos/client-go/dcos"
 	"github.com/hashicorp/terraform/helper/schema"
 )

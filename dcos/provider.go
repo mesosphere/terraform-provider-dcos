@@ -48,6 +48,14 @@ func Provider() terraform.ResourceProvider {
 				Default:     "",
 				Description: "Password to login with",
 			},
+
+			"cli_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "",
+				Description: "The DC/OS cli version to use",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"dcos_security_cluster_saml": resourceDcosSecurityClusterSAML(),
@@ -71,6 +79,7 @@ func Provider() terraform.ResourceProvider {
 
 			"dcos_marathon_app": resourceDcosMarathonApp(),
 			"dcos_marathon_pod": resourceDcosMarathonPod(),
+			"dcos_cli":          resourceDcosCLI(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_base_url":        dataSourceDcosBaseURL(),
