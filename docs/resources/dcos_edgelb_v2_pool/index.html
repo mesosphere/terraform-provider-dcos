@@ -1,1390 +1,154 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_edgelb_v2_pool" />
-<meta property="og:description" content="Resource: dcos_edgelb_v2_pool Provides a resource &hellip;
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content="dcos_edgelb_v2_pool"><meta property="og:description" content="Resource: dcos_edgelb_v2_pool Provides a resource &hellip;
 Example Usage # an example provider &#34;dcos&#34; { cluster = &#34;my-cluster&#34; } Argument Reference The following arguments are supported
- secret_name (Optional) Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present  constraints (Optional) Marathon style constraints for load balancer instance placement  secrets (Optional) DC/OS secrets  secret (Optional) Secret name  file (Optional) File name." />
-<meta property="og:type" content="article" />
-<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/" />
-
-<title>dcos_edgelb_v2_pool | DC/OS Terraform Provider</title>
-<link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
-
-
-<link rel="stylesheet" href="/terraform-provider-dcos/book.min.06f36f77411fb7f10ae468fbe4855cec3709e6d93a4680927b5431c872bf4654.css" integrity="sha256-BvNvd0Eft/EK5Gj75IVc7DcJ5tk6RoCSe1QxyHK/RlQ=">
-
-
-<script defer src="/terraform-provider-dcos/search.min.11b74992db1db8b391257c33ca168caebfc36ac1a22d1b83ae593f08f2876d8c.js" integrity="sha256-EbdJktsduLORJXwzyhaMrr/DasGiLRuDrlk/CPKHbYw="></script>
-
-<!--
-Made with Book Theme
-https://github.com/alex-shpak/hugo-book
--->
-
-    <link rel="stylesheet" href="https://mesosphere.github.io/terraform-provider-dcos//css/styles.css">
-
-</head>
-
-<body>
-  <input type="checkbox" class="hidden" id="menu-control" />
-  <main class="flex container">
-
-    <aside class="book-menu fixed">
-      <nav>
-<h2 class="book-brand">
-  <a href="https://mesosphere.github.io/terraform-provider-dcos/"><span>DC/OS Terraform Provider</span>
-  </a>
-</h2>
-
-
-<div class="book-search">
-  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" />
-  <div class="book-search-spinner spinner hidden"></div>
-  <ul id="book-search-results"></ul>
-</div>
-
-
-
-
-
-    
-
-  
-  
-
-
-
-
-
- 
-  
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        
-
-  <li >
-    
-      <span>Getting Started</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/getting-started/installation/" >
-      Installation
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/getting-started/authentication/" >
-      Authentication
-  </a>
-
-</li>
-      
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-      
-        
-
-  <li >
-    
-      <span>Examples</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-      
-        
-
-  <li >
-    
-      <span>Resources</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/"  class="active">
-      dcos_edgelb_v2_pool
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_job/" >
-      dcos_job
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
-      dcos_job_schedule
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_app/" >
-      dcos_marathon_app
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_pod/" >
-      dcos_marathon_pod
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_package/" >
-      dcos_package
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/" >
-      dcos_package_repo
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/" >
-      dcos_security_cluster_oidc
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/" >
-      dcos_security_cluster_saml
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
-      dcos_security_org_group
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/" >
-      dcos_security_org_group_user
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/" >
-      dcos_security_org_service_account
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user/" >
-      dcos_security_org_user
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/" >
-      dcos_security_org_user_grant
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_secret/" >
-      dcos_security_secret
-  </a>
-
-</li>
-      
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-      
-        
-
-  <li >
-    
-      <span>Data Resources</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/" >
-      dcos_package_config
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/" >
-      dcos_package_version
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
-      dcos_security_secret_service_account_secret
-  </a>
-
-</li>
-      
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-  </ul>
-  
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-</nav>
-
-
-<script>
-(function() {
-  var menu = document.querySelector("aside.book-menu nav");
-  addEventListener("beforeunload", function(event) {
-    localStorage.setItem("menu.scrollTop", menu.scrollTop);
-  });
-  menu.scrollTop = localStorage.getItem("menu.scrollTop");
-})();
-</script>
-
-    </aside>
-
-    <div class="book-page">
-      <header class="flex align-center justify-between book-header">
-  <label for="menu-control">
-    <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
-  </label>
-  <strong>dcos_edgelb_v2_pool</strong>
-</header>
-
-      
-<article class="markdown"><h1 id="resource-dcos_edgelb_v2_pool">Resource: dcos_edgelb_v2_pool</h1>
-<p>Provides a resource &hellip;</p>
-<h2 id="example-usage">Example Usage</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#8f5902;font-style:italic"># an example
-</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">provider</span> <span style="color:#4e9a06">&#34;dcos&#34;</span> {
-<span style="color:#000">  cluster</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;my-cluster&#34;</span>
-}
-
-</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
-<p>The following arguments are supported</p>
-<ul>
-  
-    
-    <li class="tf_arg" id="secret_name">
-  <a href="#secret_name"><code class="arg">secret_name</code></a>
-  
-    
-      (Optional)
-    
-  
-  Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present
-</li>
-
-    
-    <li class="tf_arg" id="constraints">
-  <a href="#constraints"><code class="arg">constraints</code></a>
-  
-    
-      (Optional)
-    
-  
-  Marathon style constraints for load balancer instance placement
-</li>
-
-    
-    <li class="tf_arg" id="secrets">
-  <a href="#secrets"><code class="arg">secrets</code></a>
-  
-    
-      (Optional)
-    
-  
-  DC/OS secrets
-</li>
-
-    
-    <li class="tf_arg" id="secret">
-  <a href="#secret"><code class="arg">secret</code></a>
-  
-    
-      (Optional)
-    
-  
-  Secret name
-</li>
-
-    
-    <li class="tf_arg" id="file">
-  <a href="#file"><code class="arg">file</code></a>
-  
-    
-      (Optional)
-    
-  
-  File name. The file &ldquo;myfile&rdquo; will be found at &ldquo;$SECRETS/myfile&rdquo;
-</li>
-
-    
-    <li class="tf_arg" id="environment_variables">
-  <a href="#environment_variables"><code class="arg">environment_variables</code></a>
-  
-    
-      (Optional)
-    
-  
-  Environment variables to pass to tasks. Prefix with &ldquo;ELB_FILE_&rdquo; and it will be written to a file. For example, the contents of &ldquo;ELB_FILE_MYENV&rdquo; will be written to &ldquo;$ENVFILE/ELB_FILE_MYENV&rdquo;
-</li>
-
-    
-    <li class="tf_arg" id="auto_certificate">
-  <a href="#auto_certificate"><code class="arg">auto_certificate</code></a>
-  
-    
-      (Optional)
-    
-  
-  Autogenerate a self-signed SSL/TLS certificate. It is not generated by default. It will be written to &ldquo;$AUTOCERT&rdquo;
-</li>
-
-    
-    <li class="tf_arg" id="haproxy_backends">
-  <a href="#haproxy_backends"><code class="arg">haproxy_backends</code></a>
-  
-    
-      (Optional)
-    
-  
-  Virtual networks to join
-</li>
-
-    
-    <li class="tf_arg" id="services">
-  <a href="#services"><code class="arg">services</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="mesos_task_id">
-  <a href="#mesos_task_id"><code class="arg">mesos_task_id</code></a>
-  
-    
-      (Optional)
-    
-  
-  Mesos task ID
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_type">
-  <a href="#endpoint_type"><code class="arg">endpoint_type</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_misc_str">
-  <a href="#endpoint_misc_str"><code class="arg">endpoint_misc_str</code></a>
-  
-    
-      (Optional)
-    
-  
-  Append arbitrary string to add to the end of the &ldquo;server&rdquo; directive
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_port">
-  <a href="#endpoint_port"><code class="arg">endpoint_port</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_all_ports">
-  <a href="#endpoint_all_ports"><code class="arg">endpoint_all_ports</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_check_enabled">
-  <a href="#endpoint_check_enabled"><code class="arg">endpoint_check_enabled</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_check_custom_str">
-  <a href="#endpoint_check_custom_str"><code class="arg">endpoint_check_custom_str</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="marathon_service_id">
-  <a href="#marathon_service_id"><code class="arg">marathon_service_id</code></a>
-  
-    
-      (Optional)
-    
-  
-  Marathon pod or application ID
-</li>
-
-    
-    <li class="tf_arg" id="marathon_service_id_pattern">
-  <a href="#marathon_service_id_pattern"><code class="arg">marathon_service_id_pattern</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="marathon_container_name">
-  <a href="#marathon_container_name"><code class="arg">marathon_container_name</code></a>
-  
-    
-      (Optional)
-    
-  
-  Marathon pod container name, optional unless using Marathon pods
-</li>
-
-    
-    <li class="tf_arg" id="mesos_framework_name">
-  <a href="#mesos_framework_name"><code class="arg">mesos_framework_name</code></a>
-  
-    
-      (Optional)
-    
-  
-  Mesos framework name
-</li>
-
-    
-    <li class="tf_arg" id="mesos_framework_id">
-  <a href="#mesos_framework_id"><code class="arg">mesos_framework_id</code></a>
-  
-    
-      (Optional)
-    
-  
-  Mesos framework ID
-</li>
-
-    
-    <li class="tf_arg" id="mesos_framework_id_pattern">
-  <a href="#mesos_framework_id_pattern"><code class="arg">mesos_framework_id_pattern</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_address">
-  <a href="#endpoint_address"><code class="arg">endpoint_address</code></a>
-  
-    
-      (Optional)
-    
-  
-  Server address override, can be used to specify a cluster internal address such as a VIP
-</li>
-
-    
-    <li class="tf_arg" id="marathon_container_name_pattern">
-  <a href="#marathon_container_name_pattern"><code class="arg">marathon_container_name_pattern</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="mesos_framework_name_pattern">
-  <a href="#mesos_framework_name_pattern"><code class="arg">mesos_framework_name_pattern</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="mesos_task_name">
-  <a href="#mesos_task_name"><code class="arg">mesos_task_name</code></a>
-  
-    
-      (Optional)
-    
-  
-  Mesos task name
-</li>
-
-    
-    <li class="tf_arg" id="mesos_task_name_pattern">
-  <a href="#mesos_task_name_pattern"><code class="arg">mesos_task_name_pattern</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="mesos_task_id_pattern">
-  <a href="#mesos_task_id_pattern"><code class="arg">mesos_task_id_pattern</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="endpoint_port_name">
-  <a href="#endpoint_port_name"><code class="arg">endpoint_port_name</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="name">
-  <a href="#name"><code class="arg">name</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="balance">
-  <a href="#balance"><code class="arg">balance</code></a>
-  
-    
-      (Optional)
-    
-  
-  Load balancing strategy. e.g. roundrobin, leastconn, etc.
-</li>
-
-    
-    <li class="tf_arg" id="custom_check_httpchk">
-  <a href="#custom_check_httpchk"><code class="arg">custom_check_httpchk</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_request_set_host_header">
-  <a href="#rewrite_http_request_set_host_header"><code class="arg">rewrite_http_request_set_host_header</code></a>
-  
-    
-      (Optional)
-    
-  
-  Set Host header
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_sticky_custom_str">
-  <a href="#rewrite_http_sticky_custom_str"><code class="arg">rewrite_http_sticky_custom_str</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="custom_check_httpchk_misc_str">
-  <a href="#custom_check_httpchk_misc_str"><code class="arg">custom_check_httpchk_misc_str</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="protocol">
-  <a href="#protocol"><code class="arg">protocol</code></a>
-  
-    
-      (Optional)
-    
-  
-  Protocol
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_to_path">
-  <a href="#rewrite_http_to_path"><code class="arg">rewrite_http_to_path</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_request_x_forwarded_proto_https_if_tls">
-  <a href="#rewrite_http_request_x_forwarded_proto_https_if_tls"><code class="arg">rewrite_http_request_x_forwarded_proto_https_if_tls</code></a>
-  
-    
-      (Optional)
-    
-  
-  Set X-Forwarded-Port HTTPS if TLS
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_sticky_enabled">
-  <a href="#rewrite_http_sticky_enabled"><code class="arg">rewrite_http_sticky_enabled</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="custom_check_ssl_hello_chk">
-  <a href="#custom_check_ssl_hello_chk"><code class="arg">custom_check_ssl_hello_chk</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="custom_check_misc_str">
-  <a href="#custom_check_misc_str"><code class="arg">custom_check_misc_str</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_request_forwardfor">
-  <a href="#rewrite_http_request_forwardfor"><code class="arg">rewrite_http_request_forwardfor</code></a>
-  
-    
-      (Optional)
-    
-  
-  Set X-Forwarded-For
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_request_rewrite_path">
-  <a href="#rewrite_http_request_rewrite_path"><code class="arg">rewrite_http_request_rewrite_path</code></a>
-  
-    
-      (Optional)
-    
-  
-  Rewrite Path
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_response_rewrite_location">
-  <a href="#rewrite_http_response_rewrite_location"><code class="arg">rewrite_http_response_rewrite_location</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="misc_strs">
-  <a href="#misc_strs"><code class="arg">misc_strs</code></a>
-  
-    
-      (Optional)
-    
-  
-  Additional template lines inserted before servers
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_host">
-  <a href="#rewrite_http_host"><code class="arg">rewrite_http_host</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_from_path">
-  <a href="#rewrite_http_from_path"><code class="arg">rewrite_http_from_path</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="rewrite_http_request_x_forwarded_port">
-  <a href="#rewrite_http_request_x_forwarded_port"><code class="arg">rewrite_http_request_x_forwarded_port</code></a>
-  
-    
-      (Optional)
-    
-  
-  Set X-Forwarded-Port
-</li>
-
-    
-    <li class="tf_arg" id="pool_healthcheck_interval">
-  <a href="#pool_healthcheck_interval"><code class="arg">pool_healthcheck_interval</code></a>
-  
-    
-      (Optional)
-    
-  
-  Pool tasks healthcheck interval (in seconds)
-</li>
-
-    
-    <li class="tf_arg" id="pool_healthcheck_timeout">
-  <a href="#pool_healthcheck_timeout"><code class="arg">pool_healthcheck_timeout</code></a>
-  
-    
-      (Optional)
-    
-  
-  Maximum amount of time that Mesos will wait for the healthcheck container to finish executing
-</li>
-
-    
-    <li class="tf_arg" id="name">
-  <a href="#name"><code class="arg">name</code></a>
-  
-    
-      (Required)
-    
-  
-  The pool name
-</li>
-
-    
-    <li class="tf_arg" id="principal">
-  <a href="#principal"><code class="arg">principal</code></a>
-  
-    
-      (Optional)
-    
-  
-  Mesos principal for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present
-</li>
-
-    
-    <li class="tf_arg" id="mem">
-  <a href="#mem"><code class="arg">mem</code></a>
-  
-    
-      (Optional)
-    
-  
-  Memory requirements (in MB)
-</li>
-
-    
-    <li class="tf_arg" id="role">
-  <a href="#role"><code class="arg">role</code></a>
-  
-    
-      (Optional)
-    
-  
-  Mesos role for load balancers. Defaults to &ldquo;slave_public&rdquo; so that load balancers will be run on public agents. Use &ldquo;*&rdquo; to run load balancers on private agents. Read more about Mesos roles at <a href="http://mesos.apache.org/documentation/latest/roles/">http://mesos.apache.org/documentation/latest/roles/</a>
-</li>
-
-    
-    <li class="tf_arg" id="cpus">
-  <a href="#cpus"><code class="arg">cpus</code></a>
-  
-    
-      (Optional)
-    
-  
-  CPU requirements
-</li>
-
-    
-    <li class="tf_arg" id="namespace">
-  <a href="#namespace"><code class="arg">namespace</code></a>
-  
-    
-      (Optional)
-    
-  
-  The DC/OS space (sometimes also referred to as a &ldquo;group&rdquo;).
-</li>
-
-    
-    <li class="tf_arg" id="disk">
-  <a href="#disk"><code class="arg">disk</code></a>
-  
-    
-      (Optional)
-    
-  
-  Disk size (in MB)
-</li>
-
-    
-    <li class="tf_arg" id="pool_count">
-  <a href="#pool_count"><code class="arg">pool_count</code></a>
-  
-    
-      (Optional)
-    
-  
-  Number of load balancer instances in the pool
-</li>
-
-    
-    <li class="tf_arg" id="ports">
-  <a href="#ports"><code class="arg">ports</code></a>
-  
-    
-      (Optional)
-    
-  
-  Override ports to allocate for each load balancer instance. Defaults to {{haproxy.frontends[].bindPort}} and   {{haproxy.stats.bindPort}}. Use this field to pre-allocate all needed ports with or   without the frontends present. For example: [80, 443, 9090]. If the length of the ports array is not zero, only the   ports specified will be allocated by the pool scheduler
-</li>
-
-    
-    <li class="tf_arg" id="virtual_networks">
-  <a href="#virtual_networks"><code class="arg">virtual_networks</code></a>
-  
-    
-      (Optional)
-    
-  
-  Virtual networks to join
-</li>
-
-    
-    <li class="tf_arg" id="name">
-  <a href="#name"><code class="arg">name</code></a>
-  
-    
-      (Optional)
-    
-  
-  The name of the virtual network to join.
-</li>
-
-    
-    <li class="tf_arg" id="labels">
-  <a href="#labels"><code class="arg">labels</code></a>
-  
-    
-      (Optional)
-    
-  
-  Labels to pass to the virtual network plugin.
-</li>
-
-    
-    <li class="tf_arg" id="haproxy_frontends">
-  <a href="#haproxy_frontends"><code class="arg">haproxy_frontends</code></a>
-  
-    
-      (Optional)
-    
-  
-  Virtual networks to join
-</li>
-
-    
-    <li class="tf_arg" id="name">
-  <a href="#name"><code class="arg">name</code></a>
-  
-    
-      (Optional)
-    
-  
-  Defaults to frontend_{{bindAddress}}_{{bindPort}}
-</li>
-
-    
-    <li class="tf_arg" id="bind_port">
-  <a href="#bind_port"><code class="arg">bind_port</code></a>
-  
-    
-      (Optional)
-    
-  
-  The port (e.g. 80 for HTTP or 443 for HTTPS) that this frontend will bind to
-</li>
-
-    
-    <li class="tf_arg" id="bind_modifier">
-  <a href="#bind_modifier"><code class="arg">bind_modifier</code></a>
-  
-    
-      (Optional)
-    
-  
-  Additional text to put in the bind field
-</li>
-
-    
-    <li class="tf_arg" id="certificates">
-  <a href="#certificates"><code class="arg">certificates</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="redirect_to_https_except">
-  <a href="#redirect_to_https_except"><code class="arg">redirect_to_https_except</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="host">
-  <a href="#host"><code class="arg">host</code></a>
-  
-    
-      (Optional)
-    
-  
-  Match on host
-</li>
-
-    
-    <li class="tf_arg" id="path_beg">
-  <a href="#path_beg"><code class="arg">path_beg</code></a>
-  
-    
-      (Optional)
-    
-  
-  Match on path
-</li>
-
-    
-    <li class="tf_arg" id="linked_backend_default_backend">
-  <a href="#linked_backend_default_backend"><code class="arg">linked_backend_default_backend</code></a>
-  
-    
-      (Optional)
-    
-  
-  This is default backend that is routed to if none of the other filters are matched.
-</li>
-
-    
-    <li class="tf_arg" id="bind_address">
-  <a href="#bind_address"><code class="arg">bind_address</code></a>
-  
-    
-      (Optional)
-    
-  
-  Only use characters that are allowed in the frontend name. Known invalid frontend name characters include &ldquo;*&quot;, &ldquo;[&quot;, and &ldquo;]&rdquo;
-</li>
-
-    
-    <li class="tf_arg" id="misc_strs">
-  <a href="#misc_strs"><code class="arg">misc_strs</code></a>
-  
-    
-      (Optional)
-    
-  
-  Additional template lines inserted before use_backend
-</li>
-
-    
-    <li class="tf_arg" id="protocol">
-  <a href="#protocol"><code class="arg">protocol</code></a>
-  
-    
-      (Optional)
-    
-  
-  Protocol
-</li>
-
-    
-    <li class="tf_arg" id="linked_backend_map">
-  <a href="#linked_backend_map"><code class="arg">linked_backend_map</code></a>
-  
-    
-      (Optional)
-    
-  
-  This is an optional field that specifies a mapping to various backends. These rules are applied in order.
-</li>
-
-    
-    <li class="tf_arg" id="backend">
-  <a href="#backend"><code class="arg">backend</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="host_eq">
-  <a href="#host_eq"><code class="arg">host_eq</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="host_reg">
-  <a href="#host_reg"><code class="arg">host_reg</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="path_beg">
-  <a href="#path_beg"><code class="arg">path_beg</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="path_end">
-  <a href="#path_end"><code class="arg">path_end</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="path_reg">
-  <a href="#path_reg"><code class="arg">path_reg</code></a>
-  
-    
-      (Optional)
-    
-  
-  
-</li>
-
-    
-    <li class="tf_arg" id="pool_healthcheck_grace_period">
-  <a href="#pool_healthcheck_grace_period"><code class="arg">pool_healthcheck_grace_period</code></a>
-  
-    
-      (Optional)
-    
-  
-  Pool tasks healthcheck grace period (in seconds)
-</li>
-
-    
-    <li class="tf_arg" id="pool_healthcheck_max_fail">
-  <a href="#pool_healthcheck_max_fail"><code class="arg">pool_healthcheck_max_fail</code></a>
-  
-    
-      (Optional)
-    
-  
-  Pool tasks healthcheck maximum number of consecutive failures before declaring as unhealthy
-</li>
-
-    
-
-</ul>
-
-<h2 id="attributes-reference">Attributes Reference</h2>
-<p>addition to all arguments above, the following attributes are exported:</p>
-<ul>
-  
-     <li class="tf_arg" id="gid">
-  <a href="#gid"><code class="arg">gid</code></a>
-  
-    
-      (Optional)
-    
-  
-  User ID to apply the grant on.
-</li>
-
- 
-</ul>
-
-</article>
-
-      
-
-      
-    </div>
-
-    
-  
-
-  <aside class="book-toc levels-6 fixed">
-    <nav id="TableOfContents">
-  <ul>
-    <li><a href="#example-usage">Example Usage</a></li>
-    <li><a href="#argument-reference">Argument Reference</a></li>
-    <li><a href="#attributes-reference">Attributes Reference</a></li>
-  </ul>
-</nav>
-  </aside>
-
-
-
-  </main>
-
-  
-</body>
-
-</html>
+ secret_name (Optional) Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present  constraints (Optional) Marathon style constraints for load balancer instance placement  secrets (Optional) DC/OS secrets  secret (Optional) Secret name  file (Optional) File name."><meta property="og:type" content="article"><meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/"><title>dcos_edgelb_v2_pool | DC/OS Terraform Provider</title><link rel=icon href=/terraform-provider-dcos/favicon.png type=image/x-icon><link rel=stylesheet href=/terraform-provider-dcos/book.min.6c28d4c7786ace6b760a10f0da9a7fa873292f04f374a4819c43fd684501f609.css integrity="sha256-bCjUx3hqzmt2ChDw2pp/qHMpLwTzdKSBnEP9aEUB9gk="><script defer src=/terraform-provider-dcos/search.min.256f77323547a8bdf40ac5a923fa874318e4ec91a793be855221b4f2929dcc90.js integrity="sha256-JW93MjVHqL30CsWpI/qHQxjk7JGnk76FUiG08pKdzJA="></script><link rel=stylesheet href=https://mesosphere.github.io/terraform-provider-dcos//css/styles.css></head><body><input type=checkbox class=hidden id=menu-control><main class="flex container"><aside class="book-menu fixed"><nav><h2 class=book-brand><a href=https://mesosphere.github.io/terraform-provider-dcos/><span>DC/OS Terraform Provider</span></a></h2><div class=book-search><input type=text placeholder=Search id=book-search-input maxlength=64><div class="book-search-spinner spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><span>Getting Started</span><ul><li><a href=/terraform-provider-dcos/docs/getting-started/installation/>Installation</a></li><li><a href=/terraform-provider-dcos/docs/getting-started/authentication/>Authentication</a></li></ul></li><li><span>Examples</span><ul></ul></li><li><span>Resources</span><ul><li><a href=/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/ class=active>dcos_edgelb_v2_pool</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_job/>dcos_job</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_job_schedule/>dcos_job_schedule</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_marathon_app/>dcos_marathon_app</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_marathon_pod/>dcos_marathon_pod</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_package/>dcos_package</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_package_repo/>dcos_package_repo</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/>dcos_security_cluster_oidc</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/>dcos_security_cluster_saml</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_external_user/>dcos_security_org_external_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group/>dcos_security_org_group</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/>dcos_security_org_group_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/>dcos_security_org_service_account</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user/>dcos_security_org_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/>dcos_security_org_user_grant</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_secret/>dcos_security_secret</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_service_http_request/>dcos_service_http_request</a></li></ul></li><li><span>Data Resources</span><ul><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_config/>dcos_package_config</a></li><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_version/>dcos_package_version</a></li><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/>dcos_security_secret_service_account_secret</a></li></ul></li></ul></nav><script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script></aside><div class=book-page><header class="flex align-center justify-between book-header"><label for=menu-control><img src=/terraform-provider-dcos/svg/menu.svg alt=Menu></label>
+<strong>dcos_edgelb_v2_pool</strong></header><article class=markdown><h1 id=resource-dcos-edgelb-v2-pool>Resource: dcos_edgelb_v2_pool</h1><p>Provides a resource &hellip;</p><h2 id=example-usage>Example Usage</h2><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#8f5902;font-style:italic># an example
+</span><span style=color:#8f5902;font-style:italic></span><span style=color:#204a87;font-weight:700>provider</span> <span style=color:#4e9a06>&#34;dcos&#34;</span> {
+<span style=color:#000>  cluster</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;my-cluster&#34;</span>
+}</code></pre></div><h2 id=argument-reference>Argument Reference</h2><p>The following arguments are supported</p><ul><li class=tf_arg id=secret_name><a href=#secret_name><code class=arg>secret_name</code></a>
+(Optional)
+Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present</li><li class=tf_arg id=constraints><a href=#constraints><code class=arg>constraints</code></a>
+(Optional)
+Marathon style constraints for load balancer instance placement</li><li class=tf_arg id=secrets><a href=#secrets><code class=arg>secrets</code></a>
+(Optional)
+DC/OS secrets</li><li class=tf_arg id=secret><a href=#secret><code class=arg>secret</code></a>
+(Optional)
+Secret name</li><li class=tf_arg id=file><a href=#file><code class=arg>file</code></a>
+(Optional)
+File name. The file &ldquo;myfile&rdquo; will be found at &ldquo;$SECRETS/myfile&rdquo;</li><li class=tf_arg id=environment_variables><a href=#environment_variables><code class=arg>environment_variables</code></a>
+(Optional)
+Environment variables to pass to tasks. Prefix with &ldquo;ELB<em>FILE</em>&rdquo; and it will be written to a file. For example, the contents of &ldquo;ELB_FILE_MYENV&rdquo; will be written to &ldquo;$ENVFILE/ELB_FILE_MYENV&rdquo;</li><li class=tf_arg id=auto_certificate><a href=#auto_certificate><code class=arg>auto_certificate</code></a>
+(Optional)
+Autogenerate a self-signed SSL/TLS certificate. It is not generated by default. It will be written to &ldquo;$AUTOCERT&rdquo;</li><li class=tf_arg id=haproxy_backends><a href=#haproxy_backends><code class=arg>haproxy_backends</code></a>
+(Optional)
+Virtual networks to join</li><li class=tf_arg id=services><a href=#services><code class=arg>services</code></a>
+(Optional)</li><li class=tf_arg id=mesos_task_id><a href=#mesos_task_id><code class=arg>mesos_task_id</code></a>
+(Optional)
+Mesos task ID</li><li class=tf_arg id=endpoint_type><a href=#endpoint_type><code class=arg>endpoint_type</code></a>
+(Optional)</li><li class=tf_arg id=endpoint_misc_str><a href=#endpoint_misc_str><code class=arg>endpoint_misc_str</code></a>
+(Optional)
+Append arbitrary string to add to the end of the &ldquo;server&rdquo; directive</li><li class=tf_arg id=endpoint_port><a href=#endpoint_port><code class=arg>endpoint_port</code></a>
+(Optional)</li><li class=tf_arg id=endpoint_all_ports><a href=#endpoint_all_ports><code class=arg>endpoint_all_ports</code></a>
+(Optional)</li><li class=tf_arg id=endpoint_check_enabled><a href=#endpoint_check_enabled><code class=arg>endpoint_check_enabled</code></a>
+(Optional)</li><li class=tf_arg id=endpoint_check_custom_str><a href=#endpoint_check_custom_str><code class=arg>endpoint_check_custom_str</code></a>
+(Optional)</li><li class=tf_arg id=marathon_service_id><a href=#marathon_service_id><code class=arg>marathon_service_id</code></a>
+(Optional)
+Marathon pod or application ID</li><li class=tf_arg id=marathon_service_id_pattern><a href=#marathon_service_id_pattern><code class=arg>marathon_service_id_pattern</code></a>
+(Optional)</li><li class=tf_arg id=marathon_container_name><a href=#marathon_container_name><code class=arg>marathon_container_name</code></a>
+(Optional)
+Marathon pod container name, optional unless using Marathon pods</li><li class=tf_arg id=mesos_framework_name><a href=#mesos_framework_name><code class=arg>mesos_framework_name</code></a>
+(Optional)
+Mesos framework name</li><li class=tf_arg id=mesos_framework_id><a href=#mesos_framework_id><code class=arg>mesos_framework_id</code></a>
+(Optional)
+Mesos framework ID</li><li class=tf_arg id=mesos_framework_id_pattern><a href=#mesos_framework_id_pattern><code class=arg>mesos_framework_id_pattern</code></a>
+(Optional)</li><li class=tf_arg id=endpoint_address><a href=#endpoint_address><code class=arg>endpoint_address</code></a>
+(Optional)
+Server address override, can be used to specify a cluster internal address such as a VIP</li><li class=tf_arg id=marathon_container_name_pattern><a href=#marathon_container_name_pattern><code class=arg>marathon_container_name_pattern</code></a>
+(Optional)</li><li class=tf_arg id=mesos_framework_name_pattern><a href=#mesos_framework_name_pattern><code class=arg>mesos_framework_name_pattern</code></a>
+(Optional)</li><li class=tf_arg id=mesos_task_name><a href=#mesos_task_name><code class=arg>mesos_task_name</code></a>
+(Optional)
+Mesos task name</li><li class=tf_arg id=mesos_task_name_pattern><a href=#mesos_task_name_pattern><code class=arg>mesos_task_name_pattern</code></a>
+(Optional)</li><li class=tf_arg id=mesos_task_id_pattern><a href=#mesos_task_id_pattern><code class=arg>mesos_task_id_pattern</code></a>
+(Optional)</li><li class=tf_arg id=endpoint_port_name><a href=#endpoint_port_name><code class=arg>endpoint_port_name</code></a>
+(Optional)</li><li class=tf_arg id=name><a href=#name><code class=arg>name</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=balance><a href=#balance><code class=arg>balance</code></a>
+(Optional)
+Load balancing strategy. e.g. roundrobin, leastconn, etc.</li><li class=tf_arg id=custom_check_httpchk><a href=#custom_check_httpchk><code class=arg>custom_check_httpchk</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=rewrite_http_request_set_host_header><a href=#rewrite_http_request_set_host_header><code class=arg>rewrite_http_request_set_host_header</code></a>
+(Optional)
+Set Host header</li><li class=tf_arg id=rewrite_http_sticky_custom_str><a href=#rewrite_http_sticky_custom_str><code class=arg>rewrite_http_sticky_custom_str</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=custom_check_httpchk_misc_str><a href=#custom_check_httpchk_misc_str><code class=arg>custom_check_httpchk_misc_str</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=protocol><a href=#protocol><code class=arg>protocol</code></a>
+(Optional)
+Protocol</li><li class=tf_arg id=rewrite_http_to_path><a href=#rewrite_http_to_path><code class=arg>rewrite_http_to_path</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=rewrite_http_request_x_forwarded_proto_https_if_tls><a href=#rewrite_http_request_x_forwarded_proto_https_if_tls><code class=arg>rewrite_http_request_x_forwarded_proto_https_if_tls</code></a>
+(Optional)
+Set X-Forwarded-Port HTTPS if TLS</li><li class=tf_arg id=rewrite_http_sticky_enabled><a href=#rewrite_http_sticky_enabled><code class=arg>rewrite_http_sticky_enabled</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=custom_check_ssl_hello_chk><a href=#custom_check_ssl_hello_chk><code class=arg>custom_check_ssl_hello_chk</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=custom_check_misc_str><a href=#custom_check_misc_str><code class=arg>custom_check_misc_str</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=rewrite_http_request_forwardfor><a href=#rewrite_http_request_forwardfor><code class=arg>rewrite_http_request_forwardfor</code></a>
+(Optional)
+Set X-Forwarded-For</li><li class=tf_arg id=rewrite_http_request_rewrite_path><a href=#rewrite_http_request_rewrite_path><code class=arg>rewrite_http_request_rewrite_path</code></a>
+(Optional)
+Rewrite Path</li><li class=tf_arg id=rewrite_http_response_rewrite_location><a href=#rewrite_http_response_rewrite_location><code class=arg>rewrite_http_response_rewrite_location</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=misc_strs><a href=#misc_strs><code class=arg>misc_strs</code></a>
+(Optional)
+Additional template lines inserted before servers</li><li class=tf_arg id=rewrite_http_host><a href=#rewrite_http_host><code class=arg>rewrite_http_host</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=rewrite_http_from_path><a href=#rewrite_http_from_path><code class=arg>rewrite_http_from_path</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=rewrite_http_request_x_forwarded_port><a href=#rewrite_http_request_x_forwarded_port><code class=arg>rewrite_http_request_x_forwarded_port</code></a>
+(Optional)
+Set X-Forwarded-Port</li><li class=tf_arg id=pool_healthcheck_interval><a href=#pool_healthcheck_interval><code class=arg>pool_healthcheck_interval</code></a>
+(Optional)
+Pool tasks healthcheck interval (in seconds)</li><li class=tf_arg id=pool_healthcheck_timeout><a href=#pool_healthcheck_timeout><code class=arg>pool_healthcheck_timeout</code></a>
+(Optional)
+Maximum amount of time that Mesos will wait for the healthcheck container to finish executing</li><li class=tf_arg id=name><a href=#name><code class=arg>name</code></a>
+(Required)
+The pool name</li><li class=tf_arg id=principal><a href=#principal><code class=arg>principal</code></a>
+(Optional)
+Mesos principal for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present</li><li class=tf_arg id=mem><a href=#mem><code class=arg>mem</code></a>
+(Optional)
+Memory requirements (in MB)</li><li class=tf_arg id=role><a href=#role><code class=arg>role</code></a>
+(Optional)
+Mesos role for load balancers. Defaults to &ldquo;slave_public&rdquo; so that load balancers will be run on public agents. Use &ldquo;*&rdquo; to run load balancers on private agents. Read more about Mesos roles at <a href=http://mesos.apache.org/documentation/latest/roles/>http://mesos.apache.org/documentation/latest/roles/</a></li><li class=tf_arg id=cpus><a href=#cpus><code class=arg>cpus</code></a>
+(Optional)
+CPU requirements</li><li class=tf_arg id=namespace><a href=#namespace><code class=arg>namespace</code></a>
+(Optional)
+The DC/OS space (sometimes also referred to as a &ldquo;group&rdquo;).</li><li class=tf_arg id=disk><a href=#disk><code class=arg>disk</code></a>
+(Optional)
+Disk size (in MB)</li><li class=tf_arg id=pool_count><a href=#pool_count><code class=arg>pool_count</code></a>
+(Optional)
+Number of load balancer instances in the pool</li><li class=tf_arg id=ports><a href=#ports><code class=arg>ports</code></a>
+(Optional)
+Override ports to allocate for each load balancer instance. Defaults to {{haproxy.frontends[].bindPort}} and {{haproxy.stats.bindPort}}. Use this field to pre-allocate all needed ports with or without the frontends present. For example: [80, 443, 9090]. If the length of the ports array is not zero, only the ports specified will be allocated by the pool scheduler</li><li class=tf_arg id=virtual_networks><a href=#virtual_networks><code class=arg>virtual_networks</code></a>
+(Optional)
+Virtual networks to join</li><li class=tf_arg id=name><a href=#name><code class=arg>name</code></a>
+(Optional)
+The name of the virtual network to join.</li><li class=tf_arg id=labels><a href=#labels><code class=arg>labels</code></a>
+(Optional)
+Labels to pass to the virtual network plugin.</li><li class=tf_arg id=haproxy_frontends><a href=#haproxy_frontends><code class=arg>haproxy_frontends</code></a>
+(Optional)
+Virtual networks to join</li><li class=tf_arg id=name><a href=#name><code class=arg>name</code></a>
+(Optional)
+Defaults to frontend<em>{{bindAddress}}</em>{{bindPort}}</li><li class=tf_arg id=bind_port><a href=#bind_port><code class=arg>bind_port</code></a>
+(Optional)
+The port (e.g. 80 for HTTP or 443 for HTTPS) that this frontend will bind to</li><li class=tf_arg id=bind_modifier><a href=#bind_modifier><code class=arg>bind_modifier</code></a>
+(Optional)
+Additional text to put in the bind field</li><li class=tf_arg id=certificates><a href=#certificates><code class=arg>certificates</code></a>
+(Optional)</li><li class=tf_arg id=redirect_to_https_except><a href=#redirect_to_https_except><code class=arg>redirect_to_https_except</code></a>
+(Optional)</li><li class=tf_arg id=host><a href=#host><code class=arg>host</code></a>
+(Optional)
+Match on host</li><li class=tf_arg id=path_beg><a href=#path_beg><code class=arg>path_beg</code></a>
+(Optional)
+Match on path</li><li class=tf_arg id=linked_backend_default_backend><a href=#linked_backend_default_backend><code class=arg>linked_backend_default_backend</code></a>
+(Optional)
+This is default backend that is routed to if none of the other filters are matched.</li><li class=tf_arg id=bind_address><a href=#bind_address><code class=arg>bind_address</code></a>
+(Optional)
+Only use characters that are allowed in the frontend name. Known invalid frontend name characters include &ldquo;*&ldquo;, &ldquo;[&ldquo;, and &ldquo;]&rdquo;</li><li class=tf_arg id=misc_strs><a href=#misc_strs><code class=arg>misc_strs</code></a>
+(Optional)
+Additional template lines inserted before use_backend</li><li class=tf_arg id=protocol><a href=#protocol><code class=arg>protocol</code></a>
+(Optional)
+Protocol</li><li class=tf_arg id=linked_backend_map><a href=#linked_backend_map><code class=arg>linked_backend_map</code></a>
+(Optional)
+This is an optional field that specifies a mapping to various backends. These rules are applied in order.</li><li class=tf_arg id=backend><a href=#backend><code class=arg>backend</code></a>
+(Optional)</li><li class=tf_arg id=host_eq><a href=#host_eq><code class=arg>host_eq</code></a>
+(Optional)</li><li class=tf_arg id=host_reg><a href=#host_reg><code class=arg>host_reg</code></a>
+(Optional)</li><li class=tf_arg id=path_beg><a href=#path_beg><code class=arg>path_beg</code></a>
+(Optional)</li><li class=tf_arg id=path_end><a href=#path_end><code class=arg>path_end</code></a>
+(Optional)</li><li class=tf_arg id=path_reg><a href=#path_reg><code class=arg>path_reg</code></a>
+(Optional)</li><li class=tf_arg id=pool_healthcheck_grace_period><a href=#pool_healthcheck_grace_period><code class=arg>pool_healthcheck_grace_period</code></a>
+(Optional)
+Pool tasks healthcheck grace period (in seconds)</li><li class=tf_arg id=pool_healthcheck_max_fail><a href=#pool_healthcheck_max_fail><code class=arg>pool_healthcheck_max_fail</code></a>
+(Optional)
+Pool tasks healthcheck maximum number of consecutive failures before declaring as unhealthy</li></ul><h2 id=attributes-reference>Attributes Reference</h2><p>addition to all arguments above, the following attributes are exported:</p><ul><li class=tf_arg id=gid><a href=#gid><code class=arg>gid</code></a>
+(Optional)
+User ID to apply the grant on.</li></ul></article></div><aside class="book-toc levels-6 fixed"><nav id=TableOfContents><ul><li><a href=#resource-dcos-edgelb-v2-pool>Resource: dcos_edgelb_v2_pool</a><ul><li><a href=#example-usage>Example Usage</a></li><li><a href=#argument-reference>Argument Reference</a></li><li><a href=#attributes-reference>Attributes Reference</a></li></ul></li></ul></nav></aside></main></body></html>

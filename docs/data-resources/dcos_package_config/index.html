@@ -1,779 +1,144 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="dcos_package_config" />
-<meta property="og:description" content="Data Resource: dcos_package_config Provides the configuration settings of a package before passing it to the dcos_package resource for the actual deployment.
-Example Usage resource &#34;dcos_package_repo&#34; &#34;universe&#34; { } data &#34;dcos_package_version&#34; &#34;jenkins-latest&#34; { repo_url = &#34;${dcos_package_repo.universe.url}&#34; name = &#34;jenkins&#34; version = &#34;latest&#34; index = -1 }# Optional previous configuration to chain against data &#34;dcos_package_config&#34; &#34;previous&#34; { ... }# Configure a specific version of the package data &#34;dcos_package_config&#34; &#34;current&#34; { version_spec = &#34;${data." />
-<meta property="og:type" content="article" />
-<meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/" />
-
-<title>dcos_package_config | DC/OS Terraform Provider</title>
-<link rel="icon" href="/terraform-provider-dcos/favicon.png" type="image/x-icon">
-
-
-<link rel="stylesheet" href="/terraform-provider-dcos/book.min.06f36f77411fb7f10ae468fbe4855cec3709e6d93a4680927b5431c872bf4654.css" integrity="sha256-BvNvd0Eft/EK5Gj75IVc7DcJ5tk6RoCSe1QxyHK/RlQ=">
-
-
-<script defer src="/terraform-provider-dcos/search.min.11b74992db1db8b391257c33ca168caebfc36ac1a22d1b83ae593f08f2876d8c.js" integrity="sha256-EbdJktsduLORJXwzyhaMrr/DasGiLRuDrlk/CPKHbYw="></script>
-
-<!--
-Made with Book Theme
-https://github.com/alex-shpak/hugo-book
--->
-
-    <link rel="stylesheet" href="https://mesosphere.github.io/terraform-provider-dcos//css/styles.css">
-
-</head>
-
-<body>
-  <input type="checkbox" class="hidden" id="menu-control" />
-  <main class="flex container">
-
-    <aside class="book-menu fixed">
-      <nav>
-<h2 class="book-brand">
-  <a href="https://mesosphere.github.io/terraform-provider-dcos/"><span>DC/OS Terraform Provider</span>
-  </a>
-</h2>
-
-
-<div class="book-search">
-  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" />
-  <div class="book-search-spinner spinner hidden"></div>
-  <ul id="book-search-results"></ul>
-</div>
-
-
-
-
-
-    
-
-  
-  
-
-
-
-
-
- 
-  
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        
-
-  <li >
-    
-      <span>Getting Started</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/getting-started/installation/" >
-      Installation
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/getting-started/authentication/" >
-      Authentication
-  </a>
-
-</li>
-      
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-      
-        
-
-  <li >
-    
-      <span>Examples</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-      
-        
-
-  <li >
-    
-      <span>Resources</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/" >
-      dcos_edgelb_v2_pool
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_job/" >
-      dcos_job
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_job_schedule/" >
-      dcos_job_schedule
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_app/" >
-      dcos_marathon_app
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_marathon_pod/" >
-      dcos_marathon_pod
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_package/" >
-      dcos_package
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_package_repo/" >
-      dcos_package_repo
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/" >
-      dcos_security_cluster_oidc
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/" >
-      dcos_security_cluster_saml
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group/" >
-      dcos_security_org_group
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/" >
-      dcos_security_org_group_user
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/" >
-      dcos_security_org_service_account
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user/" >
-      dcos_security_org_user
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/" >
-      dcos_security_org_user_grant
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/resources/dcos_security_secret/" >
-      dcos_security_secret
-  </a>
-
-</li>
-      
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-      
-        
-
-  <li >
-    
-      <span>Data Resources</span>
-    
-
-    
-
-
-
-
-  
-  <ul>
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_config/"  class="active">
-      dcos_package_config
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/" >
-      dcos_package_version
-  </a>
-
-</li>
-      
-    
-      
-        <li>
-
-  <a href="/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/" >
-      dcos_security_secret_service_account_secret
-  </a>
-
-</li>
-      
-    
-  </ul>
-  
-
-
-
-  </li>
-
-
-      
-    
-  </ul>
-  
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-</nav>
-
-
-<script>
-(function() {
-  var menu = document.querySelector("aside.book-menu nav");
-  addEventListener("beforeunload", function(event) {
-    localStorage.setItem("menu.scrollTop", menu.scrollTop);
-  });
-  menu.scrollTop = localStorage.getItem("menu.scrollTop");
-})();
-</script>
-
-    </aside>
-
-    <div class="book-page">
-      <header class="flex align-center justify-between book-header">
-  <label for="menu-control">
-    <img src="/terraform-provider-dcos/svg/menu.svg" alt="Menu" />
-  </label>
-  <strong>dcos_package_config</strong>
-</header>
-
-      
-<article class="markdown"><h1 id="data-resource-dcos_package_config">Data Resource: dcos_package_config</h1>
-<p>Provides the configuration settings of a package before passing it to the <a href="/terraform-provider-dcos/docs/resources/dcos_package/"><code>dcos_package</code></a> resource for the actual deployment.</p>
-<h2 id="example-usage">Example Usage</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">resource</span> <span style="color:#4e9a06">&#34;dcos_package_repo&#34; &#34;universe&#34;</span> { }
-
-<span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_version&#34; &#34;jenkins-latest&#34;</span> {
-<span style="color:#000">    repo_url</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${dcos_package_repo.universe.url}&#34;</span>
-<span style="color:#000">    name</span>     <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;jenkins&#34;</span>
-<span style="color:#000">    version</span>  <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;latest&#34;</span>
-<span style="color:#000">    index</span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#a40000">-</span><span style="color:#0000cf;font-weight:bold">1</span>
-}<span style="color:#8f5902;font-style:italic">
-</span><span style="color:#8f5902;font-style:italic">
-</span><span style="color:#8f5902;font-style:italic"># Optional previous configuration to chain against
-</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34; &#34;previous&#34;</span> { <span style="color:#000;font-weight:bold">...</span> }<span style="color:#8f5902;font-style:italic">
-</span><span style="color:#8f5902;font-style:italic">
-</span><span style="color:#8f5902;font-style:italic"># Configure a specific version of the package
-</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34; &#34;current&#34;</span> {
-<span style="color:#000">  version_spec</span>      <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${data.dcos_package_version.jenkins-latest.spec}&#34;</span>
-<span style="color:#000">  extend</span>            <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${data.dcos_package_config.previous.config}&#34;</span>
-<span style="color:#000">  autotype</span>          <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">true</span>
-<span style="color:#000">  checksum</span>          <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">[</span> <span style="color:#4e9a06">&#34;version-1&#34;</span> <span style="color:#000;font-weight:bold">]</span>
-
-  <span style="color:#204a87;font-weight:bold">section</span> {
-<span style="color:#000">    path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;service&#34;</span>
-<span style="color:#000">    map</span> <span style="color:#ce5c00;font-weight:bold">=</span> {
-<span style="color:#000">        cpus</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">4</span>
-<span style="color:#000">        mem</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">2048</span>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content="dcos_package_config"><meta property="og:description" content="Data Resource: dcos_package_config Provides the configuration settings of a package before passing it to the dcos_package resource for the actual deployment.
+Example Usage resource &#34;dcos_package_repo&#34; &#34;universe&#34; { } data &#34;dcos_package_version&#34; &#34;jenkins-latest&#34; { repo_url = &#34;${dcos_package_repo.universe.url}&#34; name = &#34;jenkins&#34; version = &#34;latest&#34; index = -1 }# Optional previous configuration to chain against data &#34;dcos_package_config&#34; &#34;previous&#34; { ... }# Configure a specific version of the package data &#34;dcos_package_config&#34; &#34;current&#34; { version_spec = &#34;${data."><meta property="og:type" content="article"><meta property="og:url" content="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/"><title>dcos_package_config | DC/OS Terraform Provider</title><link rel=icon href=/terraform-provider-dcos/favicon.png type=image/x-icon><link rel=stylesheet href=/terraform-provider-dcos/book.min.6c28d4c7786ace6b760a10f0da9a7fa873292f04f374a4819c43fd684501f609.css integrity="sha256-bCjUx3hqzmt2ChDw2pp/qHMpLwTzdKSBnEP9aEUB9gk="><script defer src=/terraform-provider-dcos/search.min.256f77323547a8bdf40ac5a923fa874318e4ec91a793be855221b4f2929dcc90.js integrity="sha256-JW93MjVHqL30CsWpI/qHQxjk7JGnk76FUiG08pKdzJA="></script><link rel=stylesheet href=https://mesosphere.github.io/terraform-provider-dcos//css/styles.css></head><body><input type=checkbox class=hidden id=menu-control><main class="flex container"><aside class="book-menu fixed"><nav><h2 class=book-brand><a href=https://mesosphere.github.io/terraform-provider-dcos/><span>DC/OS Terraform Provider</span></a></h2><div class=book-search><input type=text placeholder=Search id=book-search-input maxlength=64><div class="book-search-spinner spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><span>Getting Started</span><ul><li><a href=/terraform-provider-dcos/docs/getting-started/installation/>Installation</a></li><li><a href=/terraform-provider-dcos/docs/getting-started/authentication/>Authentication</a></li></ul></li><li><span>Examples</span><ul></ul></li><li><span>Resources</span><ul><li><a href=/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/>dcos_edgelb_v2_pool</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_job/>dcos_job</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_job_schedule/>dcos_job_schedule</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_marathon_app/>dcos_marathon_app</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_marathon_pod/>dcos_marathon_pod</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_package/>dcos_package</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_package_repo/>dcos_package_repo</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/>dcos_security_cluster_oidc</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/>dcos_security_cluster_saml</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_external_user/>dcos_security_org_external_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group/>dcos_security_org_group</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/>dcos_security_org_group_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/>dcos_security_org_service_account</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user/>dcos_security_org_user</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/>dcos_security_org_user_grant</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_security_secret/>dcos_security_secret</a></li><li><a href=/terraform-provider-dcos/docs/resources/dcos_service_http_request/>dcos_service_http_request</a></li></ul></li><li><span>Data Resources</span><ul><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_config/ class=active>dcos_package_config</a></li><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_package_version/>dcos_package_version</a></li><li><a href=/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/>dcos_security_secret_service_account_secret</a></li></ul></li></ul></nav><script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script></aside><div class=book-page><header class="flex align-center justify-between book-header"><label for=menu-control><img src=/terraform-provider-dcos/svg/menu.svg alt=Menu></label>
+<strong>dcos_package_config</strong></header><article class=markdown><h1 id=data-resource-dcos-package-config>Data Resource: dcos_package_config</h1><p>Provides the configuration settings of a package before passing it to the <a href=/terraform-provider-dcos/docs/resources/dcos_package/><code>dcos_package</code></a> resource for the actual deployment.</p><h2 id=example-usage>Example Usage</h2><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>resource</span> <span style=color:#4e9a06>&#34;dcos_package_repo&#34; &#34;universe&#34;</span> { }
+
+<span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_version&#34; &#34;jenkins-latest&#34;</span> {
+<span style=color:#000>    repo_url</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;${dcos_package_repo.universe.url}&#34;</span>
+<span style=color:#000>    name</span>     <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;jenkins&#34;</span>
+<span style=color:#000>    version</span>  <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;latest&#34;</span>
+<span style=color:#000>    index</span>    <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#a40000>-</span><span style=color:#0000cf;font-weight:700>1</span>
+}<span style=color:#8f5902;font-style:italic>
+</span><span style=color:#8f5902;font-style:italic>
+</span><span style=color:#8f5902;font-style:italic># Optional previous configuration to chain against
+</span><span style=color:#8f5902;font-style:italic></span><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34; &#34;previous&#34;</span> { <span style=color:#000;font-weight:700>...</span> }<span style=color:#8f5902;font-style:italic>
+</span><span style=color:#8f5902;font-style:italic>
+</span><span style=color:#8f5902;font-style:italic># Configure a specific version of the package
+</span><span style=color:#8f5902;font-style:italic></span><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34; &#34;current&#34;</span> {
+<span style=color:#000>  version_spec</span>      <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;${data.dcos_package_version.jenkins-latest.spec}&#34;</span>
+<span style=color:#000>  extend</span>            <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;${data.dcos_package_config.previous.config}&#34;</span>
+<span style=color:#000>  autotype</span>          <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#204a87;font-weight:700>true</span>
+<span style=color:#000>  checksum</span>          <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#000;font-weight:700>[</span> <span style=color:#4e9a06>&#34;version-1&#34;</span> <span style=color:#000;font-weight:700>]</span>
+
+  <span style=color:#204a87;font-weight:700>section</span> {
+<span style=color:#000>    path</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;service&#34;</span>
+<span style=color:#000>    map</span> <span style=color:#ce5c00;font-weight:700>=</span> {
+<span style=color:#000>        cpus</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#0000cf;font-weight:700>4</span>
+<span style=color:#000>        mem</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#0000cf;font-weight:700>2048</span>
     }
   }
-}
-</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
-<p>The following arguments are supported</p>
-<ul>
-  
-    <li class="tf_arg" id="version_spec">
-  <a href="#version_spec"><code class="arg">version_spec</code></a>
-  
-    
-      (Optional)
-    
-  
-  The package name, version and repository meta-data. Assign here the value of the <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/#spec"><code>.spec</code></a> output variable of a <a href="/terraform-provider-dcos/docs/data-resources/dcos_package_version/"><code>dcos_package_version</code></a> data resource.
-</li>
-
-    <li class="tf_arg" id="extend">
-  <a href="#extend"><code class="arg">extend</code></a>
-  
-    
-      (Optional)
-    
-  
-  The previous configuration to chain. Assign here the value of the <a href="#config"><code>.config</code></a> output variable of another <code>dcos_package_config</code> resource.
-</li>
-
-    <li class="tf_arg" id="autotype">
-  <a href="#autotype"><code class="arg">autotype</code></a>
-  
-    
-      (Optional, defaults to <code>true</code>)
-    
-  
-  If <code>true</code>, the provider will try to convert string JSON values from strings to their respective types (eg. “123” will become an integer 123)
-</li>
-
-    <li class="tf_arg" id="checksum">
-  <a href="#checksum"><code class="arg">checksum</code></a>
-  
-    
-      (Optional, defaults to <code>[]</code>)
-    
-  
-  An array of arbitrary string expressions that can be used to calculate a unique checksum for this configuration.
-</li>
-
-    <li class="tf_arg" id="section">
-  <a href="#section"><code class="arg">section</code></a>
-  
-    
-      (Optional, defaults to <code>[]</code>)
-    
-  
-  One or more configuration sections. Refer to <a href="#configuration-sections">Configuration Sections</a> for more details.
-</li>
-
-    <li class="tf_arg" id="config">
-  <a href="#config"><code class="arg output">config</code></a>
-  
-    <em>(Output Only)</em>
-  
-  This is an output (read-only) variable with the configuration meta-data of the package. Can be passed down to an <a href="#extend"><code>extend</code></a> property of another dcos_package_config resource, or to a dcos_package resource to deploy the service.
-</li>
-
-
-</ul>
-
-<h2 id="configuration-chaining">Configuration Chaining</h2>
-<p>This data resource can be extended, enabling the user to share common parts. A configuration is extended by chaining the previous <code>.config</code> variable with the current <code>.extend</code> variable:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34; &#34;kafka-zookeeper&#34;</span> {
-  <span style="color:#000;font-weight:bold">...</span>
+}</code></pre></div><h2 id=argument-reference>Argument Reference</h2><p>The following arguments are supported</p><ul><li class=tf_arg id=version_spec><a href=#version_spec><code class=arg>version_spec</code></a>
+(Optional)
+The package name, version and repository meta-data. Assign here the value of the <a href=/terraform-provider-dcos/docs/data-resources/dcos_package_version/#spec><code>.spec</code></a> output variable of a <a href=/terraform-provider-dcos/docs/data-resources/dcos_package_version/><code>dcos_package_version</code></a> data resource.</li><li class=tf_arg id=extend><a href=#extend><code class=arg>extend</code></a>
+(Optional)
+The previous configuration to chain. Assign here the value of the <a href=#config><code>.config</code></a> output variable of another <code>dcos_package_config</code> resource.</li><li class=tf_arg id=autotype><a href=#autotype><code class=arg>autotype</code></a>
+(Optional, defaults to <code>true</code>)
+If <code>true</code>, the provider will try to convert string JSON values from strings to their respective types (eg. “123” will become an integer 123)</li><li class=tf_arg id=checksum><a href=#checksum><code class=arg>checksum</code></a>
+(Optional, defaults to <code>[]</code>)
+An array of arbitrary string expressions that can be used to calculate a unique checksum for this configuration.</li><li class=tf_arg id=section><a href=#section><code class=arg>section</code></a>
+(Optional, defaults to <code>[]</code>)
+One or more configuration sections. Refer to <a href=#configuration-sections>Configuration Sections</a> for more details.</li><li class=tf_arg id=config><a href=#config><code class="arg output">config</code></a>
+<em>(Output Only)</em>
+This is an output (read-only) variable with the configuration meta-data of the package. Can be passed down to an <a href=#extend><code>extend</code></a> property of another dcos_package_config resource, or to a dcos_package resource to deploy the service.</li></ul><h2 id=configuration-chaining>Configuration Chaining</h2><p>This data resource can be extended, enabling the user to share common parts. A configuration is extended by chaining the previous <code>.config</code> variable with the current <code>.extend</code> variable:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34; &#34;kafka-zookeeper&#34;</span> {
+  <span style=color:#000;font-weight:700>...</span>
 }
 
-<span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34; &#34;kafka-zookeeper-kerberos&#34;</span> {
-<span style="color:#000">  extend</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${data.dcos_package_config.kafka-zookeeper.config}&#34;</span>
-  <span style="color:#000;font-weight:bold">...</span>
-}
-</code></pre></div><p>You are free to nest your configurations as desired, making sure that the final <code>dcos_package_config</code> data resource passed to the <code>dcos_package</code> resource contains a version information:</p>
-
-
-<script src="/terraform-provider-dcos/mermaid.min.js"></script>
-
-
-
-<p class="mermaid text-center">
-  
-graph TD;
-    subgraph Example 2;
-    style cfg4 fill:#fff,stroke:#999;
-    style cfg5 fill:#fff,stroke:#999;
-    style cfg6 fill:#fff,stroke:#999;
-    style cfg7 fill:#fff,stroke:#999;
-    style cfg8 fill:#fff,stroke:#999;
-    cfg4("Config<br />A");
-    cfg4 -- .extend --> cfg5("Config<br />B");
-    cfg4 -- .extend --> cfg6("Config<br />C");
-    cfg5 -- .extend --> cfg7("Config<br />D");
-    cfg6 -- .extend --> cfg8("Config<br />E");
-    ver2>Version 1] -- .version_spec --> cfg7;
-    ver3>Version 2] -- .version_spec --> cfg8;
-    cfg7 -- .config --> depl3["Deployment<br/>A"];
-    cfg8 -- .config --> depl4["Deployment<br/>B"];
-    end;
-
-    subgraph Example 1;
-    style cfg1 fill:#fff,stroke:#999;
-    style cfg2 fill:#fff,stroke:#999;
-    style cfg3 fill:#fff,stroke:#999;
-    ver1>Version] -- .version_spec --> cfg1("Config<br />A");
-    cfg1 -- .extend  --> cfg2("Config<br/>B");
-    cfg1 -- .extend --> cfg3("Config<br/>C");
-    cfg2 -- .config --> depl1["Deployment<br/>A"];
-    cfg3 -- .config --> depl2["Deployment<br/>B"];
-    end;
-
-</p>
-
-<p>You can attach a <code>version_spec</code> at any point of the chain. As seen in the example above, this is not required to happen on the root.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_version&#34; &#34;kafka-zookeeper&#34;</span> {
-  <span style="color:#000;font-weight:bold">...</span>
+<span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34; &#34;kafka-zookeeper-kerberos&#34;</span> {
+<span style=color:#000>  extend</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;${data.dcos_package_config.kafka-zookeeper.config}&#34;</span>
+  <span style=color:#000;font-weight:700>...</span>
+}</code></pre></div><p>You are free to nest your configurations as desired, making sure that the final <code>dcos_package_config</code> data resource passed to the <code>dcos_package</code> resource contains a version information:</p><script src=/terraform-provider-dcos/mermaid.min.js></script><p class="mermaid text-center">graph TD;
+subgraph Example 2;
+style cfg4 fill:#fff,stroke:#999;
+style cfg5 fill:#fff,stroke:#999;
+style cfg6 fill:#fff,stroke:#999;
+style cfg7 fill:#fff,stroke:#999;
+style cfg8 fill:#fff,stroke:#999;
+cfg4("Config<br>A");
+cfg4 -- .extend --> cfg5("Config<br>B");
+cfg4 -- .extend --> cfg6("Config<br>C");
+cfg5 -- .extend --> cfg7("Config<br>D");
+cfg6 -- .extend --> cfg8("Config<br>E");
+ver2>Version 1] -- .version_spec --> cfg7;
+ver3>Version 2] -- .version_spec --> cfg8;
+cfg7 -- .config --> depl3["Deployment<br>A"];
+cfg8 -- .config --> depl4["Deployment<br>B"];
+end;
+subgraph Example 1;
+style cfg1 fill:#fff,stroke:#999;
+style cfg2 fill:#fff,stroke:#999;
+style cfg3 fill:#fff,stroke:#999;
+ver1>Version] -- .version_spec --> cfg1("Config<br>A");
+cfg1 -- .extend --> cfg2("Config<br>B");
+cfg1 -- .extend --> cfg3("Config<br>C");
+cfg2 -- .config --> depl1["Deployment<br>A"];
+cfg3 -- .config --> depl2["Deployment<br>B"];
+end;</p><p>You can attach a <code>version_spec</code> at any point of the chain. As seen in the example above, this is not required to happen on the root.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_version&#34; &#34;kafka-zookeeper&#34;</span> {
+  <span style=color:#000;font-weight:700>...</span>
 }
 
-<span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34; &#34;kafka-zookeeper&#34;</span> {
-<span style="color:#000">  version_spec</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;${data.dcos_package_version.kafka-zookeeper.spec}&#34;</span>
-  <span style="color:#000;font-weight:bold">...</span>
-}
-</code></pre></div><h2 id="configuration-sections">Configuration Sections</h2>
-<p>In order to be able to provide configuration parameters in a format friendly to terraform we are using the concept of configuration “sections”. Each section is a value in a particular path in the configuration JSON object. There are three kinds of sections:</p>
-<ul>
-<li><a href="#object-section">Object Sections</a></li>
-<li><a href="#list-section">List Sections</a></li>
-<li><a href="#raw-section">Raw Sections</a></li>
-</ul>
-<p>Each section has a <code>path</code> property that specifies the JSON path where to inject it&rsquo;s properties. This property can point to an object at arbitrary depth. For example:</p>
-<div class="book-columns flex flex-wrap">
-  
-  <div class="flex-even markdown-inner">
-    <p>The configuration:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34;</span> <span style="color:#000;font-weight:bold">...</span> {
-  <span style="color:#204a87;font-weight:bold">section</span> {
-<span style="color:#000">    path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;service&#34;</span>
-    <span style="color:#204a87;font-weight:bold">map</span> {
-<span style="color:#000">      name</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;foo&#34;</span>
+<span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34; &#34;kafka-zookeeper&#34;</span> {
+<span style=color:#000>  version_spec</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;${data.dcos_package_version.kafka-zookeeper.spec}&#34;</span>
+  <span style=color:#000;font-weight:700>...</span>
+}</code></pre></div><h2 id=configuration-sections>Configuration Sections</h2><p>In order to be able to provide configuration parameters in a format friendly to terraform we are using the concept of configuration “sections”. Each section is a value in a particular path in the configuration JSON object. There are three kinds of sections:</p><ul><li><a href=#object-section>Object Sections</a></li><li><a href=#list-section>List Sections</a></li><li><a href=#raw-section>Raw Sections</a></li></ul><p>Each section has a <code>path</code> property that specifies the JSON path where to inject it&rsquo;s properties. This property can point to an object at arbitrary depth. For example:</p><div class="book-columns flex flex-wrap"><div class="flex-even markdown-inner"><p>The configuration:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34;</span> <span style=color:#000;font-weight:700>...</span> {
+  <span style=color:#204a87;font-weight:700>section</span> {
+<span style=color:#000>    path</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;service&#34;</span>
+    <span style=color:#204a87;font-weight:700>map</span> {
+<span style=color:#000>      name</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;foo&#34;</span>
     }
   }
-}
-</code></pre></div>
-  </div>
-  
-  <div class="flex-even markdown-inner">
-    <p>Will produce:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#000;font-weight:bold">{</span>
-  <span style="color:#204a87;font-weight:bold">&#34;service&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
-    <span style="color:#204a87;font-weight:bold">&#34;name&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;foo&#34;</span>
-  <span style="color:#000;font-weight:bold">}</span>
-<span style="color:#000;font-weight:bold">}</span>
-</code></pre></div>
-  </div>
-  
-</div>
-
-<div class="book-columns flex flex-wrap">
-  
-  <div class="flex-even markdown-inner">
-    <p>And the configuration:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#204a87;font-weight:bold">data</span> <span style="color:#4e9a06">&#34;dcos_package_config&#34;</span> <span style="color:#000;font-weight:bold">...</span> {
-  <span style="color:#204a87;font-weight:bold">section</span> {
-<span style="color:#000">    path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;service.kdc.hosts&#34;</span>
-<span style="color:#000">    list</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">[</span>
-      <span style="color:#4e9a06">&#34;host1&#34;</span><span style="color:#000;font-weight:bold">,</span>
-      <span style="color:#4e9a06">&#34;host2&#34;</span><span style="color:#000;font-weight:bold">,</span>
-      <span style="color:#4e9a06">&#34;host3&#34;</span>
-    <span style="color:#000;font-weight:bold">]</span>
+}</code></pre></div></div><div class="flex-even markdown-inner"><p>Will produce:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=color:#000;font-weight:700>{</span>
+  <span style=color:#204a87;font-weight:700>&#34;service&#34;</span><span style=color:#000;font-weight:700>:</span> <span style=color:#000;font-weight:700>{</span>
+    <span style=color:#204a87;font-weight:700>&#34;name&#34;</span><span style=color:#000;font-weight:700>:</span> <span style=color:#4e9a06>&#34;foo&#34;</span>
+  <span style=color:#000;font-weight:700>}</span>
+<span style=color:#000;font-weight:700>}</span></code></pre></div></div></div><div class="book-columns flex flex-wrap"><div class="flex-even markdown-inner"><p>And the configuration:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=color:#204a87;font-weight:700>data</span> <span style=color:#4e9a06>&#34;dcos_package_config&#34;</span> <span style=color:#000;font-weight:700>...</span> {
+  <span style=color:#204a87;font-weight:700>section</span> {
+<span style=color:#000>    path</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;service.kdc.hosts&#34;</span>
+<span style=color:#000>    list</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#000;font-weight:700>[</span>
+      <span style=color:#4e9a06>&#34;host1&#34;</span><span style=color:#000;font-weight:700>,</span>
+      <span style=color:#4e9a06>&#34;host2&#34;</span><span style=color:#000;font-weight:700>,</span>
+      <span style=color:#4e9a06>&#34;host3&#34;</span>
+    <span style=color:#000;font-weight:700>]</span>
   }
-}
-</code></pre></div>
-  </div>
-  
-  <div class="flex-even markdown-inner">
-    <p>Will produce:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#000;font-weight:bold">{</span>
-  <span style="color:#204a87;font-weight:bold">&#34;service&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
-    <span style="color:#204a87;font-weight:bold">&#34;kdc&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
-      <span style="color:#204a87;font-weight:bold">&#34;hosts&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">[</span>
-        <span style="color:#4e9a06">&#34;host1&#34;</span><span style="color:#000;font-weight:bold">,</span>
-        <span style="color:#4e9a06">&#34;host2&#34;</span><span style="color:#000;font-weight:bold">,</span>
-        <span style="color:#4e9a06">&#34;host3&#34;</span>
-      <span style="color:#000;font-weight:bold">]</span>
-    <span style="color:#000;font-weight:bold">}</span>
-  <span style="color:#000;font-weight:bold">}</span>
-<span style="color:#000;font-weight:bold">}</span>
-</code></pre></div>
-  </div>
-  
-</div>
-
-<h3 id="object-section">Object Section</h3>
-<p>The object section is equivalent to a JSON object. The section properties will be mapped 1:1 to the resulting JSON.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl">  <span style="color:#204a87;font-weight:bold">section</span> {
-<span style="color:#000">    path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;service.config&#34;</span>
-<span style="color:#000">    map</span> <span style="color:#ce5c00;font-weight:bold">=</span> {
-<span style="color:#000">        name</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;foo&#34;</span>
-<span style="color:#000">        cpus</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">3</span>
-        <span style="color:#000;font-weight:bold">...</span>
+}</code></pre></div></div><div class="flex-even markdown-inner"><p>Will produce:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=color:#000;font-weight:700>{</span>
+  <span style=color:#204a87;font-weight:700>&#34;service&#34;</span><span style=color:#000;font-weight:700>:</span> <span style=color:#000;font-weight:700>{</span>
+    <span style=color:#204a87;font-weight:700>&#34;kdc&#34;</span><span style=color:#000;font-weight:700>:</span> <span style=color:#000;font-weight:700>{</span>
+      <span style=color:#204a87;font-weight:700>&#34;hosts&#34;</span><span style=color:#000;font-weight:700>:</span> <span style=color:#000;font-weight:700>[</span>
+        <span style=color:#4e9a06>&#34;host1&#34;</span><span style=color:#000;font-weight:700>,</span>
+        <span style=color:#4e9a06>&#34;host2&#34;</span><span style=color:#000;font-weight:700>,</span>
+        <span style=color:#4e9a06>&#34;host3&#34;</span>
+      <span style=color:#000;font-weight:700>]</span>
+    <span style=color:#000;font-weight:700>}</span>
+  <span style=color:#000;font-weight:700>}</span>
+<span style=color:#000;font-weight:700>}</span></code></pre></div></div></div><h3 id=object-section>Object Section</h3><p>The object section is equivalent to a JSON object. The section properties will be mapped 1:1 to the resulting JSON.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl>  <span style=color:#204a87;font-weight:700>section</span> {
+<span style=color:#000>    path</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;service.config&#34;</span>
+<span style=color:#000>    map</span> <span style=color:#ce5c00;font-weight:700>=</span> {
+<span style=color:#000>        name</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;foo&#34;</span>
+<span style=color:#000>        cpus</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#0000cf;font-weight:700>3</span>
+        <span style=color:#000;font-weight:700>...</span>
     }
-  }
-</code></pre></div><ul>
-  
-    <li class="tf_arg" id="object-path">
-  <a href="#object-path"><code class="arg">path</code></a>
-  
-    
-      (Required)
-    
-  
-  The path in the resulting object where to inject the object properties.
-</li>
-
-    <li class="tf_arg" id="object-map">
-  <a href="#object-map"><code class="arg">map</code></a>
-  
-    
-      (Required)
-    
-  
-  An object with an arbitrary set of (key/value) pairs that will be inserted to the target path.
-</li>
-
-
-</ul>
-
-<h3 id="list-section">List Section</h3>
-<p>The list section is equivalent to a JSON array, with the only exception that you must specify scalar values.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl">  <span style="color:#204a87;font-weight:bold">section</span> {
-<span style="color:#000">    path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;service.kdc.hosts&#34;</span>
-<span style="color:#000">    list</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">[</span>
-        <span style="color:#4e9a06">&#34;host-1&#34;</span><span style="color:#000;font-weight:bold">,</span>
-        <span style="color:#4e9a06">&#34;host-2&#34;</span><span style="color:#000;font-weight:bold">,</span>
-        <span style="color:#4e9a06">&#34;host-3&#34;</span>
-    <span style="color:#000;font-weight:bold">]</span>
-  }
-</code></pre></div><ul>
-  
-    <li class="tf_arg" id="list-path">
-  <a href="#list-path"><code class="arg">path</code></a>
-  
-    
-      (Required)
-    
-  
-  The path in the resulting object where to inject the object properties.
-</li>
-
-    <li class="tf_arg" id="list-list">
-  <a href="#list-list"><code class="arg">list</code></a>
-  
-    
-      (Required)
-    
-  
-  An list of scalar values (eg. strings, booleans, numbers) that will be inserted to the target path.
-</li>
-
-
-</ul>
-
-<h3 id="raw-section">Raw Section</h3>
-<p>If the map or list values are not fitting in your case, you can fall-back to raw JSON string.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl">  <span style="color:#204a87;font-weight:bold">section</span> {
-<span style="color:#000">    path</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#4e9a06">&#34;service&#34;</span>
-<span style="color:#000">    json</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#a40000">&lt;&lt;</span><span style="color:#204a87;font-weight:bold">EOF</span>
+  }</code></pre></div><ul><li class=tf_arg id=object-path><a href=#object-path><code class=arg>path</code></a>
+(Required)
+The path in the resulting object where to inject the object properties.</li><li class=tf_arg id=object-map><a href=#object-map><code class=arg>map</code></a>
+(Required)
+An object with an arbitrary set of (key/value) pairs that will be inserted to the target path.</li></ul><h3 id=list-section>List Section</h3><p>The list section is equivalent to a JSON array, with the only exception that you must specify scalar values.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl>  <span style=color:#204a87;font-weight:700>section</span> {
+<span style=color:#000>    path</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;service.kdc.hosts&#34;</span>
+<span style=color:#000>    list</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#000;font-weight:700>[</span>
+        <span style=color:#4e9a06>&#34;host-1&#34;</span><span style=color:#000;font-weight:700>,</span>
+        <span style=color:#4e9a06>&#34;host-2&#34;</span><span style=color:#000;font-weight:700>,</span>
+        <span style=color:#4e9a06>&#34;host-3&#34;</span>
+    <span style=color:#000;font-weight:700>]</span>
+  }</code></pre></div><ul><li class=tf_arg id=list-path><a href=#list-path><code class=arg>path</code></a>
+(Required)
+The path in the resulting object where to inject the object properties.</li><li class=tf_arg id=list-list><a href=#list-list><code class=arg>list</code></a>
+(Required)
+An list of scalar values (eg. strings, booleans, numbers) that will be inserted to the target path.</li></ul><h3 id=raw-section>Raw Section</h3><p>If the map or list values are not fitting in your case, you can fall-back to raw JSON string.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl>  <span style=color:#204a87;font-weight:700>section</span> {
+<span style=color:#000>    path</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#4e9a06>&#34;service&#34;</span>
+<span style=color:#000>    json</span> <span style=color:#ce5c00;font-weight:700>=</span> <span style=color:#a40000>&lt;&lt;</span><span style=color:#204a87;font-weight:700>EOF</span>
     {
-      <span style="color:#4e9a06">&#34;placement_constraint&#34;: &#34;[[\&#34;@zone\&#34;,\&#34;GROUP_BY\&#34;,\&#34;3\&#34;]]&#34;</span>
+      <span style=color:#4e9a06>&#34;placement_constraint&#34;: &#34;[[\&#34;@zone\&#34;,\&#34;GROUP_BY\&#34;,\&#34;3\&#34;]]&#34;</span>
     }
-    <span style="color:#204a87;font-weight:bold">EOF</span>
-  }
-</code></pre></div><ul>
-  
-    <li class="tf_arg" id="raw-path">
-  <a href="#raw-path"><code class="arg">path</code></a>
-  
-    
-      (Required)
-    
-  
-  The path in the resulting object where to inject the object properties.
-</li>
-
-    <li class="tf_arg" id="raw-raw">
-  <a href="#raw-raw"><code class="arg">raw</code></a>
-  
-    
-      (Required)
-    
-  
-  An valid JSON string that will be inserted to the target path. This can be an object, an array or a scalar value.
-</li>
-
-
-</ul>
-
-</article>
-
-      
-
-      
-    </div>
-
-    
-  
-
-  <aside class="book-toc levels-6 fixed">
-    <nav id="TableOfContents">
-  <ul>
-    <li><a href="#example-usage">Example Usage</a></li>
-    <li><a href="#argument-reference">Argument Reference</a></li>
-    <li><a href="#configuration-chaining">Configuration Chaining</a></li>
-    <li><a href="#configuration-sections">Configuration Sections</a>
-      <ul>
-        <li><a href="#object-section">Object Section</a></li>
-        <li><a href="#list-section">List Section</a></li>
-        <li><a href="#raw-section">Raw Section</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-  </aside>
-
-
-
-  </main>
-
-  
-</body>
-
-</html>
+    <span style=color:#204a87;font-weight:700>EOF</span>
+  }</code></pre></div><ul><li class=tf_arg id=raw-path><a href=#raw-path><code class=arg>path</code></a>
+(Required)
+The path in the resulting object where to inject the object properties.</li><li class=tf_arg id=raw-raw><a href=#raw-raw><code class=arg>raw</code></a>
+(Required)
+An valid JSON string that will be inserted to the target path. This can be an object, an array or a scalar value.</li></ul></article></div><aside class="book-toc levels-6 fixed"><nav id=TableOfContents><ul><li><a href=#data-resource-dcos-package-config>Data Resource: dcos_package_config</a><ul><li><a href=#example-usage>Example Usage</a></li><li><a href=#argument-reference>Argument Reference</a></li><li><a href=#configuration-chaining>Configuration Chaining</a></li><li><a href=#configuration-sections>Configuration Sections</a><ul><li><a href=#object-section>Object Section</a></li><li><a href=#list-section>List Section</a></li><li><a href=#raw-section>Raw Section</a></li></ul></li></ul></li></ul></nav></aside></main></body></html>

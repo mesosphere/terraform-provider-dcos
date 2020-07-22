@@ -1,45 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Data Resources on DC/OS Terraform Provider</title>
-    <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/</link>
-    <description>Recent content in Data Resources on DC/OS Terraform Provider</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    
-	<atom:link href="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>dcos_package_config</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</guid>
-      <description>Data Resource: dcos_package_config Provides the configuration settings of a package before passing it to the dcos_package resource for the actual deployment.
-Example Usage resource &amp;#34;dcos_package_repo&amp;#34; &amp;#34;universe&amp;#34; { } data &amp;#34;dcos_package_version&amp;#34; &amp;#34;jenkins-latest&amp;#34; { repo_url = &amp;#34;${dcos_package_repo.universe.url}&amp;#34; name = &amp;#34;jenkins&amp;#34; version = &amp;#34;latest&amp;#34; index = -1 }# Optional previous configuration to chain against data &amp;#34;dcos_package_config&amp;#34; &amp;#34;previous&amp;#34; { ... }# Configure a specific version of the package data &amp;#34;dcos_package_config&amp;#34; &amp;#34;current&amp;#34; { version_spec = &amp;#34;${data.</description>
-    </item>
-    
-    <item>
-      <title>dcos_package_version</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</guid>
-      <description>Data Resource: dcos_package_version Selects a package version from the given catalog repository.
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Data Resources on DC/OS Terraform Provider</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/</link><description>Recent content in Data Resources on DC/OS Terraform Provider</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/index.xml" rel="self" type="application/rss+xml"/><item><title>dcos_package_config</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</guid><description>Data Resource: dcos_package_config Provides the configuration settings of a package before passing it to the dcos_package resource for the actual deployment.
+Example Usage resource &amp;#34;dcos_package_repo&amp;#34; &amp;#34;universe&amp;#34; { } data &amp;#34;dcos_package_version&amp;#34; &amp;#34;jenkins-latest&amp;#34; { repo_url = &amp;#34;${dcos_package_repo.universe.url}&amp;#34; name = &amp;#34;jenkins&amp;#34; version = &amp;#34;latest&amp;#34; index = -1 }# Optional previous configuration to chain against data &amp;#34;dcos_package_config&amp;#34; &amp;#34;previous&amp;#34; { ... }# Configure a specific version of the package data &amp;#34;dcos_package_config&amp;#34; &amp;#34;current&amp;#34; { version_spec = &amp;#34;${data.</description></item><item><title>dcos_package_version</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</guid><description>Data Resource: dcos_package_version Selects a package version from the given catalog repository.
 Example Usage resource &amp;#34;dcos_package_repo&amp;#34; &amp;#34;universe&amp;#34; { }# Select a package version out of a repository data &amp;#34;dcos_package_version&amp;#34; &amp;#34;jenkins-latest&amp;#34; { repo_url = &amp;#34;${dcos_package_repo.universe.url}&amp;#34; name = &amp;#34;jenkins&amp;#34; version = &amp;#34;latest&amp;#34; index = -1 } Argument Reference The following arguments are supported
- repo_url (Required) the repository URL where to search for the package. This is typically the .url output variable of a dcos_package_repo resource  name (Required) the name of the package to resolve in the repository specified.</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_secret_service_account_secret</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</guid>
-      <description>Data Resource: dcos_security_secret_service_account_secret Computes the contents for the service account secret
-Example Usage # Create a private key using an external provider (eg. tls) resource &amp;#34;tls_private_key&amp;#34; &amp;#34;service_account_key&amp;#34; { algorithm = &amp;#34;RSA&amp;#34; rsa_bits = &amp;#34;2048&amp;#34; }# Pass the private key and the user account to the resource data &amp;#34;dcos_security_secret_service_account_secret&amp;#34; &amp;#34;service_account&amp;#34; { uid = &amp;#34;user-login&amp;#34; private_key = &amp;#34;${tls_private_key.service_account_key.private_key_pem}&amp;#34; }# Handle the contents (eg. upload to a secret) resource &amp;#34;dcos_security_secret&amp;#34; &amp;#34;service_account_secret&amp;#34; { path = &amp;#34;my-service/service-account&amp;#34; value = &amp;#34;${data.</description>
-    </item>
-    
-  </channel>
-</rss>
+repo_url (Required) the repository URL where to search for the package. This is typically the .url output variable of a dcos_package_repo resource name (Required) the name of the package to resolve in the repository specified.</description></item><item><title>dcos_security_secret_service_account_secret</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</guid><description>Data Resource: dcos_security_secret_service_account_secret Computes the contents for the service account secret
+Example Usage # Create a private key using an external provider (eg. tls) resource &amp;#34;tls_private_key&amp;#34; &amp;#34;service_account_key&amp;#34; { algorithm = &amp;#34;RSA&amp;#34; rsa_bits = &amp;#34;2048&amp;#34; }# Pass the private key and the user account to the resource data &amp;#34;dcos_security_secret_service_account_secret&amp;#34; &amp;#34;service_account&amp;#34; { uid = &amp;#34;user-login&amp;#34; private_key = &amp;#34;${tls_private_key.service_account_key.private_key_pem}&amp;#34; }# Handle the contents (eg. upload to a secret) resource &amp;#34;dcos_security_secret&amp;#34; &amp;#34;service_account_secret&amp;#34; { path = &amp;#34;my-service/service-account&amp;#34; value = &amp;#34;${data.</description></item></channel></rss>

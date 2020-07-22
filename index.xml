@@ -1,225 +1,35 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>DC/OS Terraform Provider</title>
-    <link>https://mesosphere.github.io/terraform-provider-dcos/</link>
-    <description>Recent content on DC/OS Terraform Provider</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    
-	<atom:link href="https://mesosphere.github.io/terraform-provider-dcos/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>Installation</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/installation/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/installation/</guid>
-      <description>Installation There are various ways you can obtain the terraform-provider-dcs binary.
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>DC/OS Terraform Provider</title><link>https://mesosphere.github.io/terraform-provider-dcos/</link><description>Recent content on DC/OS Terraform Provider</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://mesosphere.github.io/terraform-provider-dcos/index.xml" rel="self" type="application/rss+xml"/><item><title>Installation</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/installation/</guid><description> Installation There are various ways you can obtain the terraform-provider-dcs binary.
 Build and Install From Source Make sure Go, make and GoLangCI-Lint are installed.
- On Linux call PLATFORMS=linux make. On macOS call PLATFORMS=darwin make Copy the binary in terraform.d/plugins to ~/.terraform.d with cp -r terraform.d/plugin ~/.terraform.d.  </description>
-    </item>
-    
-    <item>
-      <title>Authentication</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/authentication/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/authentication/</guid>
-      <description>Authentication TODO</description>
-    </item>
-    
-    <item>
-      <title>dcos_edgelb_v2_pool</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/</guid>
-      <description>Resource: dcos_edgelb_v2_pool Provides a resource &amp;hellip;
+On Linux call PLATFORMS=linux make. On macOS call PLATFORMS=darwin make Copy the binary in terraform.d/plugins to ~/.terraform.d with cp -r terraform.d/plugin ~/.terraform.d.</description></item><item><title>Authentication</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/authentication/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/getting-started/authentication/</guid><description>Authentication TODO</description></item><item><title>dcos_edgelb_v2_pool</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_edgelb_v2_pool/</guid><description>Resource: dcos_edgelb_v2_pool Provides a resource &amp;hellip;
 Example Usage # an example provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } Argument Reference The following arguments are supported
- secret_name (Optional) Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present  constraints (Optional) Marathon style constraints for load balancer instance placement  secrets (Optional) DC/OS secrets  secret (Optional) Secret name  file (Optional) File name.</description>
-    </item>
-    
-    <item>
-      <title>dcos_job</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job/</guid>
-      <description>Resource: dcos_job Provides a resource creating metronome jobs on DC/OS.
+secret_name (Optional) Service account secret name for pool framework authentication. If omitted or left blank, the service account used to install Edge-LB will be used if present constraints (Optional) Marathon style constraints for load balancer instance placement secrets (Optional) DC/OS secrets secret (Optional) Secret name file (Optional) File name.</description></item><item><title>dcos_job</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job/</guid><description>Resource: dcos_job Provides a resource creating metronome jobs on DC/OS.
 Should be used together with dcos_job_schedule.
-Example Usage # an example provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;dcos_job&amp;#34; &amp;#34;job&amp;#34; { name = &amp;#34;testjob&amp;#34; cmd = &amp;#34;echo foo&amp;#34; cpus = 1 mem = 64 disk = 0 user = &amp;#34;root&amp;#34; description = &amp;#34;the best description ever&amp;#34; max_launch_delay = 600 docker { image = &amp;#34;ubuntu:latest&amp;#34; } placement_constraint { attribute = &amp;#34;host&amp;#34; operator = &amp;#34;LIKE&amp;#34; } env { key = &amp;#34;my_env_key&amp;#34; secret = &amp;#34;secret1&amp;#34; } env { key = &amp;#34;cool_key&amp;#34; value = &amp;#34;cool_value&amp;#34; } secrets { secret1 = &amp;#34;/something&amp;#34; cool_secret = &amp;#34;something_else&amp;#34; } restart { active_deadline_seconds = 120 policy = &amp;#34;NEVER&amp;#34; } artifacts { uri = &amp;#34;http://downloads.</description>
-    </item>
-    
-    <item>
-      <title>dcos_job_schedule</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job_schedule/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job_schedule/</guid>
-      <description>Resource: dcos_job_schedule provides a resource adding schedules to Metronome jobs.
+Example Usage # an example provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;dcos_job&amp;#34; &amp;#34;job&amp;#34; { name = &amp;#34;testjob&amp;#34; cmd = &amp;#34;echo foo&amp;#34; cpus = 1 mem = 64 disk = 0 user = &amp;#34;root&amp;#34; description = &amp;#34;the best description ever&amp;#34; max_launch_delay = 600 docker { image = &amp;#34;ubuntu:latest&amp;#34; } placement_constraint { attribute = &amp;#34;host&amp;#34; operator = &amp;#34;LIKE&amp;#34; } env { key = &amp;#34;my_env_key&amp;#34; secret = &amp;#34;secret1&amp;#34; } env { key = &amp;#34;cool_key&amp;#34; value = &amp;#34;cool_value&amp;#34; } secrets { secret1 = &amp;#34;/something&amp;#34; cool_secret = &amp;#34;something_else&amp;#34; } restart { active_deadline_seconds = 120 policy = &amp;#34;NEVER&amp;#34; } artifacts { uri = &amp;#34;http://downloads.</description></item><item><title>dcos_job_schedule</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job_schedule/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_job_schedule/</guid><description>Resource: dcos_job_schedule provides a resource adding schedules to Metronome jobs.
 Example Usage # an example provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } data &amp;#34;dcos_job&amp;#34; &amp;#34;job&amp;#34; { name = &amp;#34;somejob&amp;#34; } resource &amp;#34;dcos_job_schedule&amp;#34; &amp;#34;jobsched&amp;#34; { dcos_job_id = &amp;#34;${data.dcos_job.job.name}&amp;#34; name = &amp;#34;someschedule&amp;#34; cron = &amp;#34;0,30 * * * *&amp;#34; } Argument Reference The following arguments are supported
- name (Required) Unique identifier for the schedule.  cron (Required) Cron based schedule string  concurrency_policy (Optional) Defines the behavior if a job is started, before the current job has finished.</description>
-    </item>
-    
-    <item>
-      <title>dcos_marathon_app</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_app/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_app/</guid>
-      <description>Resource: dcos_marathon_app Provides a resource &amp;hellip;
+name (Required) Unique identifier for the schedule. cron (Required) Cron based schedule string concurrency_policy (Optional) Defines the behavior if a job is started, before the current job has finished.</description></item><item><title>dcos_marathon_app</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_app/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_app/</guid><description>Resource: dcos_marathon_app Provides a resource &amp;hellip;
 Example Usage # an example provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } Argument Reference The following arguments are supported
- args (Optional)  cpus (Optional)  fetch (Optional)  extract (Optional)  uri (Optional)  cache (Optional)  executable (Optional)  user (Optional)  executor (Optional)  dcos_framework (Optional)  plan_path (Optional)  timeout (Optional) Timeout in seconds to wait for a framework to complete deployment  is_framework (Optional)  constraints (Optional)  attribute (Optional)  operation (Optional)  parameter (Optional)  disk (Optional)  labels (Optional)  networks (Optional)  name (Optional)  mode (Required)  labels (Optional)  version (Optional)  accepted_resource_roles (Optional)  container (Optional)  volumes (Optional)  host_path (Optional)  secret (Optional)  mode (Optional)  external (Optional)  options (Optional)  name (Optional)  provider (Optional)  persistent (Optional)  type (Optional)  size (Optional)  max_size (Optional)  container_path (Optional)  port_mappings (Optional)  name (Optional)  network_names (Optional)  container_port (Optional)  host_port (Optional)  service_port (Optional)  protocol (Optional)  labels (Optional)  type (Optional)  docker (Optional)  parameters (Optional)  key (Optional)  value (Optional)  privileged (Optional)  force_pull_image (Optional)  image (Required)  pull_config (Optional)  secret (Optional)  gpus (Optional)  backoff_seconds (Optional)  dependencies (Optional)  env (Optional)  secrets (Optional)  unreachable_strategy (Optional)  inactive_after_seconds (Optional)  expunge_after_seconds (Optional)  app_id (Required)  mem (Optional)  backoff_factor (Optional)  health_checks (Optional)  grace_period_seconds (Optional)  interval_seconds (Optional)  port_index (Optional)  port (Optional)  timeout_seconds (Optional)  ignore_http_1xx (Optional)  max_consecutive_failures (Optional)  protocol (Optional)  delay_seconds (Optional)  path (Optional)  command (Optional)  value (Optional)  port_definitions (Optional)  port (Optional)  name (Optional)  labels (Optional)  protocol (Optional)  max_launch_delay_seconds (Optional)  kill_selection (Optional)  marathon_service_url (Optional) By default we use the default DC/OS marathon serivce: service/marathon.</description>
-    </item>
-    
-    <item>
-      <title>dcos_marathon_pod</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_pod/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_pod/</guid>
-      <description>Resource: dcos_marathon_pod Provides a resource &amp;hellip;
+args (Optional) cpus (Optional) fetch (Optional) extract (Optional) uri (Optional) cache (Optional) executable (Optional) user (Optional) executor (Optional) dcos_framework (Optional) plan_path (Optional) timeout (Optional) Timeout in seconds to wait for a framework to complete deployment is_framework (Optional) constraints (Optional) attribute (Optional) operation (Optional) parameter (Optional) disk (Optional) labels (Optional) networks (Optional) name (Optional) mode (Required) labels (Optional) version (Optional) accepted_resource_roles (Optional) container (Optional) volumes (Optional) host_path (Optional) secret (Optional) mode (Optional) external (Optional) options (Optional) name (Optional) provider (Optional) persistent (Optional) type (Optional) size (Optional) max_size (Optional) container_path (Optional) port_mappings (Optional) name (Optional) network_names (Optional) container_port (Optional) host_port (Optional) service_port (Optional) protocol (Optional) labels (Optional) type (Optional) docker (Optional) parameters (Optional) key (Optional) value (Optional) privileged (Optional) force_pull_image (Optional) image (Required) pull_config (Optional) secret (Optional) gpus (Optional) backoff_seconds (Optional) dependencies (Optional) env (Optional) secrets (Optional) unreachable_strategy (Optional) inactive_after_seconds (Optional) expunge_after_seconds (Optional) app_id (Required) mem (Optional) backoff_factor (Optional) health_checks (Optional) grace_period_seconds (Optional) interval_seconds (Optional) port_index (Optional) port (Optional) timeout_seconds (Optional) ignore_http_1xx (Optional) max_consecutive_failures (Optional) protocol (Optional) delay_seconds (Optional) path (Optional) command (Optional) value (Optional) port_definitions (Optional) port (Optional) name (Optional) labels (Optional) protocol (Optional) max_launch_delay_seconds (Optional) kill_selection (Optional) marathon_service_url (Optional) By default we use the default DC/OS marathon serivce: service/marathon.</description></item><item><title>dcos_marathon_pod</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_pod/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_marathon_pod/</guid><description>Resource: dcos_marathon_pod Provides a resource &amp;hellip;
 Example Usage # an example provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } Argument Reference The following arguments are supported
- container (Optional) DC/OS secrets  volume_mounts (Optional) DC/OS secrets  name (Required)  mount_path (Required)  read_only (Optional)  artifact (Optional) DC/OS secrets  cache (Optional)  executable (Optional)  extract (Optional)  uri (Optional)  dest_path (Optional)  name (Required)  endpoints (Optional) DC/OS secrets  name (Optional)  container_port (Optional)  host_port (Optional)  protocol (Optional)  labels (Optional)  env (Optional)  user (Optional)  secret (Optional) DC/OS secrets  env_var (Required)  source (Required)  lifecycle (Optional) DC/OS secrets  kill_grace_period_seconds (Required)  health_check (Optional) DC/OS secrets  delay_seconds (Optional)  http (Optional) DC/OS secrets  path (Optional)  scheme (Optional)  endpoint (Optional)  grace_period_seconds (Optional)  interval_seconds (Optional)  max_consecutive_failures (Optional)  timeout_seconds (Optional)  resources (Optional) DC/OS secrets  mem (Optional)  disk (Optional)  gpus (Optional)  cpus (Optional)  exec (Optional) DC/OS secrets  command_shell (Optional)  image (Optional) DC/OS secrets  kind (Optional)  id (Optional)  force_pull (Optional)  labels (Optional)  labels (Optional)  scheduling (Optional) DC/OS secrets  unreachable_strategy (Optional) DC/OS secrets  inactive_after_seconds (Optional)  expunge_after_seconds (Optional)  backoff (Optional) DC/OS secrets  backoff (Optional)  backoff_factor (Optional)  max_launch_delay (Optional)  upgrade (Optional) DC/OS secrets  minimum_health_capacity (Optional)  maximum_over_capacity (Optional)  kill_selection (Optional)  volume (Optional) DC/OS secrets  persistent (Optional) DC/OS secrets  max_size (Optional)  constraints (Optional)  parameter (Optional)  attribute (Required)  operation (Required)  type (Optional)  size (Optional)  name (Required)  host (Required)  secrets (Optional) DC/OS secrets  secret_name (Required)  env_var (Optional)  source (Optional)  user (Optional)  marathon_service_url (Optional) By default we use the default DC/OS marathon serivce: service/marathon.</description>
-    </item>
-    
-    <item>
-      <title>dcos_package</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package/</guid>
-      <description>Resource: dcos_package Deploys (or upgrades) a service package on DC/OS.
+container (Optional) DC/OS secrets volume_mounts (Optional) DC/OS secrets name (Required) mount_path (Required) read_only (Optional) artifact (Optional) DC/OS secrets cache (Optional) executable (Optional) extract (Optional) uri (Optional) dest_path (Optional) name (Required) endpoints (Optional) DC/OS secrets name (Optional) container_port (Optional) host_port (Optional) protocol (Optional) labels (Optional) env (Optional) user (Optional) secret (Optional) DC/OS secrets env_var (Required) source (Required) lifecycle (Optional) DC/OS secrets kill_grace_period_seconds (Required) health_check (Optional) DC/OS secrets delay_seconds (Optional) http (Optional) DC/OS secrets path (Optional) scheme (Optional) endpoint (Optional) grace_period_seconds (Optional) interval_seconds (Optional) max_consecutive_failures (Optional) timeout_seconds (Optional) resources (Optional) DC/OS secrets mem (Optional) disk (Optional) gpus (Optional) cpus (Optional) exec (Optional) DC/OS secrets command_shell (Optional) image (Optional) DC/OS secrets kind (Optional) id (Optional) force_pull (Optional) labels (Optional) labels (Optional) scheduling (Optional) DC/OS secrets unreachable_strategy (Optional) DC/OS secrets inactive_after_seconds (Optional) expunge_after_seconds (Optional) backoff (Optional) DC/OS secrets backoff (Optional) backoff_factor (Optional) max_launch_delay (Optional) upgrade (Optional) DC/OS secrets minimum_health_capacity (Optional) maximum_over_capacity (Optional) kill_selection (Optional) volume (Optional) DC/OS secrets persistent (Optional) DC/OS secrets max_size (Optional) constraints (Optional) parameter (Optional) attribute (Required) operation (Required) type (Optional) size (Optional) name (Required) host (Required) secrets (Optional) DC/OS secrets secret_name (Required) env_var (Optional) source (Optional) user (Optional) marathon_service_url (Optional) By default we use the default DC/OS marathon serivce: service/marathon.</description></item><item><title>dcos_package</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package/</guid><description>Resource: dcos_package Deploys (or upgrades) a service package on DC/OS.
 Example Usage data &amp;#34;dcos_package_config&amp;#34; &amp;#34;jenkins-config&amp;#34; { ... }# Deploy a package resource &amp;#34;dcos_package&amp;#34; &amp;#34;jenkins&amp;#34; { config = &amp;#34;${data.dcos_package_config.jenkins-config.config}&amp;#34; app_id = &amp;#34;/jenkins&amp;#34; wait = true wait_duration = &amp;#34;5m&amp;#34; sdk = true } Argument Reference The following arguments are supported
- config (Required) The configuration for the package to be deployed. This should be set to the .config output variable of a dcos_package_config data resource.</description>
-    </item>
-    
-    <item>
-      <title>dcos_package_config</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</guid>
-      <description>Data Resource: dcos_package_config Provides the configuration settings of a package before passing it to the dcos_package resource for the actual deployment.
-Example Usage resource &amp;#34;dcos_package_repo&amp;#34; &amp;#34;universe&amp;#34; { } data &amp;#34;dcos_package_version&amp;#34; &amp;#34;jenkins-latest&amp;#34; { repo_url = &amp;#34;${dcos_package_repo.universe.url}&amp;#34; name = &amp;#34;jenkins&amp;#34; version = &amp;#34;latest&amp;#34; index = -1 }# Optional previous configuration to chain against data &amp;#34;dcos_package_config&amp;#34; &amp;#34;previous&amp;#34; { ... }# Configure a specific version of the package data &amp;#34;dcos_package_config&amp;#34; &amp;#34;current&amp;#34; { version_spec = &amp;#34;${data.</description>
-    </item>
-    
-    <item>
-      <title>dcos_package_repo</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package_repo/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package_repo/</guid>
-      <description>Resource: dcos_package_repo Installs a catalog repository on DC/OS that can be used to resolve service packages.
+config (Required) The configuration for the package to be deployed. This should be set to the .config output variable of a dcos_package_config data resource.</description></item><item><title>dcos_package_config</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_config/</guid><description>Data Resource: dcos_package_config Provides the configuration settings of a package before passing it to the dcos_package resource for the actual deployment.
+Example Usage resource &amp;#34;dcos_package_repo&amp;#34; &amp;#34;universe&amp;#34; { } data &amp;#34;dcos_package_version&amp;#34; &amp;#34;jenkins-latest&amp;#34; { repo_url = &amp;#34;${dcos_package_repo.universe.url}&amp;#34; name = &amp;#34;jenkins&amp;#34; version = &amp;#34;latest&amp;#34; index = -1 }# Optional previous configuration to chain against data &amp;#34;dcos_package_config&amp;#34; &amp;#34;previous&amp;#34; { ... }# Configure a specific version of the package data &amp;#34;dcos_package_config&amp;#34; &amp;#34;current&amp;#34; { version_spec = &amp;#34;${data.</description></item><item><title>dcos_package_repo</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package_repo/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_package_repo/</guid><description>Resource: dcos_package_repo Installs a catalog repository on DC/OS that can be used to resolve service packages.
 Example Usage resource &amp;#34;dcos_package_repo&amp;#34; { name = &amp;#34;Universe&amp;#34; url = &amp;#34;https://universe.mesosphere.com/repo&amp;#34; volatile = false index = -1 } Argument Reference The following arguments are supported
- name (Optional, defaults to Universe) the name of the repository.  url (Optional, defaults to https://universe.mesosphere.com/repo) the url of the repository.  volatile (Optional, defaults to false) if set to true, this repository will be removed when the resource is destroyed.</description>
-    </item>
-    
-    <item>
-      <title>dcos_package_version</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</guid>
-      <description>Data Resource: dcos_package_version Selects a package version from the given catalog repository.
+name (Optional, defaults to Universe) the name of the repository. url (Optional, defaults to https://universe.mesosphere.com/repo) the url of the repository. volatile (Optional, defaults to false) if set to true, this repository will be removed when the resource is destroyed.</description></item><item><title>dcos_package_version</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_package_version/</guid><description>Data Resource: dcos_package_version Selects a package version from the given catalog repository.
 Example Usage resource &amp;#34;dcos_package_repo&amp;#34; &amp;#34;universe&amp;#34; { }# Select a package version out of a repository data &amp;#34;dcos_package_version&amp;#34; &amp;#34;jenkins-latest&amp;#34; { repo_url = &amp;#34;${dcos_package_repo.universe.url}&amp;#34; name = &amp;#34;jenkins&amp;#34; version = &amp;#34;latest&amp;#34; index = -1 } Argument Reference The following arguments are supported
- repo_url (Required) the repository URL where to search for the package. This is typically the .url output variable of a dcos_package_repo resource  name (Required) the name of the package to resolve in the repository specified.</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_cluster_oidc</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/</guid>
-      <description>Resource: dcos_security_cluster_oidc Resource to maintain SAML authentication with DC/OS Cluster
-Example Usage # Assign the bootstrap user into testgroup provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } variable &amp;#34;client_id&amp;#34; { default = &amp;#34;Google Client ID&amp;#34; } variable &amp;#34;client_secret&amp;#34; { default = &amp;#34;Google Client Secret&amp;#34; } data &amp;#34;dcos_base_url&amp;#34; &amp;#34;current&amp;#34; {} resource &amp;#34;dcos_security_cluster_oidc&amp;#34; &amp;#34;google&amp;#34; { provider_id = &amp;#34;google-idp&amp;#34; description = &amp;#34;Google&amp;#34; issuer = &amp;#34;https://accounts.google.com&amp;#34; base_url = &amp;#34;https://${data.dcos_base_url.current.url}&amp;#34; client_id = &amp;#34;${var.client_id}&amp;#34; client_secret = &amp;#34;${var.client_secret}&amp;#34; } Argument Reference The following arguments are supported</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_cluster_saml</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/</guid>
-      <description>Resource: dcos_security_cluster_saml Resource to maintain SAML authentication with DC/OS Cluster
-Example Usage # Assign the bootstrap user into testgroup provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } data &amp;#34;dcos_base_url&amp;#34; &amp;#34;current&amp;#34; {} resource &amp;#34;dcos_security_cluster_saml&amp;#34; &amp;#34;OneloginTest&amp;#34; { provider_id = &amp;#34;onelogin&amp;#34; description = &amp;#34;OneLogin SAML Provider&amp;#34;# SAML provider metadata from a file idp_metadata = &amp;#34;${file(&amp;#34;~/testcluster-onelogin.xml&amp;#34;)}&amp;#34; base_url = &amp;#34;${data.dcos_base_url.current.url}&amp;#34; } output &amp;#34;sp_metadata&amp;#34; { value = &amp;#34;${dcos_iam_saml_provider.OneloginTest.metadata}&amp;#34; } output &amp;#34;callback_url&amp;#34; { value = &amp;#34;${dcos_iam_saml_provider.OneloginTest.callback_url}&amp;#34; } output &amp;#34;entity_id&amp;#34; { value = &amp;#34;${dcos_iam_saml_provider.</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_org_group</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group/</guid>
-      <description>Resource: dcos_security_org_group Provides a resource for creating DC/OS user groups.
+repo_url (Required) the repository URL where to search for the package. This is typically the .url output variable of a dcos_package_repo resource name (Required) the name of the package to resolve in the repository specified.</description></item><item><title>dcos_security_cluster_oidc</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_oidc/</guid><description>Resource: dcos_security_cluster_oidc Resource to maintain SAML authentication with DC/OS Cluster
+Example Usage # Assign the bootstrap user into testgroup provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } variable &amp;#34;client_id&amp;#34; { default = &amp;#34;Google Client ID&amp;#34; } variable &amp;#34;client_secret&amp;#34; { default = &amp;#34;Google Client Secret&amp;#34; } data &amp;#34;dcos_base_url&amp;#34; &amp;#34;current&amp;#34; {} resource &amp;#34;dcos_security_cluster_oidc&amp;#34; &amp;#34;google&amp;#34; { provider_id = &amp;#34;google-idp&amp;#34; description = &amp;#34;Google&amp;#34; issuer = &amp;#34;https://accounts.google.com&amp;#34; base_url = &amp;#34;https://${data.dcos_base_url.current.url}&amp;#34; client_id = &amp;#34;${var.client_id}&amp;#34; client_secret = &amp;#34;${var.</description></item><item><title>dcos_security_cluster_saml</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_cluster_saml/</guid><description>Resource: dcos_security_cluster_saml Resource to maintain SAML authentication with DC/OS Cluster
+Example Usage # Assign the bootstrap user into testgroup provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } data &amp;#34;dcos_base_url&amp;#34; &amp;#34;current&amp;#34; {} resource &amp;#34;dcos_security_cluster_saml&amp;#34; &amp;#34;OneloginTest&amp;#34; { provider_id = &amp;#34;onelogin&amp;#34; description = &amp;#34;OneLogin SAML Provider&amp;#34;# SAML provider metadata from a file idp_metadata = &amp;#34;${file(&amp;#34;~/testcluster-onelogin.xml&amp;#34;)}&amp;#34; base_url = &amp;#34;${data.dcos_base_url.current.url}&amp;#34; } output &amp;#34;sp_metadata&amp;#34; { value = &amp;#34;${dcos_iam_saml_provider.OneloginTest.metadata}&amp;#34; } output &amp;#34;callback_url&amp;#34; { value = &amp;#34;${dcos_iam_saml_provider.OneloginTest.callback_url}&amp;#34; } output &amp;#34;entity_id&amp;#34; { value = &amp;#34;${dcos_iam_saml_provider.</description></item><item><title>dcos_security_org_external_user</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_external_user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_external_user/</guid><description>Resource: dcos_security_org_external_user Resource to maintain SAML authentication with DC/OS Cluster
+Example Usage provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } locals { user_list = [&amp;#34;jdoe@mesosphere.com&amp;#34;] } data &amp;#34;dcos_base_url&amp;#34; &amp;#34;current&amp;#34; {} resource &amp;#34;dcos_security_cluster_oidc&amp;#34; &amp;#34;google&amp;#34; { provider_id = &amp;#34;google-idp&amp;#34; description = &amp;#34;Google&amp;#34; issuer = &amp;#34;https://accounts.google.com&amp;#34; base_url = &amp;#34;${data.dcos_base_url.current.url}&amp;#34; client_id = &amp;#34;&amp;lt;...&amp;gt;&amp;#34; client_secret = &amp;#34;&amp;lt;...&amp;gt;&amp;#34; } resource &amp;#34;dcos_security_org_external_user&amp;#34; &amp;#34;soakusers&amp;#34; { count = &amp;#34;${length(local.user_list)}&amp;#34; uid = &amp;#34;${element(local.user_list,count.index)}&amp;#34; description = &amp;#34;Terraform managed OIDC Users&amp;#34; provider_id = &amp;#34;${dcos_security_cluster_oidc.</description></item><item><title>dcos_security_org_group</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group/</guid><description>Resource: dcos_security_org_group Provides a resource for creating DC/OS user groups.
 Example Usage # Create a group provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;dcos_security_org_group&amp;#34; &amp;#34;testgroup&amp;#34; { gid = &amp;#34;testgroup&amp;#34; description = &amp;#34;This group is for testing only&amp;#34; } Argument Reference The following arguments are supported
- gid (Required) User ID to apply the grant on.  description (Optional) a description for the group.   Attributes Reference addition to all arguments above, the following attributes are exported:</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_org_group_user</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/</guid>
-      <description>Resource: dcos_security_org_group_user Provides a resource for assigning users into groups.
+gid (Required) User ID to apply the grant on. description (Optional) a description for the group. Attributes Reference addition to all arguments above, the following attributes are exported:</description></item><item><title>dcos_security_org_group_user</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_group_user/</guid><description>Resource: dcos_security_org_group_user Provides a resource for assigning users into groups.
 Example Usage # Assign the bootstrap user into testgroup provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;dcos_security_org_group&amp;#34; &amp;#34;testgroup&amp;#34; { gid = &amp;#34;testgroup&amp;#34; description = &amp;#34;This group is for testing only&amp;#34; } resource &amp;#34;dcos_security_org_group_user&amp;#34; &amp;#34;testgroupassign&amp;#34; { gid = &amp;#34;${dcos_security_org_group.testgroup.gid}&amp;#34; uid = &amp;#34;bootstrapuser&amp;#34; } Argument Reference The following arguments are supported
- gid (Required) Group ID.  uid (Required) User ID.   </description>
-    </item>
-    
-    <item>
-      <title>dcos_security_org_service_account</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/</guid>
-      <description>Resource: dcos_security_org_service_account Provides a resource for creating service accounts.
-Example Usage # Create a Service Account from a generated private key provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;tls_private_key&amp;#34; &amp;#34;k8s&amp;#34; { algorithm = &amp;#34;RSA&amp;#34; rsa_bits = &amp;#34;2048&amp;#34; } resource &amp;#34;dcos_security_org_service_account&amp;#34; &amp;#34;k8s-sa&amp;#34; { uid = &amp;#34;kubernetes-service-account&amp;#34; description = &amp;#34;Terraform provider Test User&amp;#34; public_key = &amp;#34;${tls_private_key.k8s.public_key_pem}&amp;#34; } resource &amp;#34;dcos_security_org_user_grant&amp;#34; &amp;#34;k8s-grant&amp;#34; { uid = &amp;#34;${dcos_security_org_service_account.k8s-sa.uid}&amp;#34; resource = &amp;#34;dcos:mesos:master:framework:role:kubernetes-role&amp;#34; action = &amp;#34;create&amp;#34; } Argument Reference The following arguments are supported</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_org_user</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user/</guid>
-      <description>Resource: dcos_security_org_user Provide a user resource. Managing users and their credentials.
-Example Usage # Create a Admin User with random password. provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;random_password&amp;#34; &amp;#34;password&amp;#34; { length = 16 special = true override_special = &amp;#34;_%@&amp;#34; } resource &amp;#34;dcos_security_org_user&amp;#34; &amp;#34;myadmin&amp;#34; { uid = &amp;#34;myadmin&amp;#34; description = &amp;#34;Terraform managed admin user&amp;#34; password = &amp;#34;${random_string.password.result}&amp;#34; } resource &amp;#34;dcos_security_group_user&amp;#34; { uid = &amp;#34;${dcos_security_org_user.myadmin.uid}&amp;#34; gid = &amp;#34;superusers&amp;#34; } Argument Reference The following arguments are supported</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_org_user_grant</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/</guid>
-      <description>Resource: dcos_security_org_user_grant Provides a grant resource maintaining a grant on a User or Service Account.
-Example Usage # Create a Secret containing a random password provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;dcos_security_org_user&amp;#34; &amp;#34;myadmin&amp;#34; { uid = &amp;#34;myadmin&amp;#34; description = &amp;#34;Terraform managed admin user&amp;#34; } locals { admin_full_grants = [ &amp;#34;dcos:adminrouter:service:marathon&amp;#34;, &amp;#34;dcos:adminrouter:ops:slave&amp;#34; ] } resource &amp;#34;dcos_security_org_user_grant&amp;#34; &amp;#34;myadmin-full-grants&amp;#34; { count = &amp;#34;${length(local.admin_full_grants)}&amp;#34; uid = &amp;#34;${dcos_security_org_user.myadmin.uid}&amp;#34; resource = &amp;#34;${element(local.admin_full_grants, count.index)}&amp;#34; action = &amp;#34;full&amp;#34; } Argument Reference The following arguments are supported</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_secret</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_secret/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_secret/</guid>
-      <description>Resource: dcos_security_secret Provides an secret resource. This allows to maintain secrets in a DC/OS secret store.
+gid (Required) Group ID. uid (Required) User ID.</description></item><item><title>dcos_security_org_service_account</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_service_account/</guid><description>Resource: dcos_security_org_service_account Provides a resource for creating service accounts.
+Example Usage # Create a Service Account from a generated private key provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;tls_private_key&amp;#34; &amp;#34;k8s&amp;#34; { algorithm = &amp;#34;RSA&amp;#34; rsa_bits = &amp;#34;2048&amp;#34; } resource &amp;#34;dcos_security_org_service_account&amp;#34; &amp;#34;k8s-sa&amp;#34; { uid = &amp;#34;kubernetes-service-account&amp;#34; description = &amp;#34;Terraform provider Test User&amp;#34; public_key = &amp;#34;${tls_private_key.k8s.public_key_pem}&amp;#34; } resource &amp;#34;dcos_security_org_user_grant&amp;#34; &amp;#34;k8s-grant&amp;#34; { uid = &amp;#34;${dcos_security_org_service_account.k8s-sa.uid}&amp;#34; resource = &amp;#34;dcos:mesos:master:framework:role:kubernetes-role&amp;#34; action = &amp;#34;create&amp;#34; } Argument Reference The following arguments are supported</description></item><item><title>dcos_security_org_user</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user/</guid><description>Resource: dcos_security_org_user Provide a user resource. Managing users and their credentials.
+Example Usage # Create a Admin User with random password. provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;random_password&amp;#34; &amp;#34;password&amp;#34; { length = 16 special = true override_special = &amp;#34;_%@&amp;#34; } resource &amp;#34;dcos_security_org_user&amp;#34; &amp;#34;myadmin&amp;#34; { uid = &amp;#34;myadmin&amp;#34; description = &amp;#34;Terraform managed admin user&amp;#34; password = &amp;#34;${random_string.password.result}&amp;#34; } resource &amp;#34;dcos_security_group_user&amp;#34; { uid = &amp;#34;${dcos_security_org_user.myadmin.uid}&amp;#34; gid = &amp;#34;superusers&amp;#34; } Argument Reference The following arguments are supported</description></item><item><title>dcos_security_org_user_grant</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_org_user_grant/</guid><description>Resource: dcos_security_org_user_grant Provides a grant resource maintaining a grant on a User or Service Account.
+Example Usage # Create a Secret containing a random password provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;dcos_security_org_user&amp;#34; &amp;#34;myadmin&amp;#34; { uid = &amp;#34;myadmin&amp;#34; description = &amp;#34;Terraform managed admin user&amp;#34; } locals { admin_full_grants = [ &amp;#34;dcos:adminrouter:service:marathon&amp;#34;, &amp;#34;dcos:adminrouter:ops:slave&amp;#34; ] } resource &amp;#34;dcos_security_org_user_grant&amp;#34; &amp;#34;myadmin-full-grants&amp;#34; { count = &amp;#34;${length(local.admin_full_grants)}&amp;#34; uid = &amp;#34;${dcos_security_org_user.myadmin.uid}&amp;#34; resource = &amp;#34;${element(local.admin_full_grants, count.index)}&amp;#34; action = &amp;#34;full&amp;#34; } Argument Reference The following arguments are supported</description></item><item><title>dcos_security_secret</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_secret/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_security_secret/</guid><description>Resource: dcos_security_secret Provides an secret resource. This allows to maintain secrets in a DC/OS secret store.
 Example Usage # Create a Secret containing a random password provider &amp;#34;dcos&amp;#34; { cluster = &amp;#34;my-cluster&amp;#34; } resource &amp;#34;random_password&amp;#34; &amp;#34;password&amp;#34; { length = 16 special = true override_special = &amp;#34;_%@&amp;#34; } resource &amp;#34;dcos_security_secret&amp;#34; &amp;#34;myapp-password&amp;#34; { path = &amp;#34;/myapp/password&amp;#34; value = &amp;#34;${random_string.password.result}&amp;#34; } Argument Reference The following arguments are supported
- path (Required) path to the secret.</description>
-    </item>
-    
-    <item>
-      <title>dcos_security_secret_service_account_secret</title>
-      <link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</guid>
-      <description>Data Resource: dcos_security_secret_service_account_secret Computes the contents for the service account secret
-Example Usage # Create a private key using an external provider (eg. tls) resource &amp;#34;tls_private_key&amp;#34; &amp;#34;service_account_key&amp;#34; { algorithm = &amp;#34;RSA&amp;#34; rsa_bits = &amp;#34;2048&amp;#34; }# Pass the private key and the user account to the resource data &amp;#34;dcos_security_secret_service_account_secret&amp;#34; &amp;#34;service_account&amp;#34; { uid = &amp;#34;user-login&amp;#34; private_key = &amp;#34;${tls_private_key.service_account_key.private_key_pem}&amp;#34; }# Handle the contents (eg. upload to a secret) resource &amp;#34;dcos_security_secret&amp;#34; &amp;#34;service_account_secret&amp;#34; { path = &amp;#34;my-service/service-account&amp;#34; value = &amp;#34;${data.</description>
-    </item>
-    
-  </channel>
-</rss>
+path (Required) path to the secret.</description></item><item><title>dcos_service_http_request</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_service_http_request/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/resources/dcos_service_http_request/</guid><description>Resource: dcos_service_http_request Performs an HTTP request to a DC/OS service, exposed through the Admin Router.
+Example Usage # POST some data to an HTTP service resource &amp;#34;dcos_service_http_request&amp;#34; &amp;#34;some_config&amp;#34; { service_name = &amp;#34;my-service&amp;#34; path = &amp;#34;/configure&amp;#34; method = &amp;#34;POST&amp;#34; header { name = &amp;#34;Content-Type&amp;#34; value = &amp;#34;application/json&amp;#34; } body = &amp;lt;&amp;lt;EOF { &amp;#34;setting-a&amp;#34;: &amp;#34;foo&amp;#34;, &amp;#34;setting-b&amp;#34;: &amp;#34;bar&amp;#34; } EOF } Argument Reference The following arguments are supported
+service_name (Required) The name of the DC/OS service to target.</description></item><item><title>dcos_security_secret_service_account_secret</title><link>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mesosphere.github.io/terraform-provider-dcos/docs/data-resources/dcos_security_secret_service_account_secret/</guid><description>Data Resource: dcos_security_secret_service_account_secret Computes the contents for the service account secret
+Example Usage # Create a private key using an external provider (eg. tls) resource &amp;#34;tls_private_key&amp;#34; &amp;#34;service_account_key&amp;#34; { algorithm = &amp;#34;RSA&amp;#34; rsa_bits = &amp;#34;2048&amp;#34; }# Pass the private key and the user account to the resource data &amp;#34;dcos_security_secret_service_account_secret&amp;#34; &amp;#34;service_account&amp;#34; { uid = &amp;#34;user-login&amp;#34; private_key = &amp;#34;${tls_private_key.service_account_key.private_key_pem}&amp;#34; }# Handle the contents (eg. upload to a secret) resource &amp;#34;dcos_security_secret&amp;#34; &amp;#34;service_account_secret&amp;#34; { path = &amp;#34;my-service/service-account&amp;#34; value = &amp;#34;${data.</description></item></channel></rss>
