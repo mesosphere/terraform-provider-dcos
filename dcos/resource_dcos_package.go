@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -64,6 +65,14 @@ func resourceDcosPackage() *schema.Resource {
 			"config": schemaInPackageConfigSpecWithDiffSup(),
 		},
 	}
+}
+
+type LightMarathonAppInfo struct {
+	TasksStaged  int           `json:"tasksStaged"`
+	TasksRunning int           `json:"tasksRunning"`
+	TasksHealthy int           `json:"tasksHealthy"`
+	Instances    int           `json:"instances"`
+	HealthChecks []interface{} `json:"healthChecks"`
 }
 
 /**
@@ -325,6 +334,132 @@ func waitForSDKPlan(client *dcos.APIClient, appId string, planName string, waitS
 }
 
 /**
+ * Contacts marathon and collects task information about the given app ID
+ */
+func getMarathonAppStatus(client *dcos.APIClient, appId string) (*LightMarathonAppInfo, error) {
+	config := client.CurrentDCOSConfig()
+	url := fmt.Sprintf("%s/marathon/v2/apps/%s", config.URL(), appId)
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to prepare request: %s", err.Error())
+	}
+
+	request.Header.Add("Authorization", config.ACSToken())
+	response, err := client.HTTPClient().Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to place request: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return nil, fmt.Errorf("Server on %s responded with %s", url, response.Status)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read response from %s: %s", url, err.Error())
+	}
+
+	log.Printf("[TRACE] Received: %s", body)
+
+	var appInfo struct {
+		App LightMarathonAppInfo `json:"app"`
+	}
+
+	err = json.Unmarshal(body, &appInfo)
+	if err != nil {
+		return nil, fmt.Errorf("Could not parse response from %s: %s", url, err.Error())
+	}
+
+	return &appInfo.App, nil
+}
+
+/**
+ * Force-restart a marathon app
+ */
+func restartMarathonApp(client *dcos.APIClient, appId string) error {
+	config := client.CurrentDCOSConfig()
+	url := fmt.Sprintf("%s/marathon/v2/apps/%s/restart?force=true", config.URL(), appId)
+
+	request, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return fmt.Errorf("Unable to prepare request: %s", err.Error())
+	}
+
+	request.Header.Add("Authorization", config.ACSToken())
+	response, err := client.HTTPClient().Do(request)
+	if err != nil {
+		return fmt.Errorf("Unable to place request: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return fmt.Errorf("Server on %s responded with %s", url, response.Status)
+	}
+
+	return nil
+}
+
+/**
+ * Waits until the given marathon app is up and healthy
+ */
+func waitForHealthyMarathonApp(client *dcos.APIClient, appId string, timeout time.Duration) error {
+	log.Printf("[TRACE] Waiting until app %s is healthy", appId)
+
+	return resource.Retry(timeout, func() *resource.RetryError {
+		status, err := getMarathonAppStatus(client, appId)
+		if err != nil {
+			log.Printf("[WARN] Error querying task %s status: %s", appId, err.Error())
+			return resource.RetryableError(
+				fmt.Errorf("Service %s is not yet found", appId),
+			)
+		}
+
+		log.Printf("[TRACE] Got status response: %v", status)
+
+		// If there are staged tasks, marathon is still busy
+		if status.TasksStaged > 0 {
+			return resource.RetryableError(
+				fmt.Errorf(
+					"Service %s is still staging %d tasks",
+					appId,
+					status.TasksStaged,
+				),
+			)
+		}
+
+		if len(status.HealthChecks) > 0 {
+			// If we have health checks, wait until all tasks are reported healthy
+			if status.TasksHealthy < status.Instances {
+				return resource.RetryableError(
+					fmt.Errorf(
+						"Service %s has %d healthy tasks, but expecting %d",
+						appId,
+						status.TasksHealthy,
+						status.Instances,
+					),
+				)
+			}
+		} else {
+			// If there are no health checks, wait until we have enough apps running
+			if status.TasksRunning < status.Instances {
+				return resource.RetryableError(
+					fmt.Errorf(
+						"Service %s has %d running tasks, but expecting %d",
+						appId,
+						status.TasksHealthy,
+						status.Instances,
+					),
+				)
+			}
+		}
+
+		return resource.NonRetryableError(nil)
+	})
+}
+
+/**
  * getPackageDesc queries cosmos for a package with the given name or version
  * and returns the package details.
  * `packageVersion` can be blank if you are querying for the latest version.
@@ -426,6 +561,11 @@ func resourceDcosPackageCreate(d *schema.ResourceData, meta interface{}) error {
 			err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
 			if err != nil {
 				return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+			}
+		} else {
+			err = waitForHealthyMarathonApp(client, appId, waitDuration)
+			if err != nil {
+				return fmt.Errorf("Error while waiting for the deployment complete: %s", err.Error())
 			}
 		}
 	}
@@ -572,10 +712,6 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			// We are going to wait for 5 minutes for the app to appear, just in case we
 			// were very quick on the previous deployment
 			if d.Get("wait").(bool) {
-				waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
-				if err != nil {
-					return fmt.Errorf("Unable to parse wait duration")
-				}
 				desc, errQ = waitAndgetServiceDesc(client, appId, waitDuration)
 			} else {
 				desc, errQ = getServiceDesc(client, appId)
@@ -650,15 +786,17 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// If this is an SDK service, also wait for the deployment plan to be completed
-			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
-				waitDuration, err := time.ParseDuration(d.Get("wait_duration").(string))
-				if err != nil {
-					return fmt.Errorf("Unable to parse wait duration")
-				}
-
-				err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
-				if err != nil {
-					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+			if d.Get("wait").(bool) {
+				if d.Get("sdk").(bool) {
+					err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
+					if err != nil {
+						return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+					}
+				} else {
+					err = waitForHealthyMarathonApp(client, appId, waitDuration)
+					if err != nil {
+						return fmt.Errorf("Error while waiting for the deployment complete: %s", err.Error())
+					}
 				}
 			}
 
@@ -685,10 +823,17 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// If this is an SDK service, also wait for the deployment plan to be completed
-			if d.Get("wait").(bool) && d.Get("sdk").(bool) {
-				err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
-				if err != nil {
-					return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+			if d.Get("wait").(bool) {
+				if d.Get("sdk").(bool) {
+					err = waitForSDKPlan(client, appId, "deploy", "COMPLETE", waitDuration)
+					if err != nil {
+						return fmt.Errorf("Error while waiting for the deployment plan to complete: %s", err.Error())
+					}
+				} else {
+					err = waitForHealthyMarathonApp(client, appId, waitDuration)
+					if err != nil {
+						return fmt.Errorf("Error while waiting for the deployment complete: %s", err.Error())
+					}
 				}
 			}
 
@@ -712,8 +857,15 @@ func resourceDcosPackageUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 			} else {
-				log.Printf("[WARN] We currently don't support restarting non-SDK services!")
-				// TODO: Remove and re-install service
+				err = restartMarathonApp(client, appId)
+				if err != nil {
+					return fmt.Errorf("Error while restarting marathon app: %s", err.Error())
+				}
+
+				err = waitForHealthyMarathonApp(client, appId, waitDuration)
+				if err != nil {
+					return fmt.Errorf("Error while waiting for the deployment complete: %s", err.Error())
+				}
 			}
 
 		} else {

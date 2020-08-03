@@ -71,6 +71,8 @@ func Provider() terraform.ResourceProvider {
 
 			"dcos_marathon_app": resourceDcosMarathonApp(),
 			"dcos_marathon_pod": resourceDcosMarathonPod(),
+
+			"dcos_service_http_request": resourceDcosServiceHttpRequest(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"dcos_base_url":        dataSourceDcosBaseURL(),
