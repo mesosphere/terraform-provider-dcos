@@ -4,7 +4,7 @@ pipeline {
       GITHUB_TOKEN = credentials('gh-token-mesosphere-ci-dcos-deploy')
       APPLE_DEVACC = credentials('APPLE_DEVELOPER_ACCOUNT')
       GOLANG_VER = "1.13.7"
-      GORELEASER_VER = "0.126.0"
+      GORELEASER_VER = "0.140.1"
       GON_VER = "0.2.2"
     }
     options {
