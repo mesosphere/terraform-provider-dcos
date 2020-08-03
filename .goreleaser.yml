@@ -31,6 +31,9 @@ builds:
   goarch:
     - amd64
   ldflags: -s -extldflags "-static"
+  hooks:
+    post: gon gon.hcl
+
 archives:
   - id: binaries
     builds:
@@ -47,18 +50,6 @@ archives:
       format: zip
     files:
       - none*  # only package the binary - not defaults: readme, license, changelog
-
-signs:
-  - signature: "${artifact}"
-    ids:
-      - macos # here we filter the macos only build id
-    # you'll need to have gon on PATH
-    cmd: gon
-    # you can follow the gon docs to properly create the gon.hcl config file:
-    # https://github.com/mitchellh/gon
-    args:
-      - gon.hcl
-    artifacts: all
 
 release:
   github:
