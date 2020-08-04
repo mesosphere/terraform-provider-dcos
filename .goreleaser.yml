@@ -55,5 +55,3 @@ release:
   github:
   draft: true
   prerelease: auto
-  extra_files:
-    - glob: ./dist/terraform-provider-dcos-darwin-amd64.zip
