@@ -85,7 +85,7 @@ pipeline {
                       sh 'mkdir -p ${WORKSPACE}/usr/local/bin'
                       sh 'wget -O /tmp/golang.tgz https://dl.google.com/go/go\${GOLANG_VER}.darwin-amd64.tar.gz && tar xzf /tmp/golang.tgz -C ${WORKSPACE}/usr/local'
                       sh 'wget -O /tmp/goreleaser.tgz https://github.com/goreleaser/goreleaser/releases/download/v\${GORELEASER_VER}/goreleaser_Darwin_x86_64.tar.gz && tar xzf /tmp/goreleaser.tgz -C ${WORKSPACE}/usr/local/bin'
-                      sh 'wget -O /tmp/gon.zip https://github.com/mitchellh/gon/releases/download/v\${GON_VER}/gon_\${GON_VER}_macos.zip && unzip /tmp/gon.zip -d ${WORKSPACE}/usr/local/bin'
+                      sh 'wget -O /tmp/gon.zip https://github.com/mitchellh/gon/releases/download/v\${GON_VER}/gon_\${GON_VER}_macos.zip && unzip -o /tmp/gon.zip -d ${WORKSPACE}/usr/local/bin'
                       sh '''
                         set +xe
                         export PATH=$PATH:${WORKSPACE}/usr/local/go/bin:${WORKSPACE}/usr/local/bin
