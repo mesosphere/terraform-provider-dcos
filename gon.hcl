@@ -6,3 +6,7 @@ bundle_id = "com.mesosphere.terraform-provider-dcos"
 sign {
   application_identity = "Developer ID Application: Mesosphere Inc. (JQJDUUPXFN)"
 }
+
+zip {
+  output_path = "dist/terraform-provider-dcos-darwin-amd64.zip"
+}

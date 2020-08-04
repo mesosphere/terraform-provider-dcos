@@ -32,7 +32,9 @@ builds:
     - amd64
   ldflags: -s -extldflags "-static"
   hooks:
-    post: gon gon.hcl
+    post:
+      - gon gon.hcl
+      - unzip -o dist/terraform-provider-dcos-darwin-amd64.zip -d dist/macos_darwin_amd64
 
 archives:
   - id: binaries
@@ -45,6 +47,7 @@ archives:
     builds:
       - linux
       - windows
+      - macos
     format_overrides:
     - goos: windows
       format: zip
