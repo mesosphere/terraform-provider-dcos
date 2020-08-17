@@ -25,6 +25,9 @@ func resourceDcosPackage() *schema.Resource {
 		Read:   resourceDcosPackageRead,
 		Update: resourceDcosPackageUpdate,
 		Delete: resourceDcosPackageDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		SchemaVersion: 1,
 		Timeouts: &schema.ResourceTimeout{
@@ -86,6 +89,19 @@ func stripRootSlash(appId string) string {
 	}
 
 	return serviceName
+}
+
+/**
+* dcosPackageParseID parses and validates the id
+ */
+func dcosPackageParseID(appId string) ([]string, error) {
+	parts := strings.SplitN(appId, ":", 3)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" {
+		return parts, fmt.Errorf("unexpected format of ID (%s), expected attribute1:attribute2", appId)
+	}
+
+	return parts, nil
 }
 
 /**
@@ -596,15 +612,14 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	var desc *dcos.CosmosServiceDescribeV1Response
 	client := meta.(*dcos.APIClient)
 
-	// If the app_id is missing, this resource is never created. Guard against
-	// this case as early as possible.
-	vString, appIdok := d.GetOk("app_id")
-	if !appIdok {
-		log.Printf("[WARN] Missing 'app_id'. Assuming the service is not installed")
+	parts, err := dcosPackageParseID(d.Id())
+
+	if err != nil {
 		d.SetId("")
-		return nil
+		return err
 	}
-	appId := stripRootSlash(vString.(string))
+
+	appId := stripRootSlash(parts[1])
 	log.Printf("[TRACE] READ Lifecycle - app %s", appId)
 
 	sdkClient := util.CreateSDKAPIClient(client, appId)
@@ -615,10 +630,14 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error while querying app status: %s", err.Error())
 	}
+
 	if desc == nil {
 		d.SetId("")
 		return nil
 	}
+
+	// Set app_id
+	d.Set("app_id", appId)
 
 	// Query SDK meta to get the old config checksum
 	csum := ""
