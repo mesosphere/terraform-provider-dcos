@@ -25,6 +25,9 @@ func resourceDcosPackage() *schema.Resource {
 		Read:   resourceDcosPackageRead,
 		Update: resourceDcosPackageUpdate,
 		Delete: resourceDcosPackageDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		SchemaVersion: 1,
 		Timeouts: &schema.ResourceTimeout{
@@ -86,6 +89,19 @@ func stripRootSlash(appId string) string {
 	}
 
 	return serviceName
+}
+
+/**
+* dcosPackageParseID parses and validates the existing of id
+ */
+func dcosPackageParseID(appId string) (string, error) {
+	parts := strings.SplitN(appId, ":", 3)
+
+	if len(parts) < 2 || parts[1] == "" {
+		return "", fmt.Errorf("unexpected format of ID (%s), expected packageName:appID[:checksum]", appId)
+	}
+
+	return stripRootSlash(parts[1]), nil
 }
 
 /**
@@ -596,15 +612,13 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	var desc *dcos.CosmosServiceDescribeV1Response
 	client := meta.(*dcos.APIClient)
 
-	// If the app_id is missing, this resource is never created. Guard against
-	// this case as early as possible.
-	vString, appIdok := d.GetOk("app_id")
-	if !appIdok {
-		log.Printf("[WARN] Missing 'app_id'. Assuming the service is not installed")
+	appId, err := dcosPackageParseID(d.Id())
+
+	if err != nil {
 		d.SetId("")
-		return nil
+		return err
 	}
-	appId := stripRootSlash(vString.(string))
+
 	log.Printf("[TRACE] READ Lifecycle - app %s", appId)
 
 	sdkClient := util.CreateSDKAPIClient(client, appId)
@@ -612,17 +626,23 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 	// We are going to wait for 5 minutes for the app to appear, just in case we
 	// were very quick on the previous deployment
 	desc, err = getServiceDesc(client, appId)
+
 	if err != nil {
 		return fmt.Errorf("Error while querying app status: %s", err.Error())
 	}
+
 	if desc == nil {
 		d.SetId("")
 		return nil
 	}
 
+	// Set app_id
+	d.Set("app_id", appId)
+
 	// Query SDK meta to get the old config checksum
 	csum := ""
 	if d.Get("sdk").(bool) {
+
 		v, err := sdkClient.GetMeta("csum", "")
 		if err != nil {
 			return fmt.Errorf("Error fetching old config checksum: %s", err.Error())
@@ -647,7 +667,7 @@ func resourceDcosPackageRead(d *schema.ResourceData, meta interface{}) error {
 		// Carry the checksum from the previous ID
 		parts := strings.Split(d.Id(), ":")
 		if len(parts) < 3 {
-			d.SetId("")
+			d.SetId(fmt.Sprintf("%s:%s", desc.Package.Name, appId))
 		} else {
 			d.SetId(fmt.Sprintf("%s:%s:%s", desc.Package.Name, appId, parts[2]))
 		}
